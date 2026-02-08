@@ -1,0 +1,57 @@
+import rateLimit from 'express-rate-limit';
+
+// General API rate limiter - 100 requests per 15 minutes
+export const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Max 100 requests per window
+    message: {
+        error: 'Too many requests',
+        message: 'Please try again later',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Strict rate limiter for vote casting - 1 vote per election per voter
+export const voteLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: 5, // Max 5 vote attempts per hour (to prevent abuse while allowing re-attempts on errors)
+    message: {
+        error: 'Too many vote attempts',
+        message: 'Please contact election officials if you need assistance',
+    },
+    skipSuccessfulRequests: true, // Only count failed requests
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Auth rate limiter - 5 login attempts per 15 minutes
+export const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 5,
+    message: {
+        error: 'Too many login attempts',
+        message: 'Account temporarily locked. Try again in 15 minutes',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Results query limiter - 30 requests per minute
+export const resultsLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 30,
+    message: {
+        error: 'Too many result queries',
+        message: 'Please wait before refreshing results',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+export default {
+    apiLimiter,
+    voteLimiter,
+    authLimiter,
+    resultsLimiter,
+};
