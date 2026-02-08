@@ -1,0 +1,186 @@
+# ===================================
+# Hyperledger Fabric Channel Configuration
+# Defines orderer and channel configurations
+# ===================================
+
+Organizations:
+  - &OrdererOrg
+      Name: OrdererMSP
+      ID: OrdererMSP
+      MSPDir: crypto-config/ordererOrganizations/election.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+        Writers:
+          Type: Signature
+          Rule: "OR('OrdererMSP.member')"
+        Admins:
+          Type: Signature
+          Rule: "OR('OrdererMSP.admin')"
+      OrdererEndpoints:
+        - orderer.election.com:7050
+
+  - &ElectionCommission
+      Name: ElectionCommissionMSP
+      ID: ElectionCommissionMSP
+      MSPDir: crypto-config/peerOrganizations/electioncommission.election.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('ElectionCommissionMSP.admin', 'ElectionCommissionMSP.peer', 'ElectionCommissionMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('ElectionCommissionMSP.admin', 'ElectionCommissionMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('ElectionCommissionMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('ElectionCommissionMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.electioncommission.election.com
+          Port: 7051
+
+  - &Judiciary
+      Name: JudiciaryMSP
+      ID: JudiciaryMSP
+      MSPDir: crypto-config/peerOrganizations/judiciary.election.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('JudiciaryMSP.admin', 'JudiciaryMSP.peer', 'JudiciaryMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('JudiciaryMSP.admin', 'JudiciaryMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('JudiciaryMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('JudiciaryMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.judiciary.election.com
+          Port: 7051
+
+  - &Observers
+      Name: ObserversMSP
+      ID: ObserversMSP
+      MSPDir: crypto-config/peerOrganizations/observers.election.com/msp
+      Policies:
+        Readers:
+          Type: Signature
+          Rule: "OR('ObserversMSP.admin', 'ObserversMSP.peer', 'ObserversMSP.client')"
+        Writers:
+          Type: Signature
+          Rule: "OR('ObserversMSP.admin', 'ObserversMSP.client')"
+        Admins:
+          Type: Signature
+          Rule: "OR('ObserversMSP.admin')"
+        Endorsement:
+          Type: Signature
+          Rule: "OR('ObserversMSP.peer')"
+      AnchorPeers:
+        - Host: peer0.observers.election.com
+          Port: 7051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.election.com:7050
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.election.com
+        Port: 7050
+        ClientTLSCert: crypto-config/ordererOrganizations/election.com/orderers/orderer.election.com/tls/server.crt
+        ServerTLSCert: crypto-config/ordererOrganizations/election.com/orderers/orderer.election.com/tls/server.crt
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  ThreeOrgsOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+      Capabilities:
+        <<: *OrdererCapabilities
+    Consortiums:
+      ElectionConsortium:
+        Organizations:
+          - *ElectionCommission
+          - *Judiciary
+          - *Observers
+
+  ThreeOrgsChannel:
+    Consortium: ElectionConsortium
+    <<: *ChannelDefaults
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *ElectionCommission
+        - *Judiciary
+        - *Observers
+      Capabilities:
+        <<: *ApplicationCapabilities

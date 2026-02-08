@@ -1,0 +1,52 @@
+# ===================================
+# Hyperledger Fabric Crypto Configuration
+# Generates cryptographic material for all organizations
+# ===================================
+
+OrdererOrgs:
+  - Name: Orderer
+    Domain: election.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+        SANS:
+          - localhost
+          - 127.0.0.1
+          - orderer.election.com
+
+PeerOrgs:
+  # Election Commission Organization
+  - Name: ElectionCommission
+    Domain: electioncommission.election.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+      SANS:
+        - localhost
+        - 127.0.0.1
+    Users:
+      Count: 3
+
+  # Judiciary Organization
+  - Name: Judiciary
+    Domain: judiciary.election.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+      SANS:
+        - localhost
+        - 127.0.0.1
+    Users:
+      Count: 2
+
+  # International Observers Organization
+  - Name: Observers
+    Domain: observers.election.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+      SANS:
+        - localhost
+        - 127.0.0.1
+    Users:
+      Count: 2

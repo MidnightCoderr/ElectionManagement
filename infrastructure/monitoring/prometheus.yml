@@ -1,0 +1,57 @@
+# Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'election-system'
+    replica: '1'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Scrape configurations
+scrape_configs:
+  # Backend API metrics
+  - job_name: 'backend-api'
+    static_configs:
+      - targets: ['backend:3000']
+    metrics_path: '/metrics'
+
+  # Hyperledger Fabric Peer metrics
+  - job_name: 'fabric-peer'
+    static_configs:
+      - targets: ['peer0.electioncommission.election.com:9444']
+
+  # PostgreSQL metrics (requires postgres_exporter)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres:5432']
+
+  # MongoDB metrics (requires mongodb_exporter)
+  - job_name: 'mongodb'
+    static_configs:
+      - targets: ['mongodb:27017']
+
+  # Redis metrics (requires redis_exporter)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+
+  # MQTT Broker
+  - job_name: 'mqtt-broker'
+    static_configs:
+      - targets: ['mqtt-broker:1883']
+
+  # ML Analytics Service
+  - job_name: 'ml-analytics'
+    static_configs:
+      - targets: ['ml-analytics:5000']
+    metrics_path: '/metrics'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']

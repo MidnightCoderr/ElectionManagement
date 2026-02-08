@@ -1,0 +1,66 @@
+{
+  "name": "election-management-system",
+  "version": "1.0.0",
+  "description": "Blockchain-based, IoT-enabled secure election management system",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend/voter-ui",
+    "frontend/observer-dashboard",
+    "frontend/admin-portal"
+  ],
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend/voter-ui && npm install && cd ../observer-dashboard && npm install && cd ../admin-portal && npm install",
+    "dev": "docker-compose up",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:voter-ui": "cd frontend/voter-ui && npm run dev",
+    "dev:observer": "cd frontend/observer-dashboard && npm run dev",
+    "dev:admin": "cd frontend/admin-portal && npm run dev",
+    "build": "npm run build:backend && npm run build:frontends",
+    "build:backend": "cd backend && npm run build",
+    "build:frontends": "cd frontend/voter-ui && npm run build && cd ../observer-dashboard && npm run build && cd ../admin-portal && npm run build",
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "cd backend && npm test",
+    "test:frontend": "cd frontend/voter-ui && npm test && cd ../observer-dashboard && npm test && cd ../admin-portal && npm test",
+    "test:integration": "cd backend && npm run test:integration",
+    "test:e2e": "cd tests/e2e && npm test",
+    "test:load": "cd tests/load && k6 run vote-casting-load-test.js",
+    "lint": "npm run lint:backend && npm run lint:frontend",
+    "lint:backend": "cd backend && npm run lint",
+    "lint:frontend": "cd frontend/voter-ui && npm run lint && cd ../observer-dashboard && npm run lint && cd ../admin-portal && npm run lint",
+    "fabric:start": "cd blockchain && ./scripts/startNetwork.sh",
+    "fabric:stop": "cd blockchain && ./scripts/stopNetwork.sh",
+    "fabric:deploy": "cd blockchain && ./scripts/deployChaincode.sh",
+    "db:migrate": "cd backend && npm run db:migrate",
+    "db:seed": "cd backend && npm run db:seed",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "clean": "rm -rf node_modules backend/node_modules frontend/*/node_modules dist build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/navyaaasingh/ElectionManagement"
+  },
+  "keywords": [
+    "blockchain",
+    "hyperledger-fabric",
+    "election",
+    "voting",
+    "iot",
+    "biometric",
+    "security",
+    "transparency"
+  ],
+  "author": "Election Management Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  }
+}
