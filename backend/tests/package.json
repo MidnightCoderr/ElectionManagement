@@ -1,0 +1,41 @@
+{
+    "name": "election-backend-tests",
+    "version": "1.0.0",
+    "scripts": {
+        "test": "jest --coverage",
+        "test:watch": "jest --watch",
+        "test:api": "jest tests/api.test.js",
+        "test:security": "jest tests/security.test.js",
+        "test:unit": "jest tests/unit/",
+        "test:integration": "jest tests/integration/",
+        "test:load": "artillery run tests/load-test.yml",
+        "test:load:report": "artillery run tests/load-test.yml --output report.json && artillery report report.json",
+        "security:audit": "node src/utils/securityAudit.js",
+        "coverage": "jest --coverage --coverageReporters=html"
+    },
+    "jest": {
+        "testEnvironment": "node",
+        "coverageDirectory": "coverage",
+        "collectCoverageFrom": [
+            "src/**/*.js",
+            "!src/server.js",
+            "!src/**/index.js"
+        ],
+        "coverageThresholds": {
+            "global": {
+                "branches": 70,
+                "functions": 75,
+                "lines": 75,
+                "statements": 75
+            }
+        },
+        "testMatch": [
+            "**/tests/**/*.test.js"
+        ]
+    },
+    "devDependencies": {
+        "jest": "^29.7.0",
+        "supertest": "^6.3.3",
+        "artillery": "^2.0.0"
+    }
+}

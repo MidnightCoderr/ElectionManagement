@@ -1,0 +1,279 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop, staging]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  NODE_VERSION: '20.x'
+  PYTHON_VERSION: '3.11'
+  GO_VERSION: '1.21'
+
+jobs:
+  # Backend Tests
+  backend-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: election_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+      
+      - name: Run linter
+        working-directory: backend
+        run: npm run lint || true
+      
+      - name: Run unit tests
+        working-directory: backend/tests
+        run: npm test
+        env:
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: election_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          MONGODB_URI: mongodb://localhost:27017/election_test
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          JWT_SECRET: test_secret_key_for_ci
+          ENCRYPTION_MASTER_KEY: test_encryption_key_256_bits_long_for_testing
+      
+      - name: Run security audit
+        working-directory: backend
+        run: node src/utils/securityAudit.js || true
+      
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./backend/coverage/coverage-final.json
+          flags: backend
+
+  # Frontend Tests - Voter UI
+  voter-ui-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: voter-ui/package-lock.json
+      
+      - name: Install dependencies
+        working-directory: voter-ui
+        run: npm ci
+      
+      - name: Run build
+        working-directory: voter-ui
+        run: npm run build
+      
+      - name: Run lint
+        working-directory: voter-ui
+        run: npm run lint || true
+
+  # ML Service Tests
+  ml-service-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+      
+      - name: Install dependencies
+        working-directory: ml-service
+        run: |
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
+      
+      - name: Run tests
+        working-directory: ml-service
+        run: pytest --cov=. || true
+
+  # Blockchain Tests
+  blockchain-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      
+      - name: Run chaincode tests
+        working-directory: blockchain/chaincode
+        run: go test -v ./...
+
+  # Security Scanning
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+      
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+  # Build Docker Images
+  build-images:
+    needs: [backend-test, voter-ui-test, ml-service-test]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      
+      - name: Build and push Backend
+        uses: docker/build-push-action@v4
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/election-backend:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/election-backend:latest
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/election-backend:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/election-backend:buildcache,mode=max
+      
+      - name: Build and push ML Service
+        uses: docker/build-push-action@v4
+        with:
+          context: ./ml-service
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/election-ml:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/election-ml:latest
+      
+      - name: Build and push Voter UI
+        uses: docker/build-push-action@v4
+        with:
+          context: ./voter-ui
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/election-voter-ui:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/election-voter-ui:latest
+
+  # Deploy to Staging
+  deploy-staging:
+    needs: build-images
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment:
+      name: staging
+      url: https://staging.election-system.com
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+          export KUBECONFIG=./kubeconfig
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/election-backend:${{ github.sha }} -n staging
+          kubectl set image deployment/ml-service ml-service=${{ secrets.DOCKER_USERNAME }}/election-ml:${{ github.sha }} -n staging
+          kubectl set image deployment/voter-ui voter-ui=${{ secrets.DOCKER_USERNAME }}/election-voter-ui:${{ github.sha }} -n staging
+          kubectl rollout status deployment/backend -n staging
+      
+      - name: Run smoke tests
+        run: |
+          curl -f https://staging-api.election-system.com/health || exit 1
+
+  # Deploy to Production
+  deploy-production:
+    needs: build-images
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://election-system.com
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v3
+      
+      - name: Configure kubectl
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+          export KUBECONFIG=./kubeconfig
+      
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl set image deployment/backend backend=${{ secrets.DOCKER_USERNAME }}/election-backend:${{ github.sha }} -n production
+          kubectl set image deployment/ml-service ml-service=${{ secrets.DOCKER_USERNAME }}/election-ml:${{ github.sha }} -n production
+          kubectl set image deployment/voter-ui voter-ui=${{ secrets.DOCKER_USERNAME }}/election-voter-ui:${{ github.sha }} -n production
+          kubectl rollout status deployment/backend -n production
+      
+      - name: Run smoke tests
+        run: |
+          curl -f https://api.election-system.com/health || exit 1
+      
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Production deployment completed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()

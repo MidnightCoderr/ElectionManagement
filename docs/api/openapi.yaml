@@ -1,0 +1,456 @@
+openapi: 3.0.3
+info:
+  title: Secure Election Management System API
+  description: |
+    Blockchain-based election management system with biometric authentication,
+    IoT terminals, and ML fraud detection.
+    
+    ## Authentication
+    Most endpoints require JWT authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your_jwt_token>
+    ```
+    
+    ## Rate Limiting
+    - 100 requests per 15 minutes per IP
+    - Voting endpoints: 10 requests per hour per voter
+    
+    ## Error Responses
+    All error responses follow this format:
+    ```json
+    {
+      "success": false,
+      "message": "Error description",
+      "error": "Detailed error message"
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@election-system.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://staging-api.election-system.com/api/v1
+    description: Staging environment
+  - url: https://api.election-system.com/api/v1
+    description: Production environment
+
+tags:
+  - name: Authentication
+    description: Voter and admin authentication
+  - name: Votes
+    description: Vote casting and retrieval
+  - name: Elections
+    description: Election management
+  - name: Candidates
+    description: Candidate management
+  - name: Audit
+    description: Audit logs and compliance
+  - name: Voters
+    description: Voter management
+
+paths:
+  /auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register a new voter
+      description: Register voter with Aadhar and biometric template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - aadharNumber
+                - biometricTemplate
+                - districtId
+              properties:
+                aadharNumber:
+                  type: string
+                  pattern: '^\d{12}$'
+                  example: "123456789012"
+                biometricTemplate:
+                  type: string
+                  description: SHA-256 hash of fingerprint
+                  example: "a1b2c3d4e5f6..."
+                districtId:
+                  type: string
+                  format: uuid
+                  example: "d4d5fa69-2142-4e26-b7aa-8e5177a3d7bb"
+                email:
+                  type: string
+                  format: email
+                  example: "voter@example.com"
+                phoneNumber:
+                  type: string
+                  example: "+911234567890"
+      responses:
+        '201':
+          description: Voter registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Voter registered successfully"
+                  voterId:
+                    type: string
+                    format: uuid
+        '400':
+          description: Invalid input or duplicate registration
+        '500':
+          description: Server error
+
+  /auth/biometric:
+    post:
+      tags: [Authentication]
+      summary: Authenticate voter with biometric
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - biometricTemplate
+                - terminalId
+              properties:
+                biometricTemplate:
+                  type: string
+                terminalId:
+                  type: string
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+                    description: JWT token
+                  voter:
+                    $ref: '#/components/schemas/Voter'
+        '401':
+          description: Authentication failed
+
+  /auth/admin/login:
+    post:
+      tags: [Authentication]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  token:
+                    type: string
+                  role:
+                    type: string
+                    enum: [admin, observer]
+
+  /votes/cast:
+    post:
+      tags: [Votes]
+      summary: Cast a vote
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - voterId
+                - electionId
+                - candidateId
+                - district
+                - biometricHash
+                - terminalId
+              properties:
+                voterId:
+                  type: string
+                  format: uuid
+                electionId:
+                  type: string
+                  format: uuid
+                candidateId:
+                  type: string
+                  format: uuid
+                district:
+                  type: string
+                  format: uuid
+                biometricHash:
+                  type: string
+                terminalId:
+                  type: string
+      responses:
+        '201':
+          description: Vote cast successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  voteId:
+                    type: string
+                  blockchainTxId:
+                    type: string
+                  receipt:
+                    type: object
+        '400':
+          description: Already voted or invalid data
+        '401':
+          description: Unauthorized
+
+  /votes/results/{electionId}:
+    get:
+      tags: [Votes]
+      summary: Get election results
+      parameters:
+        - name: electionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Results retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        candidateId:
+                          type: string
+                        candidateName:
+                          type: string
+                        voteCount:
+                          type: integer
+                        percentage:
+                          type: number
+                  totalVotes:
+                    type: integer
+
+  /elections:
+    get:
+      tags: [Elections]
+      summary: List all elections
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Elections list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  elections:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Election'
+    post:
+      tags: [Elections]
+      summary: Create new election
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ElectionInput'
+      responses:
+        '201':
+          description: Election created
+        '403':
+          description: Admin access required
+
+  /audit:
+    get:
+      tags: [Audit]
+      summary: Get audit logs
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: eventType
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Audit logs retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  logs:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+                  pagination:
+                    type: object
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Voter:
+      type: object
+      properties:
+        voter_id:
+          type: string
+          format: uuid
+        aadhar_number:
+          type: string
+        district_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+        phone_number:
+          type: string
+        status:
+          type: string
+          enum: [active, blocked, pending]
+        created_at:
+          type: string
+          format: date-time
+
+    Election:
+      type: object
+      properties:
+        election_id:
+          type: string
+          format: uuid
+        election_name:
+          type: string
+        election_type:
+          type: string
+          enum: [GENERAL, LOCAL, REFERENDUM]
+        start_date:
+          type: string
+          format: date-time
+        end_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [SCHEDULED, ONGOING, COMPLETED]
+
+    ElectionInput:
+      type: object
+      required:
+        - electionName
+        - electionType
+        - startDate
+        - endDate
+      properties:
+        electionName:
+          type: string
+        electionType:
+          type: string
+          enum: [GENERAL, LOCAL, REFERENDUM]
+        startDate:
+          type: string
+          format: date-time
+        endDate:
+          type: string
+          format: date-time
+        description:
+          type: string
+
+    AuditLog:
+      type: object
+      properties:
+        _id:
+          type: string
+        eventType:
+          type: string
+        userId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        success:
+          type: boolean
+        ipAddress:
+          type: string
+        metadata:
+          type: object
