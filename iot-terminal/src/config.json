@@ -1,0 +1,18 @@
+{
+    "terminal_id": "TERM-001",
+    "district_id": "district-uuid-placeholder",
+    "polling_station": "PS-001 - Central Polling Station",
+    "mqtt_broker": "localhost",
+    "mqtt_port": 1883,
+    "mqtt_username": null,
+    "mqtt_password": null,
+    "sensor_port": "/dev/ttyUSB0",
+    "sensor_baud": 57600,
+    "display_type": "lcd",
+    "display_width": 320,
+    "display_height": 240,
+    "logging": {
+        "level": "INFO",
+        "file": "/var/log/voting_terminal.log"
+    }
+}

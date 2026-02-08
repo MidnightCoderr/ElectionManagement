@@ -49,6 +49,8 @@ tags:
     description: Election management
   - name: Candidates
     description: Candidate management
+  - name: IoT
+    description: IoT terminal management
   - name: Audit
     description: Audit logs and compliance
   - name: Voters
@@ -241,6 +243,51 @@ paths:
         '401':
           description: Unauthorized
 
+  /votes/verify/{voteId}:
+    get:
+      tags: [Votes]
+      summary: Verify a cast vote
+      description: Verify vote integrity and retrieve vote receipt details
+      parameters:
+        - name: voteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Vote verification successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      voteId:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [CONFIRMED, PENDING, REJECTED]
+                        example: CONFIRMED
+                      blockchainTxId:
+                        type: string
+                        example: "0xabc123..."
+                      timestamp:
+                        type: string
+                        format: date-time
+                      verified:
+                        type: boolean
+                        example: true
+        '404':
+          description: Vote not found
+
   /votes/results/{electionId}:
     get:
       tags: [Votes]
@@ -252,6 +299,16 @@ paths:
           schema:
             type: string
             format: uuid
+        - name: district
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [PRELIMINARY, FINAL, RECOUNT]
       responses:
         '200':
           description: Results retrieved
@@ -262,21 +319,41 @@ paths:
                 properties:
                   success:
                     type: boolean
-                  results:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        candidateId:
-                          type: string
-                        candidateName:
-                          type: string
-                        voteCount:
-                          type: integer
-                        percentage:
-                          type: number
-                  totalVotes:
-                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      electionId:
+                        type: string
+                        format: uuid
+                      electionName:
+                        type: string
+                      status:
+                        type: string
+                        enum: [SCHEDULED, ACTIVE, COMPLETED, CANCELLED]
+                      totalVotes:
+                        type: integer
+                      results:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            candidateId:
+                              type: string
+                              format: uuid
+                            candidateName:
+                              type: string
+                            partyName:
+                              type: string
+                            voteCount:
+                              type: integer
+                            percentage:
+                              type: number
+                              format: float
+                            rank:
+                              type: integer
+                      generatedAt:
+                        type: string
+                        format: date-time
 
   /elections:
     get:
@@ -312,6 +389,225 @@ paths:
       responses:
         '201':
           description: Election created
+        '403':
+          description: Admin access required
+
+  /candidates:
+    post:
+      tags: [Candidates]
+      summary: Add candidate to election
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - electionId
+                - candidateName
+                - partyName
+              properties:
+                electionId:
+                  type: string
+                  format: uuid
+                candidateName:
+                  type: string
+                  example: "John Smith"
+                partyName:
+                  type: string
+                  example: "Democratic Party"
+                partySymbol:
+                  type: string
+                  example: "🦅"
+                age:
+                  type: integer
+                  minimum: 25
+                manifesto:
+                  type: string
+                photoUrl:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: Candidate added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      candidateId:
+                        type: string
+                        format: uuid
+                      status:
+                        type: string
+                        enum: [ACTIVE, WITHDRAWN, DISQUALIFIED]
+        '400':
+          description: Invalid input or duplicate candidate
+        '403':
+          description: Admin access required
+        '422':
+          description: Election not in SCHEDULED status
+
+  /candidates/{electionId}:
+    get:
+      tags: [Candidates]
+      summary: List candidates for an election
+      parameters:
+        - name: electionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Candidates retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      candidates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            candidateId:
+                              type: string
+                              format: uuid
+                            candidateName:
+                              type: string
+                            partyName:
+                              type: string
+                            partySymbol:
+                              type: string
+                            photoUrl:
+                              type: string
+                            age:
+                              type: integer
+                            status:
+                              type: string
+                              enum: [ACTIVE, WITHDRAWN, DISQUALIFIED]
+        '404':
+          description: Election not found
+
+  /terminals:
+    get:
+      tags: [IoT]
+      summary: List all IoT voting terminals
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ONLINE, OFFLINE, MAINTENANCE, COMPROMISED, TAMPERED]
+        - name: districtId
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Terminals retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      terminals:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            terminalId:
+                              type: string
+                            macAddress:
+                              type: string
+                            districtId:
+                              type: string
+                              format: uuid
+                            status:
+                              type: string
+                            lastHeartbeat:
+                              type: string
+                              format: date-time
+                            batteryLevel:
+                              type: integer
+                            tamperSealIntact:
+                              type: boolean
+        '403':
+          description: Admin access required
+
+  /terminals/authorize:
+    post:
+      tags: [IoT]
+      summary: Authorize a new terminal by MAC address
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - terminalId
+                - macAddress
+                - districtId
+              properties:
+                terminalId:
+                  type: string
+                  example: "TERM-001"
+                macAddress:
+                  type: string
+                  pattern: '^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$'
+                  example: "00:1B:44:11:3A:B7"
+                districtId:
+                  type: string
+                  format: uuid
+                pollingStation:
+                  type: string
+      responses:
+        '201':
+          description: Terminal authorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      terminalId:
+                        type: string
+                      authorized:
+                        type: boolean
+                      authorizedAt:
+                        type: string
+                        format: date-time
+        '400':
+          description: Invalid MAC address or duplicate terminal
         '403':
           description: Admin access required
 
@@ -374,45 +670,49 @@ components:
     Voter:
       type: object
       properties:
-        voter_id:
+        voterId:
           type: string
           format: uuid
-        aadhar_number:
+        aadharNumber:
           type: string
-        district_id:
+        districtId:
           type: string
           format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
         email:
           type: string
-        phone_number:
+        phoneNumber:
           type: string
         status:
           type: string
-          enum: [active, blocked, pending]
-        created_at:
+          enum: [ACTIVE, BLOCKED, PENDING]
+        createdAt:
           type: string
           format: date-time
 
     Election:
       type: object
       properties:
-        election_id:
+        electionId:
           type: string
           format: uuid
-        election_name:
+        electionName:
           type: string
-        election_type:
+        electionType:
           type: string
-          enum: [GENERAL, LOCAL, REFERENDUM]
-        start_date:
+          enum: [GENERAL, LOCAL, REFERENDUM, BY_ELECTION]
+        startDate:
           type: string
           format: date-time
-        end_date:
+        endDate:
           type: string
           format: date-time
         status:
           type: string
-          enum: [SCHEDULED, ONGOING, COMPLETED]
+          enum: [SCHEDULED, ACTIVE, COMPLETED, CANCELLED]
 
     ElectionInput:
       type: object
