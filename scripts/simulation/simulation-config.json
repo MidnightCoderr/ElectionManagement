@@ -1,0 +1,25 @@
+{
+    "database": {
+        "host": "localhost",
+        "port": 5432,
+        "database": "election_db",
+        "user": "postgres",
+        "password": "password"
+    },
+    "mqtt": {
+        "host": "localhost",
+        "port": 1883
+    },
+    "scenarios": {
+        "demo": {
+            "voters": 1000,
+            "turnout": 75,
+            "description": "Quick demo with 1K voters"
+        },
+        "realistic": {
+            "voters": 25000,
+            "turnout": 67,
+            "description": "Realistic mid-size election"
+        }
+    }
+}
