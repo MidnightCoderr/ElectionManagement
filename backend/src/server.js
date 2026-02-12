@@ -12,6 +12,7 @@ import authRoutes from './routes/auth.routes.js';
 import voteRoutes from './routes/vote.routes.js';
 import electionRoutes from './routes/election.routes.js';
 import candidateRoutes from './routes/candidate.routes.js';
+import resultsRoutes from './routes/results.routes.js';
 import auditRoutes from './routes/audit.routes.js';
 import voterRoutes from './routes/voter.routes.js';
 
@@ -52,6 +53,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/votes', voteRoutes);
 app.use('/api/v1/elections', electionRoutes);
 app.use('/api/v1/candidates', candidateRoutes);
+app.use('/api/v1/results', resultsRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/voters', voterRoutes);
 

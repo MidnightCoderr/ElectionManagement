@@ -28,6 +28,7 @@ router.get('/', async (req, res) => {
         });
 
         res.json({
+            success: true,
             candidates,
             count: candidates.length,
         });
@@ -35,6 +36,7 @@ router.get('/', async (req, res) => {
     } catch (error) {
         console.error('Get candidates error:', error.message);
         res.status(500).json({
+            success: false,
             error: 'Failed to retrieve candidates',
             message: error.message,
         });
@@ -56,15 +58,20 @@ router.get('/:id', async (req, res) => {
 
         if (!candidate) {
             return res.status(404).json({
+                success: false,
                 error: 'Candidate not found',
             });
         }
 
-        res.json(candidate);
+        res.json({
+            success: true,
+            candidate,
+        });
 
     } catch (error) {
         console.error('Get candidate error:', error.message);
         res.status(500).json({
+            success: false,
             error: 'Failed to retrieve candidate',
             message: error.message,
         });
@@ -89,16 +96,41 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
         // Validate required fields
         if (!electionId || !fullName || !partyName || !districtId) {
             return res.status(400).json({
+                success: false,
                 error: 'Missing required fields',
                 required: ['electionId', 'fullName', 'partyName', 'districtId'],
             });
         }
 
-        // Verify election exists
+        // Verify election exists and is in valid state
         const election = await Election.findByPk(electionId);
         if (!election) {
             return res.status(404).json({
+                success: false,
                 error: 'Election not found',
+            });
+        }
+
+        // Cannot add candidates to active/completed elections
+        if (['active', 'completed', 'cancelled'].includes(election.status)) {
+            return res.status(403).json({
+                success: false,
+                error: `Cannot add candidates to election in ${election.status} status`,
+            });
+        }
+
+        // Check for duplicate candidate name
+        const existingCandidate = await Candidate.findOne({
+            where: {
+                election_id: electionId,
+                full_name: fullName,
+            },
+        });
+
+        if (existingCandidate) {
+            return res.status(400).json({
+                success: false,
+                error: 'Candidate with this name already exists in this election',
             });
         }
 
@@ -136,6 +168,7 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
     } catch (error) {
         console.error('Register candidate error:', error.message);
         res.status(500).json({
+            success: false,
             error: 'Failed to register candidate',
             message: error.message,
         });
@@ -148,11 +181,25 @@ router.post('/', authenticate, authorize('admin'), async (req, res) => {
  */
 router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
     try {
-        const candidate = await Candidate.findByPk(req.params.id);
+        const candidate = await Candidate.findByPk(req.params.id, {
+            include: [{
+                model: Election,
+                as: 'election',
+            }],
+        });
 
         if (!candidate) {
             return res.status(404).json({
+                success: false,
                 error: 'Candidate not found',
+            });
+        }
+
+        // Check election status
+        if (['active', 'completed', 'cancelled'].includes(candidate.election.status)) {
+            return res.status(403).json({
+                success: false,
+                error: `Cannot update candidate in ${candidate.election.status} election`,
             });
         }
 
@@ -174,10 +221,59 @@ router.put('/:id', authenticate, authorize('admin'), async (req, res) => {
     } catch (error) {
         console.error('Update candidate error:', error.message);
         res.status(500).json({
+            success: false,
             error: 'Failed to update candidate',
             message: error.message,
         });
     }
 });
 
+/**
+ * DELETE /api/v1/candidates/:id
+ * Delete candidate (Admin only, only from upcoming elections)
+ */
+router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const candidate = await Candidate.findByPk(id, {
+            include: [{
+                model: Election,
+                as: 'election',
+            }],
+        });
+
+        if (!candidate) {
+            return res.status(404).json({
+                success: false,
+                error: 'Candidate not found',
+            });
+        }
+
+        // Only allow deletion from upcoming elections
+        if (candidate.election.status !== 'upcoming') {
+            return res.status(403).json({
+                success: false,
+                error: 'Can only delete candidates from upcoming elections',
+            });
+        }
+
+        await candidate.destroy();
+
+        res.json({
+            success: true,
+            message: 'Candidate deleted successfully',
+        });
+
+    } catch (error) {
+        console.error('Delete candidate error:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to delete candidate',
+            message: error.message,
+        });
+    }
+});
+
 export default router;
+
