@@ -4,6 +4,8 @@ import crypto from 'crypto';
 import { Voter } from '../models/index.js';
 import { generateToken } from '../middleware/auth.middleware.js';
 import { authLimiter } from '../middleware/rateLimit.middleware.js';
+import logger from '../utils/logger.js';
+
 
 const router = express.Router();
 
@@ -12,6 +14,30 @@ const router = express.Router();
  * Register a new voter
  */
 router.post('/register-voter', async (req, res) => {
+
+    logger.info('VOTER_REGISTERED', {
+        email,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+    });
+
+    logger.warn('LOGIN_ATTEMPT', {
+        email,
+        success: true,
+        ip: req.ip
+    });
+
+    logger.warn('FAILED_LOGIN', {
+        email,
+        ip: req.ip
+    });
+
+    logger.error('SUSPICIOUS_ACTIVITY', {
+        reason: 'Multiple votes from same IP',
+        ip: req.ip
+    });
+
+
     try {
         const {
             aadharNumber,
