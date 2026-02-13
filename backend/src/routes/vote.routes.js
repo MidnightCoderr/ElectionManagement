@@ -12,6 +12,13 @@ const router = express.Router();
  * Cast a vote
  */
 router.post('/cast', voteLimiter, async (req, res) => {
+    logger.info('VOTE_CAST', {
+        voterId: req.body.voterId,
+        candidateId: req.body.candidateId,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+    });
+
     try {
         const {
             voterId,
