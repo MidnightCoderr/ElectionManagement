@@ -1,20 +1,20 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import dotenv from 'dotenv';
-import { initializeDatabases, closeDatabases } from './db/index.js';
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const dotenv = require('dotenv');
+const { initializeDatabases, closeDatabases  } = require('./db/index.js');
 
 // Load environment variables
 dotenv.config();
 
 // Import routes
-import authRoutes from './routes/auth.routes.js';
-import voteRoutes from './routes/vote.routes.js';
-import electionRoutes from './routes/election.routes.js';
-import candidateRoutes from './routes/candidate.routes.js';
-import resultsRoutes from './routes/results.routes.js';
-import auditRoutes from './routes/audit.routes.js';
-import voterRoutes from './routes/voter.routes.js';
+const authRoutes = require('./routes/auth.routes.js');
+const voteRoutes = require('./routes/vote.routes.js');
+const electionRoutes = require('./routes/election.routes.js');
+const candidateRoutes = require('./routes/candidate.routes.js');
+const resultsRoutes = require('./routes/results.routes.js');
+const auditRoutes = require('./routes/audit.routes.js');
+const voterRoutes = require('./routes/voter.routes.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -33,7 +33,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging middleware
-import logger from './utils/logger.js';
+const logger = require('./utils/logger.js');
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -123,4 +123,4 @@ process.on('SIGINT', async () => {
 // Start the server
 startServer();
 
-export default app;
+module.exports = app;

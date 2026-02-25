@@ -1,10 +1,10 @@
-import express from 'express';
-import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
-import { Voter } from '../models/index.js';
-import { generateToken } from '../middleware/auth.middleware.js';
-import { authLimiter } from '../middleware/rateLimit.middleware.js';
-import logger from '../utils/logger.js';
+const express = require('express');
+const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
+const { Voter  } = require('../models/index.js');
+const { generateToken  } = require('../middleware/auth.middleware.js');
+const { authLimiter  } = require('../middleware/rateLimit.middleware.js');
+const logger = require('../utils/logger.js');
 
 
 const router = express.Router();
@@ -276,4 +276,4 @@ router.get('/verify', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

@@ -1,10 +1,7 @@
-import { Gateway, Wallets } from 'fabric-network';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const { Gateway, Wallets } = require('fabric-network');
+const fs = require('fs/promises');
+const path = require('path');
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 class FabricService {
     constructor() {
@@ -238,4 +235,4 @@ class FabricService {
 // Create singleton instance
 const fabricService = new FabricService();
 
-export default fabricService;
+module.exports = fabricService;

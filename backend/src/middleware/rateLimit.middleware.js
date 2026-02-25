@@ -1,7 +1,7 @@
-import rateLimit from 'express-rate-limit';
+const rateLimit = require('express-rate-limit');
 
 // General API rate limiter - 100 requests per 15 minutes
-export const apiLimiter = rateLimit({
+exports.apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // Max 100 requests per window
     message: {
@@ -13,7 +13,7 @@ export const apiLimiter = rateLimit({
 });
 
 // Strict rate limiter for vote casting - 1 vote per election per voter
-export const voteLimiter = rateLimit({
+exports.voteLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour window
     max: 5, // Max 5 vote attempts per hour (to prevent abuse while allowing re-attempts on errors)
     message: {
@@ -26,7 +26,7 @@ export const voteLimiter = rateLimit({
 });
 
 // Auth rate limiter - 5 login attempts per 15 minutes
-export const authLimiter = rateLimit({
+exports.authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 5,
     message: {
@@ -38,7 +38,7 @@ export const authLimiter = rateLimit({
 });
 
 // Results query limiter - 30 requests per minute
-export const resultsLimiter = rateLimit({
+exports.resultsLimiter = rateLimit({
     windowMs: 60 * 1000, // 1 minute
     max: 30,
     message: {
@@ -48,10 +48,3 @@ export const resultsLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
 });
-
-export default {
-    apiLimiter,
-    voteLimiter,
-    authLimiter,
-    resultsLimiter,
-};

@@ -22,7 +22,7 @@ The ML fraud detection system monitors voting patterns in real-time to detect an
          │   Kafka Event Stream           │
          │   Topic: election-events       │
          └───────────────┬────────────────┘
-                         │
+                         │10
          ┌───────────────▼────────────────┐
          │   Feature Engineering          │
          │   (Apache Spark / Python)      │

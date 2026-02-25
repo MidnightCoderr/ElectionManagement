@@ -1,16 +1,16 @@
-import { Sequelize } from 'sequelize';
-import pg from 'pg';
-import mongoose from 'mongoose';
-import { createClient } from 'redis';
-import dotenv from 'dotenv';
+const { Sequelize } = require('sequelize');
+const pg = require('pg');
+const mongoose = require('mongoose');
+const { createClient } = require('redis');
+const dotenv = require('dotenv');
 
-dotenv.config();
+dotenv.config({ path: require('path').resolve(__dirname, '../../../.env') });
 
 // PostgreSQL Connection with Sequelize (ORM)
 const sequelize = new Sequelize(
     process.env.POSTGRES_DB || 'election_db',
     process.env.POSTGRES_USER || 'election_admin',
-    process.env.POSTGRES_PASSWORD || 'secure_password',
+    process.env.POSTGRES_PASSWORD || 'changeme_secure_password',
     {
         host: process.env.POSTGRES_HOST || 'localhost',
         port: process.env.POSTGRES_PORT || 5432,
@@ -32,7 +32,7 @@ const sequelize = new Sequelize(
 );
 
 // MongoDB Connection with Mongoose
-const mongoURI = `mongodb://${process.env.MONGO_USER || 'election_admin'}:${process.env.MONGO_PASSWORD || 'secure_password'}@${process.env.MONGO_HOST || 'localhost'}:${process.env.MONGO_PORT || 27017}/${process.env.MONGO_DB || 'election_logs'}?authSource=admin`;
+const mongoURI = process.env.MONGODB_URI || `mongodb://${process.env.MONGODB_USER || 'mongo_admin'}:${process.env.MONGODB_PASSWORD || 'changeme_mongo_password'}@${process.env.MONGODB_HOST || 'localhost'}:${process.env.MONGODB_PORT || 27017}/${process.env.MONGODB_DB || 'election_logs'}?authSource=admin`;
 
 mongoose.set('strictQuery', false);
 
@@ -82,7 +82,7 @@ const testPostgresConnection = async () => {
 };
 
 // Initialize all database connections
-export const initializeDatabases = async () => {
+const initializeDatabases = async () => {
     console.log('🔌 Initializing database connections...');
 
     await testPostgresConnection();
@@ -93,7 +93,7 @@ export const initializeDatabases = async () => {
 };
 
 // Close all connections gracefully
-export const closeDatabases = async () => {
+const closeDatabases = async () => {
     console.log('🔌 Closing database connections...');
 
     await sequelize.close();
@@ -103,11 +103,10 @@ export const closeDatabases = async () => {
     console.log('✅ All database connections closed');
 };
 
-export { sequelize, mongoose, redisClient };
-export default {
-    sequelize,
-    mongoose,
-    redisClient,
+module.exports = {
     initializeDatabases,
     closeDatabases,
+    sequelize,
+    mongoose,
+    redisClient
 };

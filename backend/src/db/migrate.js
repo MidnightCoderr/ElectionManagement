@@ -1,12 +1,8 @@
-import pg from 'pg';
-import fs from 'fs/promises';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
+const pg = require('pg');
+const fs = require('fs/promises');
+const path = require('path');
 const { Pool } = pg;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../../.env') });
 
 // Database connection configuration
 const pool = new Pool({
@@ -14,7 +10,7 @@ const pool = new Pool({
     port: process.env.POSTGRES_PORT || 5432,
     database: process.env.POSTGRES_DB || 'election_db',
     user: process.env.POSTGRES_USER || 'election_admin',
-    password: process.env.POSTGRES_PASSWORD || 'secure_password',
+    password: process.env.POSTGRES_PASSWORD || 'changeme_secure_password',
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 2000,
@@ -56,8 +52,8 @@ async function runMigration() {
 }
 
 // Run migration if called directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (require.main === module) {
     runMigration().catch(console.error);
 }
 
-export default runMigration;
+module.exports = runMigration;

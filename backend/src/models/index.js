@@ -1,8 +1,8 @@
-import Voter from './voter.model.js';
-import Election from './election.model.js';
-import Candidate from './candidate.model.js';
-import VotingRecord from './votingRecord.model.js';
-import AuditLog from './auditLog.model.js';
+const Voter = require('./voter.model.js');
+const Election = require('./election.model.js');
+const Candidate = require('./candidate.model.js');
+const VotingRecord = require('./votingRecord.model.js');
+const AuditLog = require('./auditLog.model.js');
 
 // Define relationships
 Election.hasMany(Candidate, {
@@ -32,15 +32,15 @@ VotingRecord.belongsTo(Voter, {
     as: 'voter',
 });
 
-export {
+Object.assign(module.exports, {
     Voter,
     Election,
     Candidate,
     VotingRecord,
     AuditLog,
-};
+});
 
-export default {
+module.exports = {
     Voter,
     Election,
     Candidate,
