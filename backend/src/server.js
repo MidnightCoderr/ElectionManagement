@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
-const { initializeDatabases, closeDatabases  } = require('./db/index.js');
+const { initializeDatabases, closeDatabases } = require('./db/index.js');
 
 // Load environment variables
 dotenv.config();
@@ -54,6 +54,10 @@ app.use('/api/v1/results', resultsRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/voters', voterRoutes);
 
+// Mock blockchain route for Verification Portal demo
+const blockchainMockRoutes = require('./routes/blockchain.mock.routes.js');
+app.use('/api/blockchain', blockchainMockRoutes);
+
 // API root endpoint
 app.get('/api/v1', (req, res) => {
     res.json({
@@ -69,13 +73,13 @@ app.get('/api/v1', (req, res) => {
 
 // Error handling middleware
 app.use((req, res, next) => {
-  logger.info('API_REQUEST', {
-    method: req.method,
-    path: req.path,
-    ip: req.ip,
-    timestamp: new Date().toISOString()
-  });
-  next();
+    logger.info('API_REQUEST', {
+        method: req.method,
+        path: req.path,
+        ip: req.ip,
+        timestamp: new Date().toISOString()
+    });
+    next();
 });
 
 // 404 handler

@@ -7,7 +7,7 @@ export default defineConfig({
         port: 3002,
         proxy: {
             '/api/blockchain': {
-                target: 'http://localhost:4000',  // Blockchain RPC
+                target: 'http://localhost:3000',  // Changed from 4000 to match backend
                 changeOrigin: true
             }
         }
