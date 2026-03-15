@@ -1,162 +1,49 @@
-import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { voteService } from '../services/vote';
+import { useVotingStore, ACTIONS } from '../store/votingStore.jsx'
+import { t } from '../i18n.js'
 
-const VoteConfirmation = () => {
-    const { t } = useTranslation();
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { candidate, election } = location.state || {};
+const SERIF = "'DM Serif Display', serif"
+const FONT  = "'DM Sans', sans-serif"
 
-    const [confirming, setConfirming] = useState(false);
-
-    const handleConfirm = async () => {
-        setConfirming(true);
-
-        try {
-            // Cast vote
-            const result = await voteService.castVote({
-                electionId: election.id,
-                candidateId: candidate.candidateId,
-                districtId: getDistrictId(),
-                terminalId: getTerminalId()
-            });
-
-            if (result.success) {
-                // Navigate to receipt with vote data
-                navigate('/receipt', {
-                    state: {
-                        receipt: result.receipt,
-                        candidate,
-                        election
-                    }
-                });
-            }
-        } catch (error) {
-            console.error('Vote casting error:', error);
-            alert(t('confirmation.error'));
-            setConfirming(false);
-        }
-    };
-
-    const handleCancel = () => {
-        navigate('/candidates');
-    };
-
-    const getDistrictId = () => {
-        const voter = JSON.parse(localStorage.getItem('voter') || '{}');
-        return voter.districtId;
-    };
-
-    const getTerminalId = () => {
-        return localStorage.getItem('terminalId') || 'TERM-001';
-    };
-
-    if (!candidate || !election) {
-        navigate('/');
-        return null;
-    }
-
-    return (
-        <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-yellow-100 flex items-center justify-center p-8">
-            <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-3xl w-full">
-                <div className="text-center mb-12">
-                    <div className="w-32 h-32 bg-yellow-400 rounded-full mx-auto mb-6 flex items-center justify-center">
-                        <span className="text-7xl">⚠️</span>
-                    </div>
-                    <h1 className="text-5xl font-bold text-gray-900 mb-4">
-                        {t('confirmation.title')}
-                    </h1>
-                    <p className="text-2xl text-gray-600">
-                        {t('confirmation.subtitle')}
-                    </p>
-                </div>
-
-                {/* Candidate Summary */}
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-3xl p-10 mb-10">
-                    <div className="flex items-center gap-8">
-                        {/* Photo */}
-                        <div className="flex-shrink-0">
-                            {candidate.photoUrl ? (
-                                <img
-                                    src={candidate.photoUrl}
-                                    alt={candidate.name}
-                                    className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-lg"
-                                />
-                            ) : (
-                                <div className="w-32 h-32 rounded-full bg-white flex items-center justify-center">
-                                    <span className="text-6xl">👤</span>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1">
-                            <h2 className="text-4xl font-bold text-gray-900 mb-2">
-                                {candidate.name}
-                            </h2>
-                            <p className="text-2xl text-gray-700 mb-3">
-                                {candidate.party}
-                            </p>
-                            <div className="flex items-center gap-3">
-                                <span className="text-5xl">{candidate.symbol}</span>
-                                <span className="text-xl text-gray-600">
-                                    ({t('candidates.symbol')})
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Confirmation Text */}
-                <div className="bg-blue-50 rounded-2xl p-8 mb-10 text-center">
-                    <p className="text-3xl font-semibold text-blue-900">
-                        {t('confirmation.question')}
-                    </p>
-                </div>
-
-                {/* Action Buttons - LARGE for accessibility */}
-                <div className="grid grid-cols-2 gap-8">
-                    <button
-                        onClick={handleCancel}
-                        disabled={confirming}
-                        className="py-10 bg-red-500 text-white rounded-3xl font-bold text-3xl hover:bg-red-600 transition-colors disabled:opacity-50"
-                    >
-                        <div className="flex flex-col items-center gap-3">
-                            <span className="text-6xl">✗</span>
-                            <span>{t('confirmation.no')}</span>
-                        </div>
-                    </button>
-
-                    <button
-                        onClick={handleConfirm}
-                        disabled={confirming}
-                        className="py-10 bg-green-500 text-white rounded-3xl font-bold text-3xl hover:bg-green-600 transition-colors disabled:opacity-50 relative"
-                    >
-                        {confirming ? (
-                            <div className="flex flex-col items-center gap-3">
-                                <div className="w-16 h-16 border-8 border-white border-t-transparent rounded-full animate-spin"></div>
-                                <span>{t('confirmation.processing')}</span>
-                            </div>
-                        ) : (
-                            <div className="flex flex-col items-center gap-3">
-                                <span className="text-6xl">✓</span>
-                                <span>{t('confirmation.yes')}</span>
-                            </div>
-                        )}
-                    </button>
-                </div>
-
-                {/* Warning */}
-                <div className="mt-10 text-center">
-                    <p className="text-xl text-red-600 font-semibold">
-                        ⚠️ {t('confirmation.warning')}
-                    </p>
-                </div>
-            </div>
+export default function VoteConfirmation() {
+  const { state, dispatch } = useVotingStore()
+  const { locale, selectedCandidate: c } = state
+  if (!c) return null
+  return (
+    <div style={{flex:1,display:'flex',flexDirection:'column',animation:'fadeSlideUp .4s ease'}}>
+      <div style={s.hdr}>{t('confirm', locale)}</div>
+      <div style={s.body}>
+        <div style={s.card}>
+          <div style={s.av}>
+            <svg viewBox="0 0 28 28" fill="none" stroke="#9d7dfd" strokeWidth="1.5" strokeLinecap="round" style={{width:30,height:30}}>
+              <circle cx="14" cy="9" r="4.5"/><path d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9"/>
+            </svg>
+          </div>
+          <div style={s.name}>{c.name}</div>
+          <div style={s.party}>{c.party}</div>
         </div>
-    );
-};
+        <div style={s.actions}>
+          <button style={s.confirm} onClick={() => dispatch({ type: ACTIONS.NEXT_STEP })}>
+            <div style={s.btnShine}/>
+            <span style={{position:'relative',zIndex:1}}>✓ &nbsp;{t('confirm_btn', locale)}</span>
+          </button>
+          <button style={s.change} onClick={() => dispatch({ type: ACTIONS.GO_TO_STEP, payload: 4 })}>
+            {t('change', locale)}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-export default VoteConfirmation;
+const s = {
+  hdr:     { background:'rgba(6,6,16,.92)',borderBottom:'1px solid rgba(255,255,255,0.05)',padding:'12px 15px',fontFamily:FONT,fontSize:11,fontWeight:600,textAlign:'center',color:'#f2f2ff' },
+  body:    { flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:24,background:'linear-gradient(160deg,#04040a,#0a0a16)' },
+  card:    { background:'rgba(255,255,255,0.038)',borderRadius:14,padding:22,textAlign:'center',border:'1px solid rgba(124,92,252,0.18)',width:'100%',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.05)' },
+  av:      { width:56,height:56,borderRadius:12,background:'rgba(91,63,212,0.14)',border:'1px solid rgba(124,92,252,0.13)',display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 12px' },
+  name:    { fontFamily:SERIF,fontSize:18,fontWeight:400,color:'#f2f2ff' },
+  party:   { fontFamily:FONT,fontSize:11,fontWeight:300,color:'#8a8aaa',marginTop:4 },
+  actions: { display:'flex',gap:10,width:'100%' },
+  confirm: { flex:1,background:'linear-gradient(135deg,rgba(124,92,252,0.88),rgba(91,63,212,.93))',color:'#fff',border:'1px solid rgba(180,160,255,0.17)',borderRadius:10,padding:'13px 0',fontFamily:FONT,fontSize:11,fontWeight:600,cursor:'pointer',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.17),0 5px 18px rgba(91,63,212,0.38)',minHeight:68,position:'relative',overflow:'hidden',display:'flex',alignItems:'center',justifyContent:'center' },
+  btnShine:{ position:'absolute',top:0,left:0,right:0,height:'50%',background:'linear-gradient(180deg,rgba(255,255,255,0.09),transparent)',borderRadius:'10px 10px 0 0',pointerEvents:'none' },
+  change:  { flex:1,background:'rgba(255,255,255,0.04)',color:'#5a5a78',border:'1px solid rgba(255,255,255,0.08)',borderRadius:10,padding:'13px 0',fontFamily:FONT,fontSize:11,fontWeight:500,cursor:'pointer',minHeight:68 },
+}

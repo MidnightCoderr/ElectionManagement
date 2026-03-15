@@ -1,80 +1,37 @@
-import axios from 'axios'
+/**
+ * api.js
+ * Base API client for the voter terminal.
+ * All services import from here.
+ */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false'
 
-const api = axios.create({
-    baseURL: API_BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-})
+export { MOCK_MODE }
 
-// Request interceptor to add auth token
-api.interceptors.request.use(
-    (config) => {
-        const token = localStorage.getItem('voterToken')
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`
-        }
-        return config
-    },
-    (error) => Promise.reject(error)
-)
+/**
+ * Authenticated fetch wrapper.
+ * Attaches the terminal JWT automatically if present in sessionStorage.
+ */
+export async function apiFetch(path, options = {}) {
+  const token = sessionStorage.getItem('terminal_token')
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...options.headers,
+  }
 
-// Response interceptor for error handling
-api.interceptors.response.use(
-    (response) => response,
-    (error) => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('voterToken')
-            window.location.href = '/'
-        }
-        return Promise.reject(error)
-    }
-)
+  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers })
 
-// Authentication
-export const authenticateBiometric = async (biometricHash, terminalId) => {
-    const response = await api.post('/auth/biometric', {
-        biometricTemplate: biometricHash,
-        terminalId,
-    })
-    return response.data
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.message || `HTTP ${res.status}`)
+  }
+
+  return res.json()
 }
 
-// Elections
-export const getActiveElections = async () => {
-    const response = await api.get('/elections?status=active')
-    return response.data
+/** Simulate network delay (mock mode only) */
+export function mockDelay(ms = 1000) {
+  return new Promise(r => setTimeout(r, ms + Math.random() * 400))
 }
-
-export const getElection = async (electionId) => {
-    const response = await api.get(`/elections/${electionId}`)
-    return response.data
-}
-
-// Candidates
-export const getCandidates = async (electionId, districtId) => {
-    const response = await api.get('/candidates', {
-        params: { electionId, districtId },
-    })
-    return response.data
-}
-
-// Voting
-export const castVote = async (voteData) => {
-    const response = await api.post('/votes/cast', voteData)
-    return response.data
-}
-
-export const checkVoterStatus = async (voterId, electionId) => {
-    const response = await api.get(`/votes/status/${voterId}/${electionId}`)
-    return response.data
-}
-
-export const getResults = async (electionId) => {
-    const response = await api.get(`/votes/results/${electionId}`)
-    return response.data
-}
-
-export default api

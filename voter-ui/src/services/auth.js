@@ -1,90 +1,43 @@
 /**
- * Authentication Service
- * Frontend service for biometric authentication
+ * auth.js
+ * Biometric authentication service.
+ * Calls POST /api/v1/auth/biometric with fingerprint scan data.
+ * In mock mode, returns a hardcoded voter after a simulated delay.
  */
 
-import axios from 'axios';
+import { apiFetch, mockDelay, MOCK_MODE } from './api.js'
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
+/**
+ * Authenticate a voter via fingerprint scan.
+ * @param {string} fingerprintData  — base64-encoded scan payload from terminal hardware
+ * @param {string} terminalId       — terminal identifier (e.g. 'TERM-00001')
+ * @returns {Promise<{ name: string, district: string, voterId: string }>}
+ */
+export async function authenticateVoter(fingerprintData, terminalId = 'TERM-00001') {
+  if (MOCK_MODE) {
+    await mockDelay(1200)
+    // Mock: always returns a successful voter
+    return { name: 'Ramesh Kumar', district: 'Mumbai Central', voterId: 'VOTER-MH-001234' }
+  }
 
-class AuthService {
-    /**
-     * Authenticate using biometric hash
-     * @param {Object} data - Auth data
-     * @param {String} data.biometricHash - SHA-256 hash of fingerprint
-     * @param {String} data.terminalId - Terminal ID
-     * @returns {Promise<Object>} Auth result with token
-     */
-    async biometricAuth({ biometricHash, terminalId }) {
-        try {
-            const response = await axios.post(`${API_URL}/auth/biometric`, {
-                biometricHash,
-                terminalId
-            });
+  const data = await apiFetch('/api/v1/auth/biometric', {
+    method: 'POST',
+    body: JSON.stringify({ fingerprintData, terminalId }),
+  })
 
-            return response.data;
-        } catch (error) {
-            console.error('Biometric auth error:', error);
-            throw this.handleError(error);
-        }
-    }
+  // Store terminal session token if provided
+  if (data.token) sessionStorage.setItem('terminal_token', data.token)
 
-    /**
-     * Get authentication header for API requests
-     * @returns {Object} Header object
-     */
-    getAuthHeader() {
-        const token = localStorage.getItem('authToken');
-
-        if (!token) {
-            throw new Error('Not authenticated');
-        }
-
-        return {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        };
-    }
-
-    /**
-     * Check if user is authenticated
-     * @returns {Boolean} Is authenticated
-     */
-    isAuthenticated() {
-        const token = localStorage.getItem('authToken');
-        const voter = localStorage.getItem('voter');
-        return !!(token && voter);
-    }
-
-    /**
-     * Get current voter info
-     * @returns {Object|null} Voter object
-     */
-    getCurrentVoter() {
-        const voter = localStorage.getItem('voter');
-        return voter ? JSON.parse(voter) : null;
-    }
-
-    /**
-     * Logout
-     */
-    logout() {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('voter');
-    }
-
-    /**
-     * Handle API errors
-     */
-    handleError(error) {
-        if (error.response) {
-            return new Error(error.response.data.error || 'Request failed');
-        } else if (error.request) {
-            return new Error('No response from server');
-        } else {
-            return new Error(error.message);
-        }
-    }
+  return { name: data.voter.name, district: data.voter.district, voterId: data.voter.id }
 }
 
-export const authService = new AuthService();
+/**
+ * Check if a voter has already voted (double-vote prevention).
+ * @param {string} voterId
+ * @returns {Promise<boolean>}
+ */
+export async function checkAlreadyVoted(voterId) {
+  if (MOCK_MODE) { await mockDelay(200); return false }
+  const data = await apiFetch(`/api/v1/auth/check/${voterId}`)
+  return data.alreadyVoted
+}

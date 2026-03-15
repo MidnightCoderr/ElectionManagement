@@ -1,65 +1,83 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-    LayoutDashboard,
-    Vote,
-    Users,
-    BarChart3,
-    Server,
-    FileText,
-    LogOut
-} from 'lucide-react';
-import './Sidebar.css';
+import './Sidebar.css'
 
-function Sidebar({ user, onLogout, activePage }) {
-    const navigate = useNavigate();
+const NAV = [
+  {
+    section: 'Main',
+    items: [
+      { id: 'dashboard',  icon: '📊', label: 'Dashboard' },
+      { id: 'elections',  icon: '🗳',  label: 'Elections' },
+      { id: 'candidates', icon: '👤', label: 'Candidates' },
+      { id: 'voters',     icon: '📋', label: 'Voters',     badge: '12K', badgeColor: 'blue' },
+    ],
+  },
+  {
+    section: 'Operations',
+    items: [
+      { id: 'terminals',  icon: '🖥',  label: 'Terminals',  badge: '3',  badgeColor: 'orange' },
+      { id: 'results',    icon: '📈', label: 'Results' },
+      { id: 'audit',      icon: '📜', label: 'Audit Log' },
+      { id: 'alerts',     icon: '🚨', label: 'Alerts',      badge: '5',  badgeColor: '' },
+    ],
+  },
+  {
+    section: 'System',
+    items: [
+      { id: 'users',      icon: '👥', label: 'Admin Users' },
+      { id: 'settings',   icon: '⚙',  label: 'Settings' },
+      { id: 'logs',       icon: '🔍', label: 'System Logs' },
+    ],
+  },
+]
 
-    const handleLogout = () => {
-        onLogout();
-        navigate('/login');
-    };
+export default function Sidebar({ activePage, onNavigate, admin }) {
+  return (
+    <aside className="sidebar">
+      {/* Brand */}
+      <div className="sidebar-brand">
+        <div className="sidebar-brand-icon">☸</div>
+        <div className="sidebar-brand-text">
+          <div className="top">Election Commission</div>
+          <div className="bottom">Admin Portal</div>
+        </div>
+      </div>
 
-    const menuItems = [
-        { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-        { id: 'elections', label: 'Elections', icon: Vote, path: '/elections' },
-        { id: 'candidates', label: 'Candidates', icon: Users, path: '/candidates' },
-        { id: 'results', label: 'Results', icon: BarChart3, path: '/results' },
-        { id: 'terminals', label: 'Terminals', icon: Server, path: '/terminals' },
-        { id: 'audit', label: 'Audit Logs', icon: FileText, path: '/audit' }
-    ];
+      {/* Nav */}
+      {NAV.map(({ section, items }) => (
+        <div className="sidebar-section" key={section}>
+          <div className="sidebar-section-label">{section}</div>
+          {items.map(item => (
+            <button
+              key={item.id}
+              className={`sidebar-item ${activePage === item.id ? 'active' : ''}`}
+              onClick={() => onNavigate(item.id)}
+            >
+              <span className="item-icon">{item.icon}</span>
+              <span className="item-label">{item.label}</span>
+              {item.badge && (
+                <span className={`item-badge ${item.badgeColor || ''}`}>
+                  {item.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      ))}
 
-    return (
-        <aside className="sidebar">
-            <div className="sidebar-header">
-                <h2>🗳️ Admin Portal</h2>
-                <p className="user-info">{user.username}</p>
-                <span className="user-role">{user.role}</span>
-            </div>
-
-            <nav className="sidebar-nav">
-                {menuItems.map(item => {
-                    const Icon = item.icon;
-                    return (
-                        <Link
-                            key={item.id}
-                            to={item.path}
-                            className={`nav-item ${activePage === item.id ? 'active' : ''}`}
-                        >
-                            <Icon size={20} />
-                            <span>{item.label}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            <div className="sidebar-footer">
-                <button onClick={handleLogout} className="logout-button">
-                    <LogOut size={20} />
-                    <span>Logout</span>
-                </button>
-            </div>
-        </aside>
-    );
+      {/* User card */}
+      <div className="sidebar-user">
+        <div className="sidebar-avatar">👤</div>
+        <div>
+          <div className="sidebar-user-name">{admin?.name || 'Admin User'}</div>
+          <div className="sidebar-user-role">{admin?.role || 'Super Admin'}</div>
+        </div>
+        <button
+          className="sidebar-logout-btn"
+          title="Logout"
+          onClick={() => onNavigate('logout')}
+        >
+          ↩
+        </button>
+      </div>
+    </aside>
+  )
 }
-
-export default Sidebar;
