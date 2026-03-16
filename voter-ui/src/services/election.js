@@ -1,111 +1,48 @@
 /**
- * Election Service
- * Frontend service for election and candidate operations
+ * election.js
+ * Fetches election metadata and candidate lists.
+ * Calls GET /api/v1/elections/:electionId/candidates
  */
 
-import axios from 'axios';
-import { authService } from './auth';
+import { apiFetch, mockDelay, MOCK_MODE } from './api.js'
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000/api/v1';
+/** @typedef {{ id: string, name: string, party: string, symbol: string, color: string, bg: string, photo: string }} Candidate */
 
-class ElectionService {
-    /**
-     * Get election by ID
-     * @param {String} electionId - Election ID
-     * @returns {Promise<Object>} Election data
-     */
-    async getElection(electionId) {
-        try {
-            const response = await axios.get(
-                `${API_URL}/elections/${electionId}`,
-                {
-                    headers: authService.getAuthHeader()
-                }
-            );
+/** Mock candidate list */
+const MOCK_CANDIDATES = [
+  { id: 'cand-a', name: 'Candidate A', party: 'Party X', symbol: '🦅', color: '#FF6B00', bg: '#fff8f0', photo: '👨‍💼' },
+  { id: 'cand-b', name: 'Candidate B', party: 'Party Y', symbol: '🌸', color: '#2563EB', bg: '#f0f4ff', photo: '👩‍💼' },
+  { id: 'cand-c', name: 'Candidate C', party: 'Party Z', symbol: '⭐', color: '#138808', bg: '#f0fff4', photo: '🧑‍💼' },
+]
 
-            return response.data.election;
-        } catch (error) {
-            console.error('Get election error:', error);
-            throw this.handleError(error);
-        }
-    }
-
-    /**
-     * Get all elections
-     * @param {Object} filters - Filter options
-     * @returns {Promise<Array>} Elections array
-     */
-    async getElections(filters = {}) {
-        try {
-            const response = await axios.get(
-                `${API_URL}/elections`,
-                {
-                    params: filters,
-                    headers: authService.getAuthHeader()
-                }
-            );
-
-            return response.data.elections;
-        } catch (error) {
-            console.error('Get elections error:', error);
-            throw this.handleError(error);
-        }
-    }
-
-    /**
-     * Get candidates for an election
-     * @param {String} electionId - Election ID
-     * @returns {Promise<Array>} Candidates array
-     */
-    async getCandidates(electionId) {
-        try {
-            const response = await axios.get(
-                `${API_URL}/elections/${electionId}/candidates`,
-                {
-                    headers: authService.getAuthHeader()
-                }
-            );
-
-            return response.data.candidates;
-        } catch (error) {
-            console.error('Get candidates error:', error);
-            throw this.handleError(error);
-        }
-    }
-
-    /**
-     * Get election results
-     * @param {String} electionId - Election ID
-     * @returns {Promise<Object>} Results data
-     */
-    async getResults(electionId) {
-        try {
-            const response = await axios.get(
-                `${API_URL}/results/${electionId}`,
-                {
-                    headers: authService.getAuthHeader()
-                }
-            );
-
-            return response.data;
-        } catch (error) {
-            console.error('Get results error:', error);
-            throw this.handleError(error);
-        }
-    }
-
-    /**
-     * Handle API errors
-     */
-    handleError(error) {
-        if (error.response) {
-            return new Error(error.response.data.error || 'Request failed');
-        } else if (error.request) {
-            return new Error('No response from server');
-        } else {
-            return new Error(error.message);
-        }
-    }
+/**
+ * Fetch all candidates for the current election and district.
+ * @param {string} districtId
+ * @param {string} electionId
+ * @returns {Promise<Candidate[]>}
+ */
+export async function getCandidates(districtId = 'mumbai-central', electionId = 'ge-2024') {
+  if (MOCK_MODE) { await mockDelay(300); return MOCK_CANDIDATES }
+  const data = await apiFetch(`/api/v1/candidates?electionId=${encodeURIComponent(electionId)}&districtId=${encodeURIComponent(districtId)}`)
+  return data.candidates
 }
 
-export const electionService = new ElectionService();
+/**
+ * Fetch current election metadata.
+ * @returns {Promise<{ id: string, name: string, date: string, status: string }>}
+ */
+export async function getElectionInfo() {
+  if (MOCK_MODE) {
+    await mockDelay(200)
+    return { id: 'ge-2024', name: 'General Election 2024', date: '2024-04-19', status: 'active' }
+  }
+  const data = await apiFetch('/api/v1/elections?status=active&limit=1')
+  const election = data.elections?.[0]
+  if (!election) throw new Error('No active election found')
+  return {
+    id: election.election_id,
+    name: election.election_name,
+    date: election.start_date,
+    status: election.status,
+  }
+}

@@ -248,6 +248,23 @@ Open browser → **http://localhost:5173**
 
 ## PART 8 — ML Fraud Detection Service (Optional)
 
+> **💡 Run via VS Code Google Colab Extension (Recommended):**  
+> If you don't want to run this locally, you can use Google Colab's compute engines directly inside your editor.
+> 1. Install the official `Google Colab` extension by Google in your VS Code / Cursor IDE. (It will also install the necessary Jupyter extensions).
+> 2. Create a new dummy file in VS Code anywhere called `test.ipynb` and open it.
+> 3. Click the **"Select Kernel"** button in the top-right corner of the notebook interface.
+> 4. From the dropdown, choose **"Select Another Kernel..."**, then select **"Colab"**, and sign into your Google Account if prompted.
+> 5. Choose your compute tier (e.g. Free T4 GPU or CPU).
+> 6. Once connected, open a VS Code terminal. The terminal (if supported by your connection method) and the notebook cells will now execute on Colab servers!
+> 
+> ```python
+> # If running via a notebook cell instead of the terminal, you can run:
+> !cd ElectionManagement/ml-analytics && pip install -r requirements.txt && python src/main.py
+> ```
+> *(Note: Colab will automatically forward port 5000 so your frontend can still reach `http://localhost:5000`)*
+
+### Local Setup (Alternative)
+
 ```bash
 # New terminal tab
 cd ElectionManagement/ml-analytics
@@ -279,6 +296,20 @@ Service runs on **http://localhost:5000**
 
 Requires: R307 fingerprint sensor connected via USB serial.
 
+> **💡 Run via VS Code Google Colab Extension:**  
+> Since the IoT terminal requires access to local hardware (like `/dev/tty.usbserial` for the fingerprint sensor), running this entirely in the cloud on Colab is generally **not recommended** because the cloud machine cannot easily access your physical USB ports.
+> However, if you are testing the backend integration without sensors, you can use Colab:
+> 1. Connect to Colab using the VS Code extension as described in Part 8.
+> 2. Open a Colab-connected terminal and run:
+> ```bash
+> cd ElectionManagement/iot-terminal
+> pip install -r requirements.txt
+> pip install pyserial paho-mqtt python-dotenv
+> ```
+> *(Note: The terminal requires MQTT, which Colab would need to reach via a public IP, ngrok tunnel, or by running the MQTT broker in Colab as well).*
+
+### Local Setup (For Hardware Access)
+
 ```bash
 cd ElectionManagement/iot-terminal
 
@@ -286,15 +317,8 @@ cd ElectionManagement/iot-terminal
 python3 -m venv venv
 source venv/bin/activate
 
-# Install
+# Install dependencies
 pip install -r requirements.txt
-```
-
-Installs: `python-escpos`, `qrcode`, `Pillow`.
-
-Also install MQTT and sensor deps:
-
-```bash
 pip install pyserial paho-mqtt python-dotenv
 ```
 
@@ -330,6 +354,16 @@ python src/terminal_main.py
 
 Use this to generate fake voters and votes for testing — no physical hardware required.
 
+> **💡 Run via VS Code Google Colab Extension (Recommended):**  
+> 1. Ensure you are connected to the Colab kernel in VS Code as described in Part 8.
+> 2. Open auto-forwarded ports for MQTT/Postgres if necessary, or run this script in a Colab-connected terminal:
+> ```bash
+> cd ElectionManagement/scripts/simulation
+> pip install -r requirements.txt
+> ```
+
+### Local Setup (Alternative)
+
 ```bash
 cd ElectionManagement/scripts/simulation
 
@@ -337,11 +371,9 @@ cd ElectionManagement/scripts/simulation
 python3 -m venv venv
 source venv/bin/activate
 
-# Install
+# Install dependencies
 pip install -r requirements.txt
 ```
-
-Installs: `Faker`, `psycopg2-binary`, `paho-mqtt`.
 
 ```bash
 # Run a small 100-voter simulation

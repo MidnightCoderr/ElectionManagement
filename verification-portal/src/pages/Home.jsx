@@ -1,197 +1,164 @@
-import React, { useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { Shield, Search, BarChart3, Lock, CheckCircle, ChevronRight, Zap, Eye } from 'lucide-react';
-import './Home.css';
+import { useState } from 'react'
+import QRScanner from '../components/QRScanner.jsx'
 
-function Home() {
-    const heroRef = useRef(null);
+export default function Home({ onVerify }) {
+  const [receipt, setReceipt]         = useState('')
+  const [showScanner, setShowScanner] = useState(false)
+  const [inputError, setInputError]   = useState('')
 
-    useEffect(() => {
-        const handler = (e) => {
-            if (!heroRef.current) return;
-            const { clientX, clientY } = e;
-            const { innerWidth, innerHeight } = window;
-            const x = (clientX / innerWidth - 0.5) * 20;
-            const y = (clientY / innerHeight - 0.5) * 20;
-            heroRef.current.style.setProperty('--tx', `${x}px`);
-            heroRef.current.style.setProperty('--ty', `${y}px`);
-        };
-        window.addEventListener('mousemove', handler);
-        return () => window.removeEventListener('mousemove', handler);
-    }, []);
+  function handleSubmit(e) {
+    e?.preventDefault?.()
+    const trimmed = receipt.trim().toUpperCase()
+    if (!trimmed) { setInputError('Please enter your receipt number.'); return }
+    setInputError(''); onVerify(trimmed)
+  }
 
-    const features = [
-        {
-            icon: <Shield size={28} />,
-            color: '#3b82f6',
-            title: 'Blockchain Immutability',
-            desc: 'Every vote is anchored to a Hyperledger Fabric ledger. Once recorded, it cannot be altered or deleted by anyone.',
-        },
-        {
-            icon: <Search size={28} />,
-            color: '#8b5cf6',
-            title: 'Instant Verification',
-            desc: 'Scan the QR code on your paper receipt or enter your Vote ID to confirm your vote exists on the chain.',
-        },
-        {
-            icon: <Lock size={28} />,
-            color: '#10b981',
-            title: 'Privacy Preserved',
-            desc: 'Verification confirms your vote was recorded — not who you voted for. Your ballot stays encrypted always.',
-        },
-        {
-            icon: <BarChart3 size={28} />,
-            color: '#f59e0b',
-            title: 'Public Results',
-            desc: 'Live tallies sourced directly from blockchain data. No intermediaries. No hidden manipulation.',
-        },
-    ];
+  function handleQRScan(id) { setShowScanner(false); setReceipt(id); onVerify(id) }
 
-    const steps = [
-        { num: '01', title: 'Get Your Receipt', desc: 'After voting, you receive a paper slip and a digital QR code as your cryptographic proof.' },
-        { num: '02', title: 'Scan or Enter ID', desc: 'Use your camera to scan the QR code, or manually type the Vote ID printed on your receipt.' },
-        { num: '03', title: 'Blockchain Confirmed', desc: 'Our system queries the Hyperledger Fabric ledger directly and returns your verification result in seconds.' },
-    ];
+  return (
+    <>
+      {showScanner && <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />}
+      <div style={s.page}>
+        <div style={s.bgGlow1} />
+        <div style={s.bgGlow2} />
 
-    return (
-        <div className="home-root">
-            {/* Nav */}
-            <nav className="home-nav">
-                <div className="nav-brand">
-                    <span className="nav-icon">🗳️</span>
-                    <span>Election Verification Portal</span>
-                </div>
-                <div className="nav-links">
-                    <Link to="/results">Results</Link>
-                    <Link to="/about">About</Link>
-                    <Link to="/verify" className="nav-cta">Verify Vote</Link>
-                </div>
-            </nav>
-
-            {/* Hero */}
-            <section className="hero" ref={heroRef}>
-                <div className="hero-glow glow-1" />
-                <div className="hero-glow glow-2" />
-                <div className="hero-inner">
-                    <div className="hero-badge">
-                        <Zap size={14} />
-                        <span>Powered by Hyperledger Fabric Blockchain</span>
-                    </div>
-                    <h1 className="hero-title">
-                        Your Vote.<br />
-                        <span className="gradient-text">Permanently Verified.</span>
-                    </h1>
-                    <p className="hero-sub">
-                        An independent, publicly auditable portal to confirm your vote was recorded on the blockchain — no login, no trust required.
-                    </p>
-                    <div className="hero-actions">
-                        <Link to="/verify" className="btn-primary">
-                            <Search size={18} />
-                            Verify My Vote
-                            <ChevronRight size={18} />
-                        </Link>
-                        <Link to="/results" className="btn-ghost">
-                            <BarChart3 size={18} />
-                            View Live Results
-                        </Link>
-                    </div>
-                    <div className="hero-trust">
-                        <span><CheckCircle size={14} /> No sign-up needed</span>
-                        <span><CheckCircle size={14} /> Open source</span>
-                        <span><CheckCircle size={14} /> Cryptographically verified</span>
-                    </div>
-                </div>
-
-                {/* floating card */}
-                <div className="hero-card">
-                    <div className="card-header">
-                        <div className="card-dot green" />
-                        <span>Vote Confirmed</span>
-                    </div>
-                    <div className="card-row">
-                        <span>Vote ID</span>
-                        <span className="card-mono">a1b2c3d4…ef90</span>
-                    </div>
-                    <div className="card-row">
-                        <span>Block</span>
-                        <span className="card-value">#4,821</span>
-                    </div>
-                    <div className="card-row">
-                        <span>Integrity</span>
-                        <span className="card-success">✓ Passed</span>
-                    </div>
-                    <div className="card-row">
-                        <span>Privacy</span>
-                        <span className="card-muted">🔒 Encrypted</span>
-                    </div>
-                    <div className="card-badge">⛓️ On-Chain · Hyperledger Fabric</div>
-                </div>
-            </section>
-
-            {/* Stats strip */}
-            <section className="stats-strip">
-                {[['100%', 'Blockchain Verified'], ['0', 'Tampered Votes'], ['< 2s', 'Verification Time'], ['Public', 'Audit Trail']].map(([v, l]) => (
-                    <div key={l} className="stat-item">
-                        <h3>{v}</h3>
-                        <p>{l}</p>
-                    </div>
-                ))}
-            </section>
-
-            {/* Features */}
-            <section className="features-section">
-                <div className="section-label">Why trust this?</div>
-                <h2 className="section-title">Built on cryptographic guarantees</h2>
-                <div className="features-grid">
-                    {features.map((f) => (
-                        <div key={f.title} className="feature-card" style={{ '--accent': f.color }}>
-                            <div className="feature-icon" style={{ background: `${f.color}20`, color: f.color }}>{f.icon}</div>
-                            <h3>{f.title}</h3>
-                            <p>{f.desc}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* How it works */}
-            <section className="how-section">
-                <div className="section-label">Simple process</div>
-                <h2 className="section-title">Verify in 3 steps</h2>
-                <div className="steps-grid">
-                    {steps.map((s) => (
-                        <div key={s.num} className="step-card">
-                            <span className="step-num">{s.num}</span>
-                            <h3>{s.title}</h3>
-                            <p>{s.desc}</p>
-                        </div>
-                    ))}
-                </div>
-                <div className="how-cta">
-                    <Link to="/verify" className="btn-primary">
-                        <Search size={18} />
-                        Start Verification
-                        <ChevronRight size={18} />
-                    </Link>
-                </div>
-            </section>
-
-            {/* Footer */}
-            <footer className="home-footer">
-                <div className="footer-brand">
-                    <span>🗳️</span>
-                    <span>Election Verification Portal</span>
-                </div>
-                <div className="footer-links">
-                    <Link to="/verify">Verify Vote</Link>
-                    <Link to="/results">Results</Link>
-                    <Link to="/about">About</Link>
-                </div>
-                <p className="footer-disclaimer">
-                    Academic research prototype · Not for live elections · No data stored on this portal
-                </p>
-            </footer>
+        <div style={s.header}>
+          <div style={s.logoRing}></div>
+          <h1 style={s.title}>Vote Verification</h1>
+          <p style={s.subtitle}>Election Commission of India  General Election 2024</p>
+          <div style={s.flagBar} />
         </div>
-    );
+
+        <div style={s.card}>
+          <h2 style={s.cardTitle}> Verify Your Vote Receipt</h2>
+          <p style={s.cardDesc}>Enter your receipt number or scan the QR code to confirm your vote was recorded on the blockchain.</p>
+
+          <label style={s.label} htmlFor="receipt-input">Receipt Number</label>
+          <input
+            id="receipt-input"
+            style={{ ...s.input, ...(inputError ? s.inputErr : {}) }}
+            type="text" value={receipt} placeholder="e.g. 12ABC34" maxLength={20}
+            autoComplete="off" spellCheck={false}
+            onChange={e => { setReceipt(e.target.value); setInputError('') }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          />
+          {inputError && <p style={s.errHint}> {inputError}</p>}
+          <p style={s.hint}>Printed on your paper voting slip.</p>
+
+          <div style={s.divider}><span style={s.dividerLine}/><span style={s.dividerText}>OR</span><span style={s.dividerLine}/></div>
+
+          <button style={s.qrBox} onClick={() => setShowScanner(true)} type="button">
+            <span style={{ fontSize:28 }}></span>
+            <div>
+              <div style={{ fontWeight:700, fontSize:14, color:'#f0f0ff' }}>Scan QR Code</div>
+              <div style={{ fontSize:11, color:'rgba(160,160,192,0.7)', marginTop:2 }}>Use camera to scan receipt QR</div>
+            </div>
+            <span style={{ marginLeft:'auto', color:'rgba(124,92,252,0.8)', fontSize:18 }}></span>
+          </button>
+
+          <button style={s.verifyBtn} onClick={handleSubmit} type="button">
+             &nbsp;Verify on Blockchain
+          </button>
+        </div>
+
+        <div style={s.infoGrid}>
+          {[
+            { icon:'', title:'Anonymous',  desc:'Your identity is never revealed.' },
+            { icon:'',  title:'Blockchain', desc:'Verified on Hyperledger Fabric.' },
+            { icon:'', title:'Instant',    desc:'Results in under 3 seconds.' },
+          ].map(({ icon, title, desc }) => (
+            <div key={title} style={s.infoCard}>
+              <span style={{ fontSize:22 }}>{icon}</span>
+              <div style={{ fontWeight:700, fontSize:12, color:'#f0f0ff', marginTop:6 }}>{title}</div>
+              <div style={{ fontSize:11, color:'rgba(160,160,192,0.7)', marginTop:3, lineHeight:1.5 }}>{desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <p style={s.footer}>
+          <a href="https://eci.gov.in" target="_blank" rel="noopener" style={s.link}>Election Commission of India</a>
+          &nbsp;&nbsp;<a href="#faq" style={s.link}>Help &amp; FAQ</a>
+        </p>
+      </div>
+    </>
+  )
 }
 
-export default Home;
+const s = {
+  page: {
+    minHeight:'100vh', background:'#09090f',
+    display:'flex', flexDirection:'column', alignItems:'center',
+    padding:'48px 16px 40px', fontFamily:"'DM Sans',sans-serif",
+    color:'#f0f0ff', position:'relative', overflow:'hidden',
+  },
+  bgGlow1: {
+    position:'fixed', top:-100, left:'30%', width:500, height:500, borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(124,92,252,0.08) 0%,transparent 70%)',
+    pointerEvents:'none', zIndex:0,
+  },
+  bgGlow2: {
+    position:'fixed', bottom:-100, right:'20%', width:400, height:400, borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(91,63,212,0.06) 0%,transparent 70%)',
+    pointerEvents:'none', zIndex:0,
+  },
+  header: { textAlign:'center', marginBottom:32, position:'relative', zIndex:1 },
+  logoRing: {
+    fontSize:52, lineHeight:1, marginBottom:10,
+    filter:'drop-shadow(0 0 20px rgba(124,92,252,0.5))',
+  },
+  title:    { fontSize:26, fontWeight:800, color:'#f0f0ff', margin:0 },
+  subtitle: { fontSize:13, color:'rgba(160,160,192,0.7)', marginTop:5 },
+  flagBar: {
+    width:100, height:3, margin:'12px auto 0',
+    background:'linear-gradient(90deg,var(--p1),var(--p2),var(--p3))',
+    borderRadius:2,
+  },
+  card: {
+    width:'100%', maxWidth:460, position:'relative', zIndex:1,
+    background:'rgba(22,22,37,0.8)', backdropFilter:'blur(16px)',
+    border:'1px solid rgba(255,255,255,0.08)', borderRadius:20,
+    padding:28, boxShadow:'0 24px 64px rgba(0,0,0,.6),0 0 0 1px rgba(124,92,252,0.1)',
+    marginBottom:16,
+  },
+  cardTitle: { fontSize:16, fontWeight:800, color:'#f0f0ff', marginBottom:8 },
+  cardDesc:  { fontSize:12, color:'rgba(160,160,192,0.7)', lineHeight:1.6, marginBottom:20 },
+  label: {
+    display:'block', color:'rgba(160,160,192,0.7)', fontSize:10, fontWeight:700,
+    textTransform:'uppercase', letterSpacing:'.06em', marginBottom:5,
+  },
+  input: {
+    width:'100%', background:'rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.1)',
+    color:'#f0f0ff', borderRadius:10, padding:'12px 14px',
+    fontFamily:"'Courier New',monospace", fontSize:15, fontWeight:700,
+    letterSpacing:'.06em', outline:'none', transition:'all .2s', marginBottom:4,
+  },
+  inputErr: { borderColor:'rgba(240,79,88,0.6)' },
+  errHint:  { color:'#f04f58', fontSize:11, marginBottom:4 },
+  hint:     { fontSize:11, color:'rgba(96,96,128,0.8)', marginBottom:18 },
+  divider:  { display:'flex', alignItems:'center', gap:10, margin:'4px 0 14px' },
+  dividerLine: { flex:1, height:1, background:'rgba(255,255,255,0.08)' },
+  dividerText: { color:'rgba(160,160,192,0.5)', fontSize:12 },
+  qrBox: {
+    width:'100%', display:'flex', alignItems:'center', gap:12,
+    background:'rgba(0,0,0,0.3)', border:'1px dashed rgba(124,92,252,0.3)',
+    borderRadius:12, padding:'12px 14px', cursor:'pointer', marginBottom:16,
+    textAlign:'left', color:'#f0f0ff', fontFamily:'inherit', transition:'border-color .2s',
+  },
+  verifyBtn: {
+    width:'100%', background:'linear-gradient(135deg,#7c5cfc,#9d7dfd)', color:'#fff',
+    border:'none', borderRadius:12, padding:'15px 0', fontFamily:'inherit',
+    fontSize:15, fontWeight:800, cursor:'pointer',
+    boxShadow:'0 8px 24px rgba(124,92,252,0.4)', transition:'opacity .2s',
+  },
+  infoGrid: {
+    display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10,
+    width:'100%', maxWidth:460, marginBottom:20, position:'relative', zIndex:1,
+  },
+  infoCard: {
+    background:'rgba(22,22,37,0.6)', border:'1px solid rgba(255,255,255,0.06)',
+    borderRadius:12, padding:'12px 10px', textAlign:'center',
+    backdropFilter:'blur(8px)',
+  },
+  footer: { color:'rgba(96,96,128,0.8)', fontSize:11, textAlign:'center', position:'relative', zIndex:1 },
+  link:   { color:'#7c5cfc', textDecoration:'none' },
+}

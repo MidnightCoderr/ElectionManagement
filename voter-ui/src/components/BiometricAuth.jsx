@@ -1,91 +1,110 @@
-import { useState } from 'react'
-import { useVotingStore } from '../store/votingStore'
-import { authenticateBiometric } from '../services/api'
+import { useEffect, useState } from 'react'
+import { useVotingStore, ACTIONS } from '../store/votingStore.jsx'
+import { t, AUDIO_MSGS, LOCALES } from '../i18n.js'
 
-export default function BiometricAuth({ onSuccess }) {
-    const [scanning, setScanning] = useState(false)
-    const [error, setError] = useState(null)
-    const { setVoter, setError: setStoreError } = useVotingStore()
+const SERIF = "'DM Serif Display', serif"
+const FONT  = "'DM Sans', sans-serif"
 
-    const handleScan = async () => {
-        setScanning(true)
-        setError(null)
+export default function BiometricAuth() {
+  const { state, dispatch } = useVotingStore()
+  const { locale, voter } = state
+  const [count, setCount] = useState(5)
 
-        try {
-            // In production, this would communicate with the IoT terminal
-            // For demo, simulating biometric capture
-            await new Promise(resolve => setTimeout(resolve, 2000))
+  useEffect(() => {
+    const id = setInterval(() => setCount(c=>{
+      if(c<=1){clearInterval(id);dispatch({type:ACTIONS.NEXT_STEP});return 0}
+      return c-1
+    }),1000)
+    return () => clearInterval(id)
+  }, [dispatch])
 
-            // Simulate biometric hash (in production, comes from terminal)
-            const simulatedHash = crypto.randomUUID().replace(/-/g, '')
-            const terminalId = 'TERMINAL_001'
+  useEffect(() => {
+    const msg = AUDIO_MSGS[3]?.[locale]||AUDIO_MSGS[3].en
+    if(!('speechSynthesis' in window)) return
+    const u = new SpeechSynthesisUtterance(msg)
+    u.lang=LOCALES.find(l=>l.code===locale)?.lang||'en-IN'; u.rate=0.9
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u)
+    return () => window.speechSynthesis.cancel()
+  }, [locale])
 
-            const response = await authenticateBiometric(simulatedHash, terminalId)
+  return (
+    <div style={s.wrap}>
+      <div style={s.glow}/>
+      <div style={s.badge}>
+        <div style={s.badgeShine}/>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"
+          strokeLinecap="round" strokeLinejoin="round"
+          style={{width:36,height:36,position:'relative',zIndex:1}}>
+          <path d="M5 13l4 4L19 7"/>
+        </svg>
+      </div>
+      <div style={s.tag}>Identity Verified</div>
+      <div style={s.name}>{voter?.name||'Voter'}</div>
+      <div style={s.dist}>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" style={{flexShrink:0}}>
+          <path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z"/><circle cx="7" cy="5" r="1.5"/>
+        </svg>
+        {t('district',locale)}: {voter?.district||''}
+      </div>
+      <button style={s.btn} onClick={()=>dispatch({type:ACTIONS.NEXT_STEP})}>
+        <span style={{position:'relative',zIndex:1}}>{t('start_voting',locale)}</span>
+        <span style={s.countBadge}>{count}s</span>
+        <div style={s.btnShine}/>
+      </button>
+    </div>
+  )
+}
 
-            if (response.success) {
-                localStorage.setItem('voterToken', response.token)
-                setVoter(response.voter)
-                onSuccess(response.voter)
-            } else {
-                throw new Error('Authentication failed')
-            }
-        } catch (err) {
-            const errorMsg = err.response?.data?.message || 'Biometric authentication failed'
-            setError(errorMsg)
-            setStoreError(errorMsg)
-        } finally {
-            setScanning(false)
-        }
-    }
-
-    return (
-        <div className="card max-w-md mx-auto text-center">
-            <div className="mb-6">
-                <div className="w-24 h-24 mx-auto mb-4 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center">
-                    <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
-                    </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                    Biometric Authentication
-                </h2>
-                <p className="text-slate-600">
-                    Place your finger on the sensor to authenticate
-                </p>
-            </div>
-
-            {error && (
-                <div className="mb-4 p-4 bg-error-50 border-l-4 border-error-500 rounded">
-                    <p className="text-error-700 font-medium">{error}</p>
-                </div>
-            )}
-
-            <button
-                onClick={handleScan}
-                disabled={scanning}
-                className={`btn-primary w-full ${scanning ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-                {scanning ? (
-                    <span className="flex items-center justify-center">
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Scanning...
-                    </span>
-                ) : (
-                    'Scan Fingerprint'
-                )}
-            </button>
-
-            <div className="mt-6 pt-6 border-t border-slate-200">
-                <div className="flex items-center justify-center text-sm text-slate-500">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                    </svg>
-                    <span>Your biometric data is encrypted and never stored</span>
-                </div>
-            </div>
-        </div>
-    )
+const s = {
+  wrap:{
+    flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+    gap:24,padding:'48px 32px',
+    background:'linear-gradient(160deg,#040408,#08081a)',
+    position:'relative',overflow:'hidden',
+  },
+  glow:{
+    position:'absolute',top:'25%',left:'50%',transform:'translate(-50%,-50%)',
+    width:'60vw',height:'60vw',maxWidth:500,maxHeight:500,borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(91,63,212,0.08) 0%,transparent 70%)',
+    pointerEvents:'none',
+  },
+  badge:{
+    width:'clamp(80px,10vw,100px)',height:'clamp(80px,10vw,100px)',
+    borderRadius:18,
+    background:'linear-gradient(145deg,rgba(124,92,252,0.28),rgba(91,63,212,0.38))',
+    display:'flex',alignItems:'center',justifyContent:'center',
+    border:'1px solid rgba(180,160,255,0.13)',
+    boxShadow:'inset 0 2px 0 rgba(255,255,255,0.13),0 12px 32px rgba(91,63,212,0.28)',
+    position:'relative',overflow:'hidden',
+  },
+  badgeShine:{
+    position:'absolute',top:0,left:0,right:0,height:'50%',
+    background:'linear-gradient(180deg,rgba(255,255,255,0.13),transparent)',
+    borderRadius:'18px 18px 0 0',
+  },
+  tag:{fontFamily:FONT,fontSize:11,fontWeight:600,color:'rgba(157,125,253,0.7)',letterSpacing:'.1em',textTransform:'uppercase'},
+  name:{fontFamily:SERIF,fontSize:'clamp(24px,4vw,38px)',fontWeight:400,color:'#f2f2ff',textAlign:'center'},
+  dist:{
+    fontFamily:FONT,fontSize:13,color:'#3e3e58',
+    background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',
+    borderRadius:8,padding:'6px 16px',display:'flex',alignItems:'center',gap:6,
+  },
+  btn:{
+    width:'clamp(280px,40vw,480px)',border:'none',borderRadius:14,padding:'16px 24px',
+    fontFamily:FONT,fontSize:15,fontWeight:700,color:'#fff',cursor:'pointer',
+    background:'linear-gradient(135deg,rgba(124,92,252,0.88),rgba(91,63,212,.93))',
+    border:'1px solid rgba(180,160,255,0.17)',
+    boxShadow:'inset 0 1px 0 rgba(255,255,255,0.17),0 8px 24px rgba(91,63,212,0.42)',
+    display:'flex',alignItems:'center',justifyContent:'center',gap:12,
+    marginTop:8,position:'relative',overflow:'hidden',
+  },
+  countBadge:{
+    background:'rgba(0,0,0,0.25)',borderRadius:7,padding:'3px 10px',fontSize:12,fontWeight:600,
+    position:'relative',zIndex:1,
+  },
+  btnShine:{
+    position:'absolute',top:0,left:0,right:0,height:'50%',
+    background:'linear-gradient(180deg,rgba(255,255,255,0.09),transparent)',
+    borderRadius:'14px 14px 0 0',pointerEvents:'none',
+  },
 }

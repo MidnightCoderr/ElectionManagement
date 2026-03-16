@@ -1,214 +1,134 @@
-import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
-import { QrCode, Search, CheckCircle, XCircle, ArrowLeft, Camera } from 'lucide-react';
-import QRScanner from '../components/QRScanner';
-import blockchainService from '../services/blockchainService';
-import './VerifyReceipt.css';
+import { useState, useEffect } from 'react'
+import { verifyReceipt, formatTimestamp } from '../services/blockchainService.js'
 
-function VerifyReceipt() {
-    const [mode, setMode] = useState('choose'); // choose, scan, manual
-    const [voteId, setVoteId] = useState('');
-    const [verificationResult, setVerificationResult] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
+export default function VerifyReceipt({ receiptId, onBack }) {
+  const [status, setStatus] = useState('loading')
+  const [result, setResult] = useState(null)
+  useEffect(() => {
+    setStatus('loading'); setResult(null)
+    verifyReceipt(receiptId).then(res => { setResult(res); setStatus(res.verified ? 'success' : 'error') })
+  }, [receiptId])
 
-    const handleQRScan = async (data) => {
-        if (data) {
-            try {
-                // Parse QR code data (format: vote_id|zkp_commitment|timestamp)
-                const parts = data.split('|');
-                const scannedVoteId = parts[0];
+  return (
+    <div style={s.page}>
+      <div style={s.bgGlow} />
+      <div style={s.header}>
+        <div style={s.logo}></div>
+        <h1 style={s.title}>Vote Verification</h1>
+        <p style={s.subtitle}>Election Commission of India</p>
+        <div style={s.flagBar} />
+      </div>
+      <div style={{ width:'100%', maxWidth:460, marginBottom:14, position:'relative', zIndex:1 }}>
+        <button style={s.backBtn} onClick={onBack}> Back to Search</button>
+      </div>
 
-                await verifyVote(scannedVoteId);
-            } catch (err) {
-                setError('Invalid QR code format');
-            }
-        }
-    };
-
-    const handleManualSubmit = async (e) => {
-        e.preventDefault();
-        if (voteId.trim()) {
-            await verifyVote(voteId.trim());
-        }
-    };
-
-    const verifyVote = async (id) => {
-        setLoading(true);
-        setError('');
-        setVerificationResult(null);
-
-        try {
-            // Query blockchain for vote
-            const result = await blockchainService.verifyVote(id);
-
-            setVerificationResult(result);
-
-            // Scroll to result
-            setTimeout(() => {
-                document.getElementById('result-section')?.scrollIntoView({
-                    behavior: 'smooth'
-                });
-            }, 100);
-        } catch (err) {
-            console.error('Verification error:', err);
-            setError(err.message || 'Failed to verify vote. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const resetVerification = () => {
-        setMode('choose');
-        setVoteId('');
-        setVerificationResult(null);
-        setError('');
-    };
-
-    return (
-        <div className="verify-container">
-            <header className="verify-header">
-                <Link to="/" className="back-link">
-                    <ArrowLeft size={20} />
-                    Back to Home
-                </Link>
-                <h1>Verify Your Vote</h1>
-                <p>Choose how you want to verify your vote:</p>
-            </header>
-
-            {mode === 'choose' && (
-                <div className="mode-selection">
-                    <button className="mode-button" onClick={() => setMode('scan')}>
-                        <Camera size={48} />
-                        <h3>Scan QR Code</h3>
-                        <p>Use your camera to scan the receipt</p>
-                    </button>
-
-                    <button className="mode-button" onClick={() => setMode('manual')}>
-                        <Search size={48} />
-                        <h3>Enter Vote ID</h3>
-                        <p>Manually type your vote ID</p>
-                    </button>
-                </div>
-            )}
-
-            {mode === 'scan' && (
-                <div className="scan-section">
-                    <button className="change-mode-btn" onClick={resetVerification}>
-                        ← Change Method
-                    </button>
-
-                    <div className="scanner-container">
-                        <h3>Position QR Code in Frame</h3>
-                        <QRScanner onScan={handleQRScan} />
-                    </div>
-                </div>
-            )}
-
-            {mode === 'manual' && (
-                <div className="manual-section">
-                    <button className="change-mode-btn" onClick={resetVerification}>
-                        ← Change Method
-                    </button>
-
-                    <form onSubmit={handleManualSubmit} className="manual-form">
-                        <label htmlFor="vote-id">Enter Your Vote ID:</label>
-                        <input
-                            id="vote-id"
-                            type="text"
-                            value={voteId}
-                            onChange={(e) => setVoteId(e.target.value)}
-                            placeholder="e.g., a1b2c3d4-e5f6-7890-abcd-1234567890ab"
-                            required
-                        />
-                        <button type="submit" disabled={loading}>
-                            {loading ? 'Verifying...' : 'Verify Vote'}
-                        </button>
-                    </form>
-                </div>
-            )}
-
-            {error && (
-                <div className="error-message">
-                    <XCircle size={20} />
-                    {error}
-                </div>
-            )}
-
-            {loading && (
-                <div className="loading-state">
-                    <div className="spinner"></div>
-                    <p>Verifying on blockchain...</p>
-                </div>
-            )}
-
-            {verificationResult && (
-                <div id="result-section" className="result-section">
-                    {verificationResult.verified ? (
-                        <div className="result-card success">
-                            <div className="result-icon">
-                                <CheckCircle size={64} />
-                            </div>
-                            <h2>✅ Vote Verified!</h2>
-                            <p className="result-message">
-                                Your vote was successfully recorded on the blockchain
-                            </p>
-
-                            <div className="result-details">
-                                <div className="detail-row">
-                                    <span className="label">Vote ID:</span>
-                                    <span className="value">{verificationResult.voteId}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Election:</span>
-                                    <span className="value">{verificationResult.electionName}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Timestamp:</span>
-                                    <span className="value">
-                                        {new Date(verificationResult.timestamp).toLocaleString()}
-                                    </span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Block Number:</span>
-                                    <span className="value">#{verificationResult.blockNumber}</span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Transaction Hash:</span>
-                                    <span className="value monospace">
-                                        {verificationResult.txHash}
-                                    </span>
-                                </div>
-                                <div className="detail-row">
-                                    <span className="label">Integrity Check:</span>
-                                    <span className="value success-text">✓ Passed</span>
-                                </div>
-                            </div>
-
-                            <div className="privacy-notice">
-                                🔒 Your vote choice remains confidential and encrypted
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="result-card error">
-                            <div className="result-icon">
-                                <XCircle size={64} />
-                            </div>
-                            <h2>❌ Vote Not Found</h2>
-                            <p className="result-message">
-                                This vote ID was not found on the blockchain
-                            </p>
-                            <p>Please check your Vote ID and try again.</p>
-                        </div>
-                    )}
-
-                    <button className="verify-another-btn" onClick={resetVerification}>
-                        Verify Another Vote
-                    </button>
-                </div>
-            )}
+      {status === 'loading' && (
+        <div style={s.card}>
+          <div style={s.spinner}></div>
+          <div style={s.loadTitle}>Verifying on Blockchain</div>
+          <div style={s.loadReceipt}>Receipt: {receiptId}</div>
+          {['Connecting to Hyperledger Fabric','Fetching block data','Verifying hash integrity'].map((step,i) => (
+            <div key={i} style={s.loadStep}><span style={{ color:'#7c5cfc' }}></span> {step}</div>
+          ))}
         </div>
-    );
+      )}
+
+      {status === 'success' && result && (
+        <div style={{ ...s.card, borderColor:'rgba(124,92,252,0.2)', background:'rgba(124,92,252,0.04)' }}>
+          <div style={s.successBadge}></div>
+          <h2 style={{ ...s.resultTitle, color:'#22d47a' }}>Vote Verified Successfully</h2>
+          <p style={s.resultSub}>Confirmed on the Hyperledger Fabric blockchain.</p>
+          <div style={s.divider} />
+          {[
+            ['Receipt #', result.receiptId],
+            ['Vote ID',   result.voteId],
+            ['Timestamp', formatTimestamp(result.timestamp)],
+            ['Election',  result.election],
+            ['Blockchain',' Found on Hyperledger Fabric','ok'],
+            ['Block #',   result.blockNumber?.toLocaleString()],
+            ['TX Hash',   result.blockchainTxId],
+            ['Integrity', result.integrityVerified ? ' Verified' : ' Failed', result.integrityVerified ? 'ok':'fail'],
+            ['District',  result.districtId],
+            ['Terminal',  result.terminalId],
+          ].map(([l,v,f])=> (
+            <div key={l} style={s.row}>
+              <span style={s.rowLabel}>{l}</span>
+              <span style={{ ...s.rowValue, ...(f==='ok'?{color:'#22d47a'}:f==='fail'?{color:'#f04f58'}:{}) }}>{v||''}</span>
+            </div>
+          ))}
+          <button style={s.exportBtn} onClick={() => window.print()}> Export Verification Proof (PDF)</button>
+        </div>
+      )}
+
+      {status === 'error' && result && (
+        <div style={{ ...s.card, borderColor:'rgba(240,79,88,0.2)', background:'rgba(240,79,88,0.04)', textAlign:'center' }}>
+          <div style={{ ...s.successBadge, background:'linear-gradient(135deg,#f04f58,#c0392b)' }}></div>
+          <h2 style={{ ...s.resultTitle, color:'#f04f58' }}>Receipt Not Found</h2>
+          <p style={s.resultSub}>No vote found for <strong style={{ color:'#f0f0ff' }}>{receiptId}</strong>.</p>
+          <p style={{ ...s.resultSub, marginTop:6 }}>{result.error || 'Please double-check and try again.'}</p>
+          <button style={{ ...s.exportBtn, marginTop:18 }} onClick={onBack}> Try Again</button>
+        </div>
+      )}
+
+      <p style={s.footer}>
+        <a href="https://eci.gov.in" target="_blank" rel="noopener" style={s.link}>Election Commission</a>
+        &nbsp;&nbsp;<a href="#faq" style={s.link}>Help</a>
+      </p>
+    </div>
+  )
 }
 
-export default VerifyReceipt;
+const s = {
+  page: {
+    minHeight:'100vh', background:'#09090f',
+    display:'flex', flexDirection:'column', alignItems:'center',
+    padding:'48px 16px 40px', fontFamily:"'DM Sans',sans-serif",
+    color:'#f0f0ff', position:'relative', overflow:'hidden',
+  },
+  bgGlow: {
+    position:'fixed', top:-80, left:'40%', width:500, height:500, borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(124,92,252,0.07) 0%,transparent 70%)',
+    pointerEvents:'none', zIndex:0,
+  },
+  header: { textAlign:'center', marginBottom:26, position:'relative', zIndex:1 },
+  logo:     { fontSize:48, lineHeight:1, marginBottom:8, filter:'drop-shadow(0 0 16px rgba(124,92,252,0.5))' },
+  title:    { fontSize:22, fontWeight:800, color:'#f0f0ff', margin:0 },
+  subtitle: { fontSize:12, color:'rgba(160,160,192,0.7)', marginTop:4 },
+  flagBar:  { width:90, height:3, margin:'10px auto 0', background:'linear-gradient(90deg,var(--p1),var(--p2),var(--p3))', borderRadius:2 },
+  backBtn: {
+    background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.08)',
+    color:'rgba(160,160,192,0.8)', borderRadius:9999, padding:'6px 14px',
+    fontFamily:'inherit', fontSize:12, fontWeight:700, cursor:'pointer',
+  },
+  card: {
+    width:'100%', maxWidth:460, position:'relative', zIndex:1,
+    background:'rgba(22,22,37,0.8)', backdropFilter:'blur(16px)',
+    border:'1px solid rgba(255,255,255,0.08)', borderRadius:20,
+    padding:28, boxShadow:'0 24px 64px rgba(0,0,0,.6)', marginBottom:16,
+  },
+  spinner: { fontSize:44, animation:'spin 1s linear infinite', display:'block', textAlign:'center', marginBottom:14 },
+  loadTitle:  { fontSize:17, fontWeight:800, color:'#f0f0ff', textAlign:'center', marginBottom:5 },
+  loadReceipt:{ fontSize:12, color:'rgba(160,160,192,0.7)', textAlign:'center', fontFamily:'Courier New,monospace', marginBottom:20 },
+  loadStep:   { display:'flex', alignItems:'center', gap:8, color:'rgba(160,160,192,0.7)', fontSize:12, padding:'4px 0' },
+  successBadge: {
+    width:68, height:68, borderRadius:'50%',
+    background:'linear-gradient(135deg,#7c5cfc,#5b3fd4)',
+    display:'flex', alignItems:'center', justifyContent:'center',
+    margin:'0 auto 14px', fontSize:34, color:'#fff', lineHeight:1,
+    boxShadow:'0 8px 24px rgba(124,92,252,0.35)',
+  },
+  resultTitle:  { fontSize:18, fontWeight:800, textAlign:'center', marginBottom:5 },
+  resultSub:    { fontSize:12, color:'rgba(160,160,192,0.7)', textAlign:'center', lineHeight:1.6 },
+  divider:      { height:1, background:'rgba(255,255,255,0.06)', margin:'16px 0' },
+  row:          { display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'6px 0', borderBottom:'1px solid rgba(255,255,255,0.04)', gap:10 },
+  rowLabel:     { color:'rgba(160,160,192,0.6)', fontSize:11, fontWeight:600, flexShrink:0 },
+  rowValue:     { color:'#f0f0ff', fontSize:11, fontFamily:'Courier New,monospace', textAlign:'right', wordBreak:'break-all' },
+  exportBtn: {
+    width:'100%', marginTop:16, background:'rgba(124,92,252,0.12)',
+    border:'1px solid rgba(124,92,252,0.3)', color:'#9d7dfd',
+    borderRadius:10, padding:'11px 0', fontFamily:'inherit',
+    fontSize:13, fontWeight:700, cursor:'pointer', transition:'background .2s',
+  },
+  footer: { color:'rgba(96,96,128,0.7)', fontSize:11, textAlign:'center', position:'relative', zIndex:1 },
+  link:   { color:'#7c5cfc', textDecoration:'none' },
+}

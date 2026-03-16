@@ -1,9 +1,9 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { Voter  } = require('../models/index.js');
-const { generateToken  } = require('../middleware/auth.middleware.js');
-const { authLimiter  } = require('../middleware/rateLimit.middleware.js');
+const { Voter } = require('../models/index.js');
+const { generateToken } = require('../middleware/auth.middleware.js');
+const { authLimiter } = require('../middleware/rateLimit.middleware.js');
 const logger = require('../utils/logger.js');
 
 

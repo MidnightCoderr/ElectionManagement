@@ -2,13 +2,25 @@ import { useState, useEffect } from 'react'
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import axios from 'axios'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false'
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
+
+// Mock data for when backend is not available
+const MOCK_RESULTS = {
+    election: { totalVoters: 2120000, totalVotesCast: 1236567 },
+    blockchainResults: {
+        'Candidate A - Party X': 523400,
+        'Candidate B - Party Y': 412300,
+        'Candidate C - Party Z': 300867,
+    },
+}
 
 function App() {
     const [results, setResults] = useState(null)
     const [stats, setStats] = useState({
         totalVoters: 0,
-        votescast: 0,
+        votesCast: 0,
         turnout: 0,
     })
     const [loading, setLoading] = useState(true)
@@ -21,8 +33,18 @@ function App() {
     }, [electionId])
 
     const fetchResults = async () => {
+        if (MOCK_MODE) {
+            setResults(MOCK_RESULTS)
+            const election = MOCK_RESULTS.election
+            const turnout = election.totalVoters > 0
+                ? ((election.totalVotesCast / election.totalVoters) * 100).toFixed(2)
+                : 0
+            setStats({ totalVoters: election.totalVoters, votesCast: election.totalVotesCast, turnout })
+            setLoading(false)
+            return
+        }
         try {
-            const response = await axios.get(`http://localhost:3000/api/v1/votes/results/${electionId}`)
+            const response = await axios.get(`${API_BASE}/api/v1/votes/results/${electionId}`)
             setResults(response.data)
 
             // Calculate stats

@@ -1,8 +1,8 @@
-"""
-Dispute Model(MongoDB)
-"""
+/**
+ * Dispute Model (MongoDB)
+ */
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const disputeSchema = new mongoose.Schema({
     dispute_id: {
@@ -60,4 +60,4 @@ const disputeSchema = new mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model('Dispute', disputeSchema);
+export default mongoose.model('Dispute', disputeSchema);

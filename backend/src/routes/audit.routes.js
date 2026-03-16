@@ -1,7 +1,8 @@
-const express = require('express');
+import express from 'express';
+import AuditLog from '../models/auditLog.model.js';
+import { authenticate, authorize } from '../middleware/auth.middleware.js';
+
 const router = express.Router();
-const AuditLog = require('../models/auditLog.model');
-const { authenticate, authorize } = require('../middleware/auth.middleware');
 
 /**
  * @route   GET /api/v1/audit
@@ -203,4 +204,4 @@ router.post('/', authenticate, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

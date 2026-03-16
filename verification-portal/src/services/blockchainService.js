@@ -1,156 +1,130 @@
-import axios from 'axios';
-
 /**
- * Blockchain service for read-only verification
- * Connects directly to blockchain RPC (no backend)
+ * blockchainService.js
+ * Handles all blockchain verification API calls.
+ * Swap MOCK_MODE to false and set VITE_API_BASE_URL to use the real backend.
  */
-class BlockchainService {
-    constructor() {
-        this.rpcUrl = '/api/blockchain'; // Proxied to blockchain RPC
-    }
 
-    /**
-     * Verify a vote exists on blockchain and check integrity
-     */
-    async verifyVote(voteId) {
-        try {
-            // Query blockchain for vote
-            const response = await axios.post(this.rpcUrl + '/query', {
-                fcn: 'ReadVote',
-                args: [voteId]
-            });
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false';
 
-            if (response.data.success && response.data.vote) {
-                const vote = response.data.vote;
+// ── Types ─────────────────────────────────────────────────────────────────
+/**
+ * @typedef {Object} VerificationResult
+ * @property {boolean} success
+ * @property {boolean} verified
+ * @property {string}  receiptId
+ * @property {string}  [voteId]
+ * @property {string}  [timestamp]
+ * @property {string}  [election]
+ * @property {string}  [blockchainTxId]
+ * @property {number}  [blockNumber]
+ * @property {string}  [districtId]
+ * @property {string}  [terminalId]
+ * @property {boolean} [integrityVerified]
+ * @property {string}  [error]
+ */
 
-                // Verify integrity (check hash hasn't been tampered)
-                const integrityCheck = await this.verifyIntegrity(vote);
-
-                return {
-                    verified: true,
-                    voteId: vote.voteId,
-                    electionName: vote.electionName || 'Unknown Election',
-                    timestamp: vote.timestamp,
-                    blockNumber: vote.blockNumber || 0,
-                    txHash: vote.txHash || 'N/A',
-                    districtId: vote.districtId,
-                    integrityPassed: integrityCheck
-                };
-            } else {
-                return {
-                    verified: false,
-                    voteId
-                };
-            }
-        } catch (error) {
-            console.error('Blockchain query error:', error);
-            throw new Error('Unable to connect to blockchain. Please try again.');
-        }
-    }
-
-    /**
-     * Verify vote integrity (Merkle proof validation)
-     */
-    async verifyIntegrity(vote) {
-        try {
-            // Get Merkle proof from blockchain
-            const response = await axios.post(this.rpcUrl + '/query', {
-                fcn: 'GetMerkleProof',
-                args: [vote.voteId]
-            });
-
-            if (response.data.success) {
-                const proof = response.data.proof;
-
-                // Validate Merkle proof locally
-                const isValid = this.validateMerkleProof(
-                    vote.voteId,
-                    vote.zkpCommitment,
-                    proof
-                );
-
-                return isValid;
-            }
-
-            return false;
-        } catch (error) {
-            console.error('Integrity check error:', error);
-            return false;
-        }
-    }
-
-    /**
-     * Validate Merkle proof
-     */
-    validateMerkleProof(voteId, commitment, proof) {
-        // Simplified Merkle proof validation
-        // In production, implement full Merkle tree validation
-
-        if (!proof || proof.length === 0) {
-            return false;
-        }
-
-        let hash = this.sha256(voteId + commitment);
-
-        for (const sibling of proof) {
-            if (sibling.position === 'left') {
-                hash = this.sha256(sibling.hash + hash);
-            } else {
-                hash = this.sha256(hash + sibling.hash);
-            }
-        }
-
-        // Hash should match Merkle root
-        return hash === proof[proof.length - 1].root;
-    }
-
-    /**
-     * Simple SHA-256 hash (browser crypto API)
-     */
-    async sha256(message) {
-        const msgBuffer = new TextEncoder().encode(message);
-        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-        const hashArray = Array.from(new Uint8Array(hashBuffer));
-        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
-    /**
-     * Get public election results
-     */
-    async getElectionResults(electionId) {
-        try {
-            const response = await axios.post(this.rpcUrl + '/query', {
-                fcn: 'GetResults',
-                args: [electionId]
-            });
-
-            if (response.data.success) {
-                return response.data.results;
-            }
-
-            return null;
-        } catch (error) {
-            console.error('Results query error:', error);
-            throw new Error('Unable to fetch results from blockchain');
-        }
-    }
-
-    /**
-     * Get list of active elections
-     */
-    async getActiveElections() {
-        try {
-            const response = await axios.post(this.rpcUrl + '/query', {
-                fcn: 'GetActiveElections',
-                args: []
-            });
-
-            return response.data.elections || [];
-        } catch (error) {
-            console.error('Elections query error:', error);
-            return [];
-        }
-    }
+// ── Helpers ───────────────────────────────────────────────────────────────
+function randomHex(len = 16) {
+  return Array.from({ length: len }, () =>
+    Math.floor(Math.random() * 16).toString(16).toUpperCase()
+  ).join('');
 }
 
-export default new BlockchainService();
+function randomUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+function mockDelay(ms = 1200) {
+  return new Promise(r => setTimeout(r, ms + Math.random() * 400));
+}
+
+// ── Mock verification ─────────────────────────────────────────────────────
+async function mockVerify(receiptId) {
+  await mockDelay();
+
+  // Receipts shorter than 4 chars are treated as "not found" in mock mode
+  if (receiptId.length < 4) {
+    return { success: false, verified: false, receiptId, error: 'Receipt not found on blockchain.' };
+  }
+
+  const ts = new Date(Date.now() - Math.floor(Math.random() * 7200000));
+
+  return {
+    success: true,
+    verified: true,
+    receiptId,
+    voteId: randomUUID(),
+    timestamp: ts.toISOString(),
+    election: 'General Election 2024',
+    blockchainTxId: '0x' + randomHex(16),
+    blockNumber: 10000 + Math.floor(Math.random() * 5000),
+    districtId: 'Mumbai Central',
+    terminalId: 'TERM-00001',
+    integrityVerified: true,
+  };
+}
+
+// ── Real API verification ─────────────────────────────────────────────────
+async function apiVerify(receiptId) {
+  const res = await fetch(`${API_BASE}/api/v1/votes/verify/${encodeURIComponent(receiptId)}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    return {
+      success: false,
+      verified: false,
+      receiptId,
+      error: body.message || `Server error (${res.status})`,
+    };
+  }
+
+  const data = await res.json();
+  return {
+    success: data.success,
+    verified: data.verified,
+    receiptId,
+    voteId:           data.vote?.voteId,
+    timestamp:        data.vote?.timestamp,
+    election:         'General Election 2024',
+    blockchainTxId:   data.vote?.blockchainTxId,
+    blockNumber:      data.vote?.blockNumber,
+    districtId:       data.vote?.districtId,
+    terminalId:       data.vote?.terminalId,
+    integrityVerified: data.vote?.integrityVerified,
+    error:            data.error,
+  };
+}
+
+// ── Public API ────────────────────────────────────────────────────────────
+/**
+ * Verify a vote receipt against the blockchain.
+ * @param {string} receiptId
+ * @returns {Promise<VerificationResult>}
+ */
+export async function verifyReceipt(receiptId) {
+  if (!receiptId || !receiptId.trim()) {
+    return { success: false, verified: false, receiptId, error: 'Receipt ID is required.' };
+  }
+  try {
+    return MOCK_MODE ? await mockVerify(receiptId.trim().toUpperCase()) : await apiVerify(receiptId.trim().toUpperCase());
+  } catch (err) {
+    return { success: false, verified: false, receiptId, error: err.message || 'Network error. Please try again.' };
+  }
+}
+
+/**
+ * Format a timestamp ISO string for display.
+ * @param {string} iso
+ * @returns {string}
+ */
+export function formatTimestamp(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'medium' });
+}
