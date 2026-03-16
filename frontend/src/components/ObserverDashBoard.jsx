@@ -42,8 +42,13 @@ function TerminalGrid() {
 }
 
 export default function ObserverPage() {
+  const portalUrl = import.meta.env.VITE_OBSERVER_URL || 'http://localhost:3002'
   return (
     <div className="view on" id="v-obs" style={{flex:1,overflow:'hidden'}}>
+      <a href={portalUrl} target="_blank" rel="noopener noreferrer"
+        style={{display:'block',textAlign:'center',padding:'6px 0',background:'rgba(91,63,212,0.15)',color:'#c4b0fa',fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",textDecoration:'none',letterSpacing:'.02em'}}>
+        Open Full Observer Dashboard &rarr;
+      </a>
       <div className="obs-shell">
 
         {/* Sidebar */}

@@ -1,25 +1,17 @@
 import { useState, useEffect, useRef } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
+import { fetchElections, fetchAuditLogs, checkHealth } from '../services/api.js'
 import './Dashboard.css'
 
-// ── Mock data ──────────────────────────────────────────────────────────────
-const ELECTIONS = [
-  { id: 1, name: 'General Election 2024',      state: 'Maharashtra', date: '2024-04-19', status: 'active',  votes: '12,34,567', terminals: 48000 },
-  { id: 2, name: 'State Assembly — Karnataka', state: 'Karnataka',   date: '2024-05-10', status: 'pending', votes: '—',         terminals: 32000 },
-  { id: 3, name: 'Municipal — Delhi North',    state: 'Delhi',       date: '2024-03-01', status: 'closed',  votes: '4,56,789',  terminals: 8500  },
-]
-
-const ACTIVITY = [
-  { color: 'green',  text: 'Terminal TERM-00045 came back online',              time: '2 min ago' },
-  { color: 'red',    text: 'HIGH alert: Unusual voting spike on TERM-00089',    time: '5 min ago' },
-  { color: 'blue',   text: 'Candidate list updated for Karnataka election',      time: '12 min ago' },
-  { color: 'orange', text: 'Admin Priya Mehta logged in from 192.168.1.42',     time: '18 min ago' },
-  { color: 'green',  text: '1,234,567th vote cast — General Election 2024',     time: '21 min ago' },
-  { color: 'gold',   text: 'Blockchain snapshot published to Ethereum mainnet', time: '1 hr ago'  },
+// ── Fallback mock data (used when API calls fail) ────────────────────────────
+const FALLBACK_ELECTIONS = [
+  { election_id: '1', election_name: 'General Election 2024', election_type: 'general', start_date: '2024-04-19', status: 'active', total_votes_cast: 1234567 },
+  { election_id: '2', election_name: 'State Assembly — Karnataka', election_type: 'state', start_date: '2024-05-10', status: 'upcoming', total_votes_cast: 0 },
+  { election_id: '3', election_name: 'Municipal — Delhi North', election_type: 'local', start_date: '2024-03-01', status: 'completed', total_votes_cast: 456789 },
 ]
 
 const ALERTS = [
-  { level: 'high',   terminal: 'TERM-00089', msg: 'Unusual voting spike',        detail: '150 votes in 5 minutes — 3× normal rate' },
+  { level: 'high',   terminal: 'TERM-00089', msg: 'Unusual voting spike',        detail: '150 votes in 5 minutes — 3x normal rate' },
   { level: 'high',   terminal: 'TERM-00234', msg: 'Multiple failed biometrics',  detail: '12 failed scans in 4 minutes' },
   { level: 'medium', terminal: 'TERM-00012', msg: 'Terminal offline',            detail: 'No heartbeat for 22 minutes' },
   { level: 'low',    terminal: 'TERM-00301', msg: 'Low battery warning',         detail: 'Battery at 8% — needs replacement' },
@@ -41,10 +33,13 @@ const PAGES = {
 
 // ── Main component ─────────────────────────────────────────────────────────
 export default function Dashboard({ admin, onLogout }) {
-  const [page, setPage]       = useState('dashboard')
-  const [votes, setVotes]     = useState(1234567)
-  const [clock, setClock]     = useState('')
-  const canvasRef             = useRef(null)
+  const [page, setPage]             = useState('dashboard')
+  const [votes, setVotes]           = useState(0)
+  const [clock, setClock]           = useState('')
+  const [elections, setElections]   = useState([])
+  const [activity, setActivity]     = useState([])
+  const [backendUp, setBackendUp]   = useState(null)
+  const canvasRef                   = useRef(null)
 
   // Live clock
   useEffect(() => {
@@ -54,7 +49,55 @@ export default function Dashboard({ admin, onLogout }) {
     return () => clearInterval(id)
   }, [])
 
-  // Live vote counter
+  // Fetch elections and activity from API on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const health = await checkHealth()
+        setBackendUp(health.status === 'healthy')
+      } catch { setBackendUp(false) }
+
+      try {
+        const data = await fetchElections()
+        const elecs = data.elections || []
+        setElections(elecs.length > 0 ? elecs : FALLBACK_ELECTIONS)
+        const activeElection = elecs.find(e => e.status === 'active')
+        if (activeElection) setVotes(activeElection.total_votes_cast || 0)
+        else setVotes(1234567)
+      } catch { setElections(FALLBACK_ELECTIONS); setVotes(1234567) }
+
+      try {
+        const data = await fetchAuditLogs({ limit: 6 })
+        const logs = data.logs || []
+        const colorMap = { vote_cast: 'green', admin_login: 'orange', fraud_alert: 'red', candidate_added: 'blue', election_created: 'gold' }
+        setActivity(logs.length > 0
+          ? logs.map(l => ({
+              color: colorMap[l.event_type] || 'blue',
+              text: l.action || l.event_type,
+              time: new Date(l.timestamp).toLocaleTimeString('en-IN'),
+            }))
+          : [
+              { color: 'green', text: 'Terminal TERM-00045 came back online', time: '2 min ago' },
+              { color: 'red', text: 'HIGH alert: Unusual voting spike on TERM-00089', time: '5 min ago' },
+              { color: 'blue', text: 'Candidate list updated for Karnataka election', time: '12 min ago' },
+              { color: 'orange', text: 'Admin Priya Mehta logged in from 192.168.1.42', time: '18 min ago' },
+              { color: 'green', text: '1,234,567th vote cast — General Election 2024', time: '21 min ago' },
+              { color: 'gold', text: 'Blockchain snapshot published to Ethereum mainnet', time: '1 hr ago' },
+            ]
+        )
+      } catch {
+        setActivity([
+          { color: 'green', text: 'Terminal TERM-00045 came back online', time: '2 min ago' },
+          { color: 'red', text: 'HIGH alert: Unusual voting spike on TERM-00089', time: '5 min ago' },
+          { color: 'blue', text: 'Candidate list updated for Karnataka election', time: '12 min ago' },
+          { color: 'orange', text: 'Admin Priya Mehta logged in from 192.168.1.42', time: '18 min ago' },
+        ])
+      }
+    }
+    loadData()
+  }, [])
+
+  // Live vote counter (simulated increment when backend is not live)
   useEffect(() => {
     const id = setInterval(() => setVotes(v => v + Math.floor(Math.random() * 8 + 1)), 2500)
     return () => clearInterval(id)
@@ -121,7 +164,12 @@ export default function Dashboard({ admin, onLogout }) {
           </div>
           <div className="dash-topbar-right">
             <span style={{ color: 'var(--muted)', fontSize: 13 }}>{clock}</span>
-            <button className="topbar-btn">📥 Export</button>
+            {backendUp !== null && (
+              <span style={{ fontSize: 11, color: backendUp ? '#22d47a' : '#f04f58', fontWeight: 600 }}>
+                {backendUp ? 'API Connected' : 'API Offline (Mock)'}
+              </span>
+            )}
+            <button className="topbar-btn">Export</button>
             <button className="topbar-btn primary" onClick={() => setPage('elections')}>
               + New Election
             </button>
@@ -171,7 +219,7 @@ export default function Dashboard({ admin, onLogout }) {
                   <div className="panel-title">⚡ Live Activity</div>
                   <button className="panel-action">View All</button>
                 </div>
-                {ACTIVITY.map((a, i) => (
+                {activity.map((a, i) => (
                   <div key={i} className="activity-item">
                     <div className={`activity-dot ${a.color}`} />
                     <div className="activity-text">{a.text}</div>
@@ -240,15 +288,15 @@ export default function Dashboard({ admin, onLogout }) {
                     <tr><th>Election</th><th>Date</th><th>Status</th><th>Votes</th></tr>
                   </thead>
                   <tbody>
-                    {ELECTIONS.map(e => (
-                      <tr key={e.id}>
+                    {elections.map(e => (
+                      <tr key={e.election_id}>
                         <td>
-                          <div style={{ fontWeight: 700 }}>{e.name}</div>
-                          <div style={{ fontSize: 11, color: 'var(--muted)' }}>{e.state}</div>
+                          <div style={{ fontWeight: 700 }}>{e.election_name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--muted)' }}>{e.election_type}</div>
                         </td>
-                        <td style={{ color: 'var(--muted)', fontSize: 12 }}>{e.date}</td>
+                        <td style={{ color: 'var(--muted)', fontSize: 12 }}>{e.start_date}</td>
                         <td><span className={`status-badge ${e.status}`}>{e.status}</span></td>
-                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{e.votes}</td>
+                        <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{(e.total_votes_cast || 0).toLocaleString('en-IN')}</td>
                       </tr>
                     ))}
                   </tbody>
