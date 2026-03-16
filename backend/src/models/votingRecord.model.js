@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../db/index.js';
+const { DataTypes  } = require('sequelize');
+const { sequelize  } = require('../db/index.js');
 
 const VotingRecord = sequelize.define('voting_records', {
     record_id: {
@@ -55,4 +55,4 @@ const VotingRecord = sequelize.define('voting_records', {
     tableName: 'voting_records',
 });
 
-export default VotingRecord;
+module.exports = VotingRecord;

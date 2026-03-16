@@ -1,10 +1,10 @@
-import express from 'express';
-import crypto from 'crypto';
-import fabricService from '../services/fabricService.js';
-import { Voter, VotingRecord, Election } from '../models/index.js';
-import { voteLimiter } from '../middleware/rateLimit.middleware.js';
-import { authenticate } from '../middleware/auth.middleware.js';
-import logger from '../../utils/logger.js';
+const express = require('express');
+const crypto = require('crypto');
+const fabricService = require('../services/fabricService.js');
+const { Voter, VotingRecord, Election } = require('../models/index.js');
+const { voteLimiter } = require('../middleware/rateLimit.middleware.js');
+const { authenticate } = require('../middleware/auth.middleware.js');
+const logger = require('../utils/logger.js');
 
 const router = express.Router();
 
@@ -300,4 +300,4 @@ router.get('/:voteId', authenticate, async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
@@ -6,7 +6,7 @@ const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
 /**
  * Authentication middleware - Verify JWT token
  */
-export const authenticate = (req, res, next) => {
+exports.authenticate = (req, res, next) => {
     try {
         // Get token from header
         const authHeader = req.headers.authorization;
@@ -52,7 +52,7 @@ export const authenticate = (req, res, next) => {
 /**
  * Role-based authorization middleware
  */
-export const authorize = (...allowedRoles) => {
+exports.authorize = (...allowedRoles) => {
     return (req, res, next) => {
         if (!req.user) {
             return res.status(401).json({
@@ -76,7 +76,7 @@ export const authorize = (...allowedRoles) => {
 /**
  * Generate JWT token
  */
-export const generateToken = (payload) => {
+exports.generateToken = (payload) => {
     return jwt.sign(payload, JWT_SECRET, {
         expiresIn: JWT_EXPIRES_IN,
     });
@@ -85,17 +85,10 @@ export const generateToken = (payload) => {
 /**
  * Verify JWT token
  */
-export const verifyToken = (token) => {
+exports.verifyToken = (token) => {
     try {
         return jwt.verify(token, JWT_SECRET);
     } catch (error) {
         throw new Error('Invalid or expired token');
     }
-};
-
-export default {
-    authenticate,
-    authorize,
-    generateToken,
-    verifyToken,
 };

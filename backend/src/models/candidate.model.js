@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../db/index.js';
+const { DataTypes  } = require('sequelize');
+const { sequelize  } = require('../db/index.js');
 
 const Candidate = sequelize.define('candidates', {
     candidate_id: {
@@ -57,4 +57,4 @@ const Candidate = sequelize.define('candidates', {
     tableName: 'candidates',
 });
 
-export default Candidate;
+module.exports = Candidate;

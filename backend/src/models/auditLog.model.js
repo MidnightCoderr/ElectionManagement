@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 // Audit Log Schema for MongoDB
 const auditLogSchema = new mongoose.Schema({
@@ -82,4 +82,4 @@ auditLogSchema.index({ timestamp: 1 }, { expireAfterSeconds: 63072000 });
 
 const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 
-export default AuditLog;
+module.exports = AuditLog;

@@ -6,6 +6,18 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Drop existing tables to make migration idempotent
+DROP TABLE IF EXISTS system_config CASCADE;
+DROP TABLE IF EXISTS fraud_alerts CASCADE;
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS admin_users CASCADE;
+DROP TABLE IF EXISTS iot_terminals CASCADE;
+DROP TABLE IF EXISTS voting_records CASCADE;
+DROP TABLE IF EXISTS voters CASCADE;
+DROP TABLE IF EXISTS candidates CASCADE;
+DROP TABLE IF EXISTS elections CASCADE;
+DROP TABLE IF EXISTS districts CASCADE;
+
 -- ===================================
 -- TABLE: districts
 -- ===================================

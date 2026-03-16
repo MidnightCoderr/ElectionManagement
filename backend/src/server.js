@@ -1,20 +1,20 @@
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import dotenv from 'dotenv';
-import { initializeDatabases, closeDatabases } from './db/index.js';
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const dotenv = require('dotenv');
+const { initializeDatabases, closeDatabases } = require('./db/index.js');
 
 // Load environment variables
 dotenv.config();
 
 // Import routes
-import authRoutes from './routes/auth.routes.js';
-import voteRoutes from './routes/vote.routes.js';
-import electionRoutes from './routes/election.routes.js';
-import candidateRoutes from './routes/candidate.routes.js';
-import resultsRoutes from './routes/results.routes.js';
-import auditRoutes from './routes/audit.routes.js';
-import voterRoutes from './routes/voter.routes.js';
+const authRoutes = require('./routes/auth.routes.js');
+const voteRoutes = require('./routes/vote.routes.js');
+const electionRoutes = require('./routes/election.routes.js');
+const candidateRoutes = require('./routes/candidate.routes.js');
+const resultsRoutes = require('./routes/results.routes.js');
+const auditRoutes = require('./routes/audit.routes.js');
+const voterRoutes = require('./routes/voter.routes.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -64,6 +64,10 @@ app.use('/api/v1/results', resultsRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/voters', voterRoutes);
 
+// Mock blockchain route for Verification Portal demo
+const blockchainMockRoutes = require('./routes/blockchain.mock.routes.js');
+app.use('/api/blockchain', blockchainMockRoutes);
+
 // API root endpoint
 app.get('/api/v1', (req, res) => {
     res.json({
@@ -75,6 +79,17 @@ app.get('/api/v1', (req, res) => {
             elections: '/api/v1/elections',
         },
     });
+});
+
+// Error handling middleware
+app.use((req, res, next) => {
+  logger.info('API_REQUEST', {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    timestamp: new Date().toISOString()
+  });
+  next();
 });
 
 // 404 handler
@@ -122,4 +137,4 @@ process.on('SIGINT', async () => {
 // Start the server
 startServer();
 
-export default app;
+module.exports = app;

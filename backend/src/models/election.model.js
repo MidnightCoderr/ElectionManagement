@@ -1,5 +1,5 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../db/index.js';
+const { DataTypes  } = require('sequelize');
+const { sequelize  } = require('../db/index.js');
 
 const Election = sequelize.define('elections', {
     election_id: {
@@ -51,4 +51,4 @@ const Election = sequelize.define('elections', {
     tableName: 'elections',
 });
 
-export default Election;
+module.exports = Election;

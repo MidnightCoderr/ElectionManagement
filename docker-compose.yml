@@ -1,11 +1,10 @@
-version: '3.8'
-
 services:
   # ============================================
   # PostgreSQL - Voter Registry Database
   # ============================================
   postgres:
     image: postgres:16-alpine
+    pull_policy: missing
     container_name: election-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-election_db}
@@ -19,7 +18,7 @@ services:
     networks:
       - election-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-election_admin}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-election_admin}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,19 +27,20 @@ services:
   # MongoDB - Audit Logs & Events
   # ============================================
   mongodb:
-    image: mongo:7
+    image: mongo:6
+    pull_policy: missing
     container_name: election-mongodb
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGODB_USER:-mongo_admin}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGODB_PASSWORD:-changeme_mongo_password}
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
       - election-network
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -50,6 +50,7 @@ services:
   # ============================================
   redis:
     image: redis:7-alpine
+    pull_policy: missing
     container_name: election-redis
     command: redis-server --requirepass ${REDIS_PASSWORD:-changeme_redis_password}
     ports:
@@ -59,7 +60,7 @@ services:
     networks:
       - election-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -68,7 +69,8 @@ services:
   # MQTT Broker - IoT Terminal Communication
   # ============================================
   mqtt-broker:
-    image: eclipse-mosquitto:2
+    image: eclipse-mosquitto:2.0
+    pull_policy: missing
     container_name: election-mqtt
     ports:
       - "1883:1883"
@@ -80,7 +82,7 @@ services:
     networks:
       - election-network
     healthcheck:
-      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      test: [ "CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -202,14 +204,14 @@ services:
       - redis
       - mqtt-broker
       - peer0.electioncommission.election.com
-    command: npm run dev
+    command: npm start
 
   # ============================================
   # ML Analytics Service (Python)
   # ============================================
   ml-analytics:
     build:
-      context: ./ml-analytics
+      context: ./ml-service
       dockerfile: ../infrastructure/docker/Dockerfile.ml
     container_name: election-ml-analytics
     environment:
@@ -217,23 +219,23 @@ services:
       - ML_MODEL_PATH=/app/src/models/voting_patterns.pkl
       - ANOMALY_THRESHOLD=${ANOMALY_THRESHOLD:-0.85}
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
-      - ./ml-analytics:/app
+      - ./ml-service:/app
       - ml_models:/app/src/models
     networks:
       - election-network
     depends_on:
       - mongodb
-    command: python src/main.py
+    command: python api.py
 
   # ============================================
   # Voter UI (Frontend)
   # ============================================
   voter-ui:
     build:
-      context: ./frontend/voter-ui
-      dockerfile: ../../infrastructure/docker/Dockerfile.frontend
+      context: ./voter-ui
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
     container_name: election-voter-ui
     environment:
       - VITE_API_URL=http://localhost:3000/api
@@ -241,7 +243,7 @@ services:
     ports:
       - "3001:3001"
     volumes:
-      - ./frontend/voter-ui:/app
+      - ./voter-ui:/app
       - /app/node_modules
     networks:
       - election-network
@@ -254,8 +256,8 @@ services:
   # ============================================
   observer-dashboard:
     build:
-      context: ./frontend/observer-dashboard
-      dockerfile: ../../infrastructure/docker/Dockerfile.frontend
+      context: ./observer-dashboard
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
     container_name: election-observer-dashboard
     environment:
       - VITE_API_URL=http://localhost:3000/api
@@ -263,7 +265,7 @@ services:
     ports:
       - "3002:3002"
     volumes:
-      - ./frontend/observer-dashboard:/app
+      - ./observer-dashboard:/app
       - /app/node_modules
     networks:
       - election-network
@@ -276,8 +278,8 @@ services:
   # ============================================
   admin-portal:
     build:
-      context: ./frontend/admin-portal
-      dockerfile: ../../infrastructure/docker/Dockerfile.frontend
+      context: ./admin-portal
+      dockerfile: ../infrastructure/docker/Dockerfile.frontend
     container_name: election-admin-portal
     environment:
       - VITE_API_URL=http://localhost:3000/api
@@ -285,7 +287,7 @@ services:
     ports:
       - "3003:3003"
     volumes:
-      - ./frontend/admin-portal:/app
+      - ./admin-portal:/app
       - /app/node_modules
     networks:
       - election-network
@@ -343,9 +345,9 @@ volumes:
   prometheus_data:
   grafana_data:
 
-# ============================================
-# Networks
-# ============================================
+    # ============================================
+    # Networks
+    # ============================================
 networks:
   election-network:
     name: election-network

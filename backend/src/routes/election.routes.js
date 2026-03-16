@@ -1,7 +1,7 @@
-import express from 'express';
-import { Election, Candidate } from '../models/index.js';
-import fabricService from '../services/fabricService.js';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
+const express = require('express');
+const { Election, Candidate  } = require('../models/index.js');
+const fabricService = require('../services/fabricService.js');
+const { authenticate, authorize  } = require('../middleware/auth.middleware.js');
 
 const router = express.Router();
 
@@ -416,4 +416,4 @@ router.put('/:id/status', authenticate, authorize('admin'), async (req, res) => 
     }
 });
 
-export default router;
+module.exports = router;
