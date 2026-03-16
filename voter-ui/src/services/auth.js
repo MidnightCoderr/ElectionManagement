@@ -34,10 +34,11 @@ export async function authenticateVoter(fingerprintData, terminalId = 'TERM-0000
 /**
  * Check if a voter has already voted (double-vote prevention).
  * @param {string} voterId
+ * @param {string} electionId — defaults to current election
  * @returns {Promise<boolean>}
  */
-export async function checkAlreadyVoted(voterId) {
+export async function checkAlreadyVoted(voterId, electionId = 'ge-2024') {
   if (MOCK_MODE) { await mockDelay(200); return false }
-  const data = await apiFetch(`/api/v1/auth/check/${voterId}`)
-  return data.alreadyVoted
+  const data = await apiFetch(`/api/v1/votes/status/${encodeURIComponent(voterId)}/${encodeURIComponent(electionId)}`)
+  return data.hasVoted
 }

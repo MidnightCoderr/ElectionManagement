@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import { Voter } from '../models/index.js';
+import { authenticate, authorize } from '../middleware/auth.middleware.js';
+import AuditLog from '../models/auditLog.model.js';
+
 const router = express.Router();
-const Voter = require('../models/voter.model');
-const { authenticate, authorize } = require('../middleware/auth.middleware');
-const AuditLog = require('../models/auditLog.model');
 
 /**
  * @route   GET /api/v1/voters
@@ -186,8 +187,7 @@ router.get('/:voterId/voting-history', authenticate, async (req, res) => {
             });
         }
 
-        const VotingRecord = require('../models/votingRecord.model');
-        const Election = require('../models/election.model');
+        const { VotingRecord, Election } = await import('../models/index.js');
 
         const votingHistory = await VotingRecord.findAll({
             where: { voter_id: voterId },
@@ -253,4 +253,4 @@ router.get('/stats/summary', authenticate, authorize(['admin']), async (req, res
     }
 });
 
-module.exports = router;
+export default router;

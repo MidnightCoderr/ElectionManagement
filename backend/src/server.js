@@ -33,7 +33,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Request logging middleware
-import logger from './utils/logger.js';
+import logger from '../utils/logger.js';
+
+app.use((req, res, next) => {
+  logger.info('API_REQUEST', {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    timestamp: new Date().toISOString()
+  });
+  next();
+});
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -65,17 +75,6 @@ app.get('/api/v1', (req, res) => {
             elections: '/api/v1/elections',
         },
     });
-});
-
-// Error handling middleware
-app.use((req, res, next) => {
-  logger.info('API_REQUEST', {
-    method: req.method,
-    path: req.path,
-    ip: req.ip,
-    timestamp: new Date().toISOString()
-  });
-  next();
 });
 
 // 404 handler

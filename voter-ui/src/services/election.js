@@ -18,11 +18,12 @@ const MOCK_CANDIDATES = [
 /**
  * Fetch all candidates for the current election and district.
  * @param {string} districtId
+ * @param {string} electionId
  * @returns {Promise<Candidate[]>}
  */
-export async function getCandidates(districtId = 'mumbai-central') {
+export async function getCandidates(districtId = 'mumbai-central', electionId = 'ge-2024') {
   if (MOCK_MODE) { await mockDelay(300); return MOCK_CANDIDATES }
-  const data = await apiFetch(`/api/v1/elections/current/candidates?district=${encodeURIComponent(districtId)}`)
+  const data = await apiFetch(`/api/v1/candidates?electionId=${encodeURIComponent(electionId)}&districtId=${encodeURIComponent(districtId)}`)
   return data.candidates
 }
 
@@ -35,5 +36,13 @@ export async function getElectionInfo() {
     await mockDelay(200)
     return { id: 'ge-2024', name: 'General Election 2024', date: '2024-04-19', status: 'active' }
   }
-  return apiFetch('/api/v1/elections/current')
+  const data = await apiFetch('/api/v1/elections?status=active&limit=1')
+  const election = data.elections?.[0]
+  if (!election) throw new Error('No active election found')
+  return {
+    id: election.election_id,
+    name: election.election_name,
+    date: election.start_date,
+    status: election.status,
+  }
 }

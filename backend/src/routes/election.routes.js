@@ -47,6 +47,47 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * GET /api/v1/elections/current
+ * Get the currently active election (convenience endpoint for voter-ui)
+ */
+router.get('/current', async (req, res) => {
+    try {
+        const election = await Election.findOne({
+            where: { status: 'active' },
+            include: [{
+                model: Candidate,
+                as: 'candidates',
+            }],
+            order: [['start_date', 'DESC']],
+        });
+
+        if (!election) {
+            return res.status(404).json({
+                success: false,
+                error: 'No active election found',
+            });
+        }
+
+        res.json({
+            success: true,
+            id: election.election_id,
+            name: election.election_name,
+            date: election.start_date,
+            status: election.status,
+            election,
+        });
+
+    } catch (error) {
+        console.error('Get current election error:', error.message);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to retrieve current election',
+            message: error.message,
+        });
+    }
+});
+
+/**
  * GET /api/v1/elections/:id
  * Get election by ID with statistics
  */

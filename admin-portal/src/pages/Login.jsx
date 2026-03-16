@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import './Login.css'
 
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false'
+
 const DEMO_USERS = [
   { username: 'admin',    password: 'admin123',    name: 'Arjun Sharma',  role: 'Super Admin' },
   { username: 'observer', password: 'observer123', name: 'Priya Mehta',   role: 'Observer' },
@@ -22,10 +25,32 @@ export default function Login({ onLogin }) {
     if (!email.trim() || !password.trim()) { setError('Please fill in all fields.'); return }
     if (!agreed) { setError('Please agree to the Terms & Conditions.'); return }
     setLoading(true); setError('')
-    await new Promise(r => setTimeout(r, 900))
-    const user = DEMO_USERS.find(u => u.username === email.trim().toLowerCase() && u.password === password)
-    if (user) { onLogin({ name: user.name, role: user.role, username: user.username }) }
-    else { setError('Invalid credentials. Try: admin / admin123'); setLoading(false) }
+
+    // Mock mode: use demo users
+    if (MOCK_MODE) {
+      await new Promise(r => setTimeout(r, 900))
+      const user = DEMO_USERS.find(u => u.username === email.trim().toLowerCase() && u.password === password)
+      if (user) { onLogin({ name: user.name, role: user.role, username: user.username }) }
+      else { setError('Invalid credentials. Try: admin / admin123'); setLoading(false) }
+      return
+    }
+
+    // Real API mode
+    try {
+      const res = await fetch(`${API_BASE}/api/v1/auth/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email.trim(), password }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.message || 'Login failed'); setLoading(false); return }
+      // Store admin token for authenticated API calls
+      if (data.token) sessionStorage.setItem('admin_token', data.token)
+      onLogin({ name: data.admin?.name || email.trim(), role: data.admin?.role || 'Admin', username: email.trim(), token: data.token })
+    } catch (err) {
+      setError('Unable to connect to server. Try: admin / admin123')
+      setLoading(false)
+    }
   }
 
   return (

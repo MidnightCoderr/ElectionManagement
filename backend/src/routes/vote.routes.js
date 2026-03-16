@@ -4,6 +4,7 @@ import fabricService from '../services/fabricService.js';
 import { Voter, VotingRecord, Election } from '../models/index.js';
 import { voteLimiter } from '../middleware/rateLimit.middleware.js';
 import { authenticate } from '../middleware/auth.middleware.js';
+import logger from '../../utils/logger.js';
 
 const router = express.Router();
 
@@ -111,6 +112,13 @@ router.post('/cast', voteLimiter, async (req, res) => {
             message: 'Vote cast successfully',
             voteId,
             timestamp,
+            receipt: {
+                receiptId: verificationHash,
+                timestamp,
+                blockchainTxId: voteId,
+                terminalId,
+                blockNumber: null,
+            },
         });
 
     } catch (error) {
@@ -211,6 +219,59 @@ router.get('/results/:electionId', async (req, res) => {
         res.status(500).json({
             error: 'Failed to get results',
             message: error.message,
+        });
+    }
+});
+
+/**
+ * GET /api/v1/votes/verify/:receiptId
+ * Verify a vote receipt against the blockchain
+ */
+router.get('/verify/:receiptId', async (req, res) => {
+    try {
+        const { receiptId } = req.params;
+
+        // Look up the voting record by verification hash or receipt ID
+        const votingRecord = await VotingRecord.findOne({
+            where: { verification_hash: receiptId },
+        });
+
+        if (!votingRecord) {
+            return res.status(404).json({
+                success: false,
+                verified: false,
+                error: 'Receipt not found on blockchain.',
+            });
+        }
+
+        // Attempt to verify on blockchain
+        let blockchainVote = null;
+        try {
+            blockchainVote = await fabricService.getVoteById(votingRecord.blockchain_tx_id);
+        } catch (err) {
+            // Blockchain might not be available, fall back to DB record
+        }
+
+        res.json({
+            success: true,
+            verified: true,
+            vote: {
+                voteId: votingRecord.record_id,
+                timestamp: votingRecord.vote_timestamp,
+                blockchainTxId: votingRecord.blockchain_tx_id,
+                blockNumber: blockchainVote?.blockNumber || null,
+                districtId: blockchainVote?.district || null,
+                terminalId: votingRecord.terminal_id,
+                integrityVerified: !!blockchainVote,
+            },
+        });
+
+    } catch (error) {
+        console.error('Verification error:', error.message);
+        res.status(500).json({
+            success: false,
+            verified: false,
+            error: 'Verification failed. Please try again.',
         });
     }
 });

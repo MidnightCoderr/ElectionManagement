@@ -1,201 +1,164 @@
 import { useState } from 'react'
 import QRScanner from '../components/QRScanner.jsx'
 
-/**
- * Home.jsx
- * Landing page for the verification portal.
- * Provides receipt number input and QR scanner access.
- *
- * Props:
- *   onVerify(receiptId: string) — navigate to VerifyReceipt with this ID
- */
 export default function Home({ onVerify }) {
-  const [receipt, setReceipt]       = useState('')
+  const [receipt, setReceipt]         = useState('')
   const [showScanner, setShowScanner] = useState(false)
   const [inputError, setInputError]   = useState('')
 
   function handleSubmit(e) {
     e?.preventDefault?.()
     const trimmed = receipt.trim().toUpperCase()
-    if (!trimmed) {
-      setInputError('Please enter your receipt number.')
-      return
-    }
-    setInputError('')
-    onVerify(trimmed)
+    if (!trimmed) { setInputError('Please enter your receipt number.'); return }
+    setInputError(''); onVerify(trimmed)
   }
 
-  function handleQRScan(receiptId) {
-    setShowScanner(false)
-    setReceipt(receiptId)
-    onVerify(receiptId)
-  }
-
-  function handleInput(e) {
-    setReceipt(e.target.value)
-    if (inputError) setInputError('')
-  }
+  function handleQRScan(id) { setShowScanner(false); setReceipt(id); onVerify(id) }
 
   return (
     <>
-      {showScanner && (
-        <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />
-      )}
+      {showScanner && <QRScanner onScan={handleQRScan} onClose={() => setShowScanner(false)} />}
+      <div style={s.page}>
+        <div style={s.bgGlow1} />
+        <div style={s.bgGlow2} />
 
-      <div style={styles.page}>
-        {/* ── Header ── */}
-        <div style={styles.header}>
-          <div style={styles.logoRing}>☸</div>
-          <h1 style={styles.title}>Vote Verification</h1>
-          <p style={styles.subtitle}>Election Commission of India — General Election 2024</p>
-          <div style={styles.flagBar} />
+        <div style={s.header}>
+          <div style={s.logoRing}></div>
+          <h1 style={s.title}>Vote Verification</h1>
+          <p style={s.subtitle}>Election Commission of India  General Election 2024</p>
+          <div style={s.flagBar} />
         </div>
 
-        {/* ── Card ── */}
-        <div style={styles.card}>
-          <h2 style={styles.cardTitle}>🔍 Verify Your Vote Receipt</h2>
-          <p style={styles.cardDesc}>
-            Enter the receipt number from your voting slip or scan the QR code to
-            confirm your vote was recorded on the blockchain.
-          </p>
+        <div style={s.card}>
+          <h2 style={s.cardTitle}> Verify Your Vote Receipt</h2>
+          <p style={s.cardDesc}>Enter your receipt number or scan the QR code to confirm your vote was recorded on the blockchain.</p>
 
-          {/* Input */}
-          <label style={styles.label} htmlFor="receipt-input">Receipt Number</label>
+          <label style={s.label} htmlFor="receipt-input">Receipt Number</label>
           <input
             id="receipt-input"
-            style={{ ...styles.input, ...(inputError ? styles.inputError : {}) }}
-            type="text"
-            value={receipt}
-            onChange={handleInput}
+            style={{ ...s.input, ...(inputError ? s.inputErr : {}) }}
+            type="text" value={receipt} placeholder="e.g. 12ABC34" maxLength={20}
+            autoComplete="off" spellCheck={false}
+            onChange={e => { setReceipt(e.target.value); setInputError('') }}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-            placeholder="e.g. 12ABC34"
-            maxLength={20}
-            autoComplete="off"
-            spellCheck={false}
           />
-          {inputError && <p style={styles.errorHint}>⚠ {inputError}</p>}
-          <p style={styles.hint}>The receipt number is printed on your paper voting slip.</p>
+          {inputError && <p style={s.errHint}> {inputError}</p>}
+          <p style={s.hint}>Printed on your paper voting slip.</p>
 
-          {/* Divider */}
-          <div style={styles.divider}><span style={styles.dividerText}>OR</span></div>
+          <div style={s.divider}><span style={s.dividerLine}/><span style={s.dividerText}>OR</span><span style={s.dividerLine}/></div>
 
-          {/* QR Scanner trigger */}
-          <button style={styles.qrBox} onClick={() => setShowScanner(true)} type="button">
-            <span style={{ fontSize: 28 }}>📷</span>
+          <button style={s.qrBox} onClick={() => setShowScanner(true)} type="button">
+            <span style={{ fontSize:28 }}></span>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 15 }}>Scan QR Code</div>
-              <div style={{ fontSize: 12, color: '#8b949e', marginTop: 2 }}>
-                Use your device camera to scan the QR on your receipt
-              </div>
+              <div style={{ fontWeight:700, fontSize:14, color:'#f0f0ff' }}>Scan QR Code</div>
+              <div style={{ fontSize:11, color:'rgba(160,160,192,0.7)', marginTop:2 }}>Use camera to scan receipt QR</div>
             </div>
-            <span style={{ marginLeft: 'auto', color: '#8b949e', fontSize: 20 }}>›</span>
+            <span style={{ marginLeft:'auto', color:'rgba(124,92,252,0.8)', fontSize:18 }}></span>
           </button>
 
-          {/* Verify button */}
-          <button style={styles.verifyBtn} onClick={handleSubmit} type="button">
-            🔍 &nbsp;Verify on Blockchain
+          <button style={s.verifyBtn} onClick={handleSubmit} type="button">
+             &nbsp;Verify on Blockchain
           </button>
         </div>
 
-        {/* ── Info strips ── */}
-        <div style={styles.infoGrid}>
+        <div style={s.infoGrid}>
           {[
-            { icon: '🔒', title: 'Anonymous',  desc: 'Your identity is never revealed during verification.' },
-            { icon: '⛓',  title: 'Blockchain', desc: 'Results are verified against Hyperledger Fabric.' },
-            { icon: '⚡', title: 'Instant',    desc: 'Verification completes in under 3 seconds.' },
+            { icon:'', title:'Anonymous',  desc:'Your identity is never revealed.' },
+            { icon:'',  title:'Blockchain', desc:'Verified on Hyperledger Fabric.' },
+            { icon:'', title:'Instant',    desc:'Results in under 3 seconds.' },
           ].map(({ icon, title, desc }) => (
-            <div key={title} style={styles.infoCard}>
-              <span style={{ fontSize: 24 }}>{icon}</span>
-              <div style={{ fontWeight: 700, fontSize: 13, color: '#e6edf3', marginTop: 6 }}>{title}</div>
-              <div style={{ fontSize: 12, color: '#8b949e', marginTop: 4, lineHeight: 1.5 }}>{desc}</div>
+            <div key={title} style={s.infoCard}>
+              <span style={{ fontSize:22 }}>{icon}</span>
+              <div style={{ fontWeight:700, fontSize:12, color:'#f0f0ff', marginTop:6 }}>{title}</div>
+              <div style={{ fontSize:11, color:'rgba(160,160,192,0.7)', marginTop:3, lineHeight:1.5 }}>{desc}</div>
             </div>
           ))}
         </div>
 
-        <p style={styles.footer}>
-          <a href="https://eci.gov.in" target="_blank" rel="noopener" style={styles.link}>
-            Election Commission of India
-          </a>
-          &nbsp;·&nbsp;
-          <a href="#faq" style={styles.link}>Help &amp; FAQ</a>
+        <p style={s.footer}>
+          <a href="https://eci.gov.in" target="_blank" rel="noopener" style={s.link}>Election Commission of India</a>
+          &nbsp;&nbsp;<a href="#faq" style={s.link}>Help &amp; FAQ</a>
         </p>
       </div>
     </>
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────
-const styles = {
+const s = {
   page: {
-    minHeight: '100vh',
-    background: 'linear-gradient(135deg,#0d1117 0%,#1a2744 55%,#0f2a1a 100%)',
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    padding: '48px 16px 40px', fontFamily: "'Baloo 2', sans-serif",
+    minHeight:'100vh', background:'#09090f',
+    display:'flex', flexDirection:'column', alignItems:'center',
+    padding:'48px 16px 40px', fontFamily:"'DM Sans',sans-serif",
+    color:'#f0f0ff', position:'relative', overflow:'hidden',
   },
-  header: { textAlign: 'center', marginBottom: 36 },
+  bgGlow1: {
+    position:'fixed', top:-100, left:'30%', width:500, height:500, borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(124,92,252,0.08) 0%,transparent 70%)',
+    pointerEvents:'none', zIndex:0,
+  },
+  bgGlow2: {
+    position:'fixed', bottom:-100, right:'20%', width:400, height:400, borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(91,63,212,0.06) 0%,transparent 70%)',
+    pointerEvents:'none', zIndex:0,
+  },
+  header: { textAlign:'center', marginBottom:32, position:'relative', zIndex:1 },
   logoRing: {
-    fontSize: 56, lineHeight: 1, marginBottom: 10,
-    filter: 'drop-shadow(0 0 16px rgba(37,99,235,.5))',
+    fontSize:52, lineHeight:1, marginBottom:10,
+    filter:'drop-shadow(0 0 20px rgba(124,92,252,0.5))',
   },
-  title: { fontSize: 28, fontWeight: 800, color: '#fff', margin: 0 },
-  subtitle: { fontSize: 13, color: '#8b949e', marginTop: 6 },
+  title:    { fontSize:26, fontWeight:800, color:'#f0f0ff', margin:0 },
+  subtitle: { fontSize:13, color:'rgba(160,160,192,0.7)', marginTop:5 },
   flagBar: {
-    width: 120, height: 4, margin: '14px auto 0',
-    background: 'linear-gradient(90deg,#FF6B00 33.3%,#fff 33.3% 66.6%,#138808 66.6%)',
-    borderRadius: 2,
+    width:100, height:3, margin:'12px auto 0',
+    background:'linear-gradient(90deg,var(--p1),var(--p2),var(--p3))',
+    borderRadius:2,
   },
   card: {
-    width: '100%', maxWidth: 480,
-    background: '#161b22', border: '1px solid #30363d', borderRadius: 20,
-    padding: 32, boxShadow: '0 24px 64px rgba(0,0,0,.5)',
-    marginBottom: 20,
+    width:'100%', maxWidth:460, position:'relative', zIndex:1,
+    background:'rgba(22,22,37,0.8)', backdropFilter:'blur(16px)',
+    border:'1px solid rgba(255,255,255,0.08)', borderRadius:20,
+    padding:28, boxShadow:'0 24px 64px rgba(0,0,0,.6),0 0 0 1px rgba(124,92,252,0.1)',
+    marginBottom:16,
   },
-  cardTitle: { fontSize: 17, fontWeight: 800, color: '#fff', marginBottom: 10 },
-  cardDesc: { fontSize: 13, color: '#8b949e', lineHeight: 1.6, marginBottom: 24 },
+  cardTitle: { fontSize:16, fontWeight:800, color:'#f0f0ff', marginBottom:8 },
+  cardDesc:  { fontSize:12, color:'rgba(160,160,192,0.7)', lineHeight:1.6, marginBottom:20 },
   label: {
-    display: 'block', color: '#8b949e', fontSize: 11, fontWeight: 700,
-    textTransform: 'uppercase', letterSpacing: '.06em', marginBottom: 6,
+    display:'block', color:'rgba(160,160,192,0.7)', fontSize:10, fontWeight:700,
+    textTransform:'uppercase', letterSpacing:'.06em', marginBottom:5,
   },
   input: {
-    width: '100%', background: '#0d1117', border: '1.5px solid #30363d',
-    color: '#e6edf3', borderRadius: 10, padding: '13px 16px',
-    fontFamily: "'Courier New',monospace", fontSize: 16, fontWeight: 700,
-    letterSpacing: '.08em', outline: 'none', transition: 'border-color .2s',
-    marginBottom: 4,
+    width:'100%', background:'rgba(0,0,0,0.5)', border:'1px solid rgba(255,255,255,0.1)',
+    color:'#f0f0ff', borderRadius:10, padding:'12px 14px',
+    fontFamily:"'Courier New',monospace", fontSize:15, fontWeight:700,
+    letterSpacing:'.06em', outline:'none', transition:'all .2s', marginBottom:4,
   },
-  inputError: { borderColor: '#E74C3C' },
-  errorHint: { color: '#E74C3C', fontSize: 12, marginBottom: 4 },
-  hint: { fontSize: 11, color: '#8b949e', marginBottom: 20 },
-  divider: {
-    display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0 16px',
-  },
-  dividerText: {
-    color: '#8b949e', fontSize: 13, whiteSpace: 'nowrap',
-    background: '#161b22', padding: '0 8px',
-    flex: 'none',
-    // use pseudo via wrapper:
-    position: 'relative',
-  },
+  inputErr: { borderColor:'rgba(240,79,88,0.6)' },
+  errHint:  { color:'#f04f58', fontSize:11, marginBottom:4 },
+  hint:     { fontSize:11, color:'rgba(96,96,128,0.8)', marginBottom:18 },
+  divider:  { display:'flex', alignItems:'center', gap:10, margin:'4px 0 14px' },
+  dividerLine: { flex:1, height:1, background:'rgba(255,255,255,0.08)' },
+  dividerText: { color:'rgba(160,160,192,0.5)', fontSize:12 },
   qrBox: {
-    width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-    background: '#0d1117', border: '1.5px dashed #30363d', borderRadius: 12,
-    padding: '14px 16px', cursor: 'pointer', marginBottom: 20, textAlign: 'left',
-    color: '#e6edf3', fontFamily: 'inherit', transition: 'border-color .2s',
+    width:'100%', display:'flex', alignItems:'center', gap:12,
+    background:'rgba(0,0,0,0.3)', border:'1px dashed rgba(124,92,252,0.3)',
+    borderRadius:12, padding:'12px 14px', cursor:'pointer', marginBottom:16,
+    textAlign:'left', color:'#f0f0ff', fontFamily:'inherit', transition:'border-color .2s',
   },
   verifyBtn: {
-    width: '100%', background: '#2563EB', color: '#fff', border: 'none',
-    borderRadius: 12, padding: '16px 0', fontFamily: 'inherit',
-    fontSize: 16, fontWeight: 800, cursor: 'pointer',
-    transition: 'background .2s, transform .1s',
+    width:'100%', background:'linear-gradient(135deg,#7c5cfc,#9d7dfd)', color:'#fff',
+    border:'none', borderRadius:12, padding:'15px 0', fontFamily:'inherit',
+    fontSize:15, fontWeight:800, cursor:'pointer',
+    boxShadow:'0 8px 24px rgba(124,92,252,0.4)', transition:'opacity .2s',
   },
   infoGrid: {
-    display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12,
-    width: '100%', maxWidth: 480, marginBottom: 24,
+    display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:10,
+    width:'100%', maxWidth:460, marginBottom:20, position:'relative', zIndex:1,
   },
   infoCard: {
-    background: 'rgba(22,27,34,.8)', border: '1px solid #30363d', borderRadius: 12,
-    padding: '14px 12px', textAlign: 'center',
+    background:'rgba(22,22,37,0.6)', border:'1px solid rgba(255,255,255,0.06)',
+    borderRadius:12, padding:'12px 10px', textAlign:'center',
+    backdropFilter:'blur(8px)',
   },
-  footer: { color: '#8b949e', fontSize: 12, textAlign: 'center' },
-  link: { color: '#60A5FA', textDecoration: 'none' },
+  footer: { color:'rgba(96,96,128,0.8)', fontSize:11, textAlign:'center', position:'relative', zIndex:1 },
+  link:   { color:'#7c5cfc', textDecoration:'none' },
 }

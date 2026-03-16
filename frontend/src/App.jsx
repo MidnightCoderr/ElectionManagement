@@ -3,6 +3,7 @@ import Landing        from './components/Landing.jsx'
 import VoterUI        from './components/VoterUI.jsx'
 import ObserverDashBoard     from './components/ObserverDashBoard.jsx'
 import AdminPage          from './components/AdminPage.jsx'
+import VerificationPortal from './components/VerificationPortal.jsx'
 import CreateAccount  from './components/CreateAccount.jsx'
 import './index.css'
 
@@ -11,7 +12,16 @@ const TABS = [
   { id: 'voter',   path: '/voter',     label: 'Voter UI',   exact: false },
   { id: 'obs',     path: '/observer',  label: 'Observer',   exact: false },
   { id: 'admin',   path: '/dashboard', label: 'Dashboard',  exact: false },
+  { id: 'verify',  path: '/verify',    label: 'Verify',     exact: false },
 ]
+
+// Portal URLs for "Open in Full App" links
+const PORTAL_URLS = {
+  voter:    import.meta.env.VITE_VOTER_URL    || 'http://localhost:3001',
+  observer: import.meta.env.VITE_OBSERVER_URL || 'http://localhost:3002',
+  verify:   import.meta.env.VITE_VERIFY_URL   || 'http://localhost:3003',
+  admin:    import.meta.env.VITE_ADMIN_URL    || 'http://localhost:3004',
+}
 
 function Nav() {
   const { pathname } = useLocation()
@@ -61,6 +71,7 @@ export default function App() {
           <Route path="/voter"     element={<VoterUI />} />
           <Route path="/observer"  element={<ObserverDashBoard />} />
           <Route path="/dashboard" element={<AdminPage />} />
+          <Route path="/verify"    element={<VerificationPortal />} />
           <Route path="/create"    element={<CreateAccount />} />
         </Routes>
       </div>

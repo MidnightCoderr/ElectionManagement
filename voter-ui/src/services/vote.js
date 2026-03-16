@@ -38,7 +38,7 @@ export async function castVote({ candidateId, voterId, terminalId = 'TERM-00001'
     }
   }
 
-  const data = await apiFetch('/api/v1/votes', {
+  const data = await apiFetch('/api/v1/votes/cast', {
     method: 'POST',
     body: JSON.stringify({ candidateId, voterId, terminalId, electionId }),
   })

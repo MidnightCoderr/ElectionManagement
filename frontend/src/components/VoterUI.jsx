@@ -145,11 +145,16 @@ function ConfirmStep({ vi, onConfirm, onChange }) {
 export default function VoterUIPage() {
   const [vs, setVs] = useState(2)   // step: 2=scan 3=verified 4=cands 5=confirm
   const [vi, setVi] = useState(0)   // voter/candidate index
+  const portalUrl = import.meta.env.VITE_VOTER_URL || 'http://localhost:3001'
 
   const dots = [2,3,4,5,6,7]
 
   return (
     <div className="view on" id="v-voter" style={{flex:1,overflow:'hidden'}}>
+      <a href={portalUrl} target="_blank" rel="noopener noreferrer"
+        style={{display:'block',textAlign:'center',padding:'6px 0',background:'rgba(91,63,212,0.15)',color:'#c4b0fa',fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",textDecoration:'none',letterSpacing:'.02em'}}>
+        Open Full Voter Terminal &rarr;
+      </a>
       <div className="voter-bg">
         <div className="device">
 

@@ -4,7 +4,7 @@ import crypto from 'crypto';
 import { Voter } from '../models/index.js';
 import { generateToken } from '../middleware/auth.middleware.js';
 import { authLimiter } from '../middleware/rateLimit.middleware.js';
-import logger from '../utils/logger.js';
+import logger from '../../utils/logger.js';
 
 
 const router = express.Router();
