@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        saffron:      '#FF6B00',
-        'saffron-lt': '#FF9A3C',
-        'india-green':'#138808',
-        'india-blue': '#1a3a6b',
+        saffron:      '#C9A227',
+        'saffron-lt': '#D4AF37',
+        'india-green':'#15803D',
+        'india-blue': '#0B1F3A',
       },
       fontFamily: {
         baloo: ['"Baloo 2"', 'sans-serif'],

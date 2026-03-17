@@ -1,5 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 
+const PORTAL_URLS = {
+  voter:    import.meta.env.VITE_VOTER_URL    || 'http://localhost:3001',
+  observer: import.meta.env.VITE_OBSERVER_URL || 'http://localhost:3002',
+  admin:    import.meta.env.VITE_ADMIN_URL    || 'http://localhost:3004',
+}
+
 export default function Landing() {
   const navigate = useNavigate()
 
@@ -13,18 +19,14 @@ export default function Landing() {
           <div className="hline" style={{top:'47%'}}></div>
           <div className="hline" style={{top:'72%'}}></div>
         </div>
-        <div className="vbars">
-          <div className="vbar" style={{height:'52%'}}></div>
-          <div className="vbar" style={{height:'70%'}}></div>
-          <div className="vbar" style={{height:'86%'}}></div>
-          <div className="vbar" style={{height:'66%'}}></div>
-          <div className="vbar" style={{height:'44%'}}></div>
-        </div>
 
-        <div className="hero-play">
-          <svg viewBox="0 0 12 12" fill="none">
-            <polygon points="4,2 10,6 4,10" fill="rgba(255,255,255,0.7)"/>
-          </svg>
+        {/* Glowing ring animation — Dribbble inspired */}
+        <div className="glow-ring-wrapper">
+          <div className="glow-ring">
+            <div className="glow-ring-trail"></div>
+          </div>
+          <div className="glow-ring-inner"></div>
+          <div className="glow-ring-pulse"></div>
         </div>
 
         <div className="hero-announce">
@@ -32,10 +34,10 @@ export default function Landing() {
           Blockchain-verified elections &mdash; Learn how it works &nbsp;&rarr;
         </div>
 
-        {/* Floating nodes  left */}
-        <div className="fnode-l1">
-          <div className="fnode-ico">
-            <svg viewBox="0 0 10 10" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1" width="10" height="10">
+        {/* Floating nodes — animated entry */}
+        <div className="fnode-l1 fnode-anim" style={{animationDelay:'0.1s'}}>
+          <div className="fnode-ico fnode-float">
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
               <polygon points="5,1 9,8 1,8" fill="none"/>
             </svg>
           </div>
@@ -43,9 +45,9 @@ export default function Landing() {
           <div className="fnode-val">72,456 votes</div>
         </div>
 
-        <div className="fnode-l2">
-          <div className="fnode-ico">
-            <svg viewBox="0 0 10 10" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1" width="10" height="10">
+        <div className="fnode-l2 fnode-anim" style={{animationDelay:'0.3s'}}>
+          <div className="fnode-ico fnode-float" style={{animationDelay:'1s'}}>
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
               <circle cx="5" cy="5" r="2" fill="none"/>
               <circle cx="5" cy="5" r="4" fill="none"/>
             </svg>
@@ -54,10 +56,9 @@ export default function Landing() {
           <div className="fnode-val">58,234 votes</div>
         </div>
 
-        {/* Floating nodes  right */}
-        <div className="fnode-r1">
-          <div className="fnode-ico" style={{marginLeft:'auto'}}>
-            <svg viewBox="0 0 10 10" fill="none" stroke="rgba(255,255,255,0.45)" strokeWidth="1" width="10" height="10">
+        <div className="fnode-r1 fnode-anim" style={{animationDelay:'0.2s'}}>
+          <div className="fnode-ico fnode-float" style={{marginLeft:'auto',animationDelay:'0.5s'}}>
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
               <path d="M2 8l3-6 3 6" strokeLinecap="round"/>
             </svg>
           </div>
@@ -65,9 +66,9 @@ export default function Landing() {
           <div className="fnode-val">65,102 votes</div>
         </div>
 
-        <div className="fnode-r2">
-          <div className="fnode-ico" style={{marginLeft:'auto'}}>
-            <svg viewBox="0 0 10 10" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1" width="10" height="10">
+        <div className="fnode-r2 fnode-anim" style={{animationDelay:'0.4s'}}>
+          <div className="fnode-ico fnode-float" style={{marginLeft:'auto',animationDelay:'1.5s'}}>
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
               <path d="M2 6l2-3 2 2 2-4" strokeLinecap="round" fill="none"/>
             </svg>
           </div>
@@ -77,23 +78,23 @@ export default function Landing() {
 
         {/* Connecting SVG curves */}
         <svg className="svg-lines" viewBox="0 0 800 654" preserveAspectRatio="none">
-          <path d="M92 210 Q200 280 400 327"  stroke="rgba(255,255,255,0.055)" strokeWidth="1" fill="none"/>
-          <path d="M92 380 Q200 376 400 327"  stroke="rgba(255,255,255,0.045)" strokeWidth="1" fill="none"/>
-          <path d="M708 210 Q600 275 400 327" stroke="rgba(255,255,255,0.055)" strokeWidth="1" fill="none"/>
-          <path d="M708 420 Q620 378 400 327" stroke="rgba(255,255,255,0.045)" strokeWidth="1" fill="none"/>
+          <path d="M92 210 Q200 280 400 327"  stroke="rgba(11,31,58,0.06)" strokeWidth="1" fill="none"/>
+          <path d="M92 380 Q200 376 400 327"  stroke="rgba(11,31,58,0.04)" strokeWidth="1" fill="none"/>
+          <path d="M708 210 Q600 275 400 327" stroke="rgba(11,31,58,0.06)" strokeWidth="1" fill="none"/>
+          <path d="M708 420 Q620 378 400 327" stroke="rgba(11,31,58,0.04)" strokeWidth="1" fill="none"/>
         </svg>
 
-        {/* Hero text */}
+        {/* Hero text with glow */}
         <div className="hero-text">
-          <span className="hero-line1">Your vote.</span>
-          <span className="hero-line2">Protected.</span>
-          <span className="hero-line3">Counted.</span>
+          <span className="hero-line1 hero-glow-text">Your vote.</span>
+          <span className="hero-line2 hero-glow-text" style={{animationDelay:'0.2s'}}>Protected.</span>
+          <span className="hero-line3 hero-glow-text" style={{animationDelay:'0.4s'}}>Counted.</span>
           <div className="hero-sub">
             Where blockchain technology meets democratic integrity &mdash; secure, transparent, verifiable.
           </div>
         </div>
 
-        {/* CTA buttons */}
+        {/* CTA — only Open App */}
         <div className="hero-btns">
           <button className="hbtn-open" onClick={() => navigate('/voter')}>
             Open App
@@ -101,19 +102,38 @@ export default function Landing() {
               <path d="M2 5h6M5 2l3 3-3 3"/>
             </svg>
           </button>
-          <button className="hbtn-discover" onClick={() => navigate('/observer')}>
-            Discover More
-          </button>
         </div>
 
         {/* Scroll indicator */}
         <div className="scroll-ind">
           <div className="scroll-circle">
-            <svg viewBox="0 0 10 10" fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="1.5" strokeLinecap="round">
+            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <path d="M5 2v5M2.5 5.5L5 8l2.5-2.5"/>
             </svg>
           </div>
           01/05 &middot; Scroll down
+        </div>
+
+        {/* Bottom-left portal links */}
+        <div className="portal-links">
+          <a href={PORTAL_URLS.voter} target="_blank" rel="noopener noreferrer" className="portal-link" title="Voter Terminal">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <rect x="2" y="3" width="12" height="9" rx="1.5"/>
+              <path d="M5 15h6M8 12v3"/>
+            </svg>
+          </a>
+          <a href={PORTAL_URLS.observer} target="_blank" rel="noopener noreferrer" className="portal-link" title="Observer Dashboard">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/>
+              <circle cx="8" cy="8" r="2"/>
+            </svg>
+          </a>
+          <a href={PORTAL_URLS.admin} target="_blank" rel="noopener noreferrer" className="portal-link" title="Admin Portal">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <circle cx="8" cy="8" r="3"/>
+              <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
+            </svg>
+          </a>
         </div>
 
         {/* Election Horizons */}

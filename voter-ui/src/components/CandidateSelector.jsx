@@ -55,7 +55,7 @@ function CandCard({ c, locale, dispatch }) {
       onClick={()=>dispatch({type:ACTIONS.SELECT_CANDIDATE,payload:c})}
     >
       <div style={s.av}>
-        <svg viewBox="0 0 20 20" fill="none" stroke="#9d7dfd" strokeWidth="1.6" strokeLinecap="round" style={{width:24,height:24}}>
+        <svg viewBox="0 0 20 20" fill="none" stroke="#4F46E5" strokeWidth="1.6" strokeLinecap="round" style={{width:24,height:24}}>
           <circle cx="10" cy="7" r="3.5"/>
           <path d="M3 18c0-3.87 3.13-7 7-7s7 3.13 7 7"/>
         </svg>
@@ -70,43 +70,42 @@ function CandCard({ c, locale, dispatch }) {
 }
 
 const s = {
-  wrap:{flex:1,display:'flex',flexDirection:'column',background:'linear-gradient(160deg,#040408,#08081a)'},
+  wrap:{flex:1,display:'flex',flexDirection:'column',background:'#F8FAFC'},
   topBar:{
-    background:'rgba(6,6,18,0.95)',backdropFilter:'blur(12px)',
-    borderBottom:'1px solid rgba(255,255,255,0.06)',
+    background:'#FFFFFF',backdropFilter:'blur(12px)',
+    borderBottom:'1px solid #E2E8F0',
     padding:'16px 32px',display:'flex',alignItems:'center',justifyContent:'space-between',
     flexShrink:0,
   },
-  topTitle:{fontFamily:FONT,fontSize:15,fontWeight:600,color:'#f2f2ff'},
-  pill:{fontFamily:FONT,fontSize:11,color:'#3e3e58',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.07)',borderRadius:6,padding:'4px 12px'},
+  topTitle:{fontFamily:FONT,fontSize:15,fontWeight:600,color:'#0F172A'},
+  pill:{fontFamily:FONT,fontSize:11,color:'#94A3B8',background:'#F1F5F9',border:'1px solid #E2E8F0',borderRadius:6,padding:'4px 12px'},
   listArea:{flex:1,overflowY:'auto',padding:'24px 32px'},
   grid:{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,380px),1fr))',gap:12},
-  loading:{fontFamily:FONT,color:'#3e3e58',textAlign:'center',padding:60,fontSize:15},
+  loading:{fontFamily:FONT,color:'#94A3B8',textAlign:'center',padding:60,fontSize:15},
   card:{
     borderRadius:12,padding:'16px 20px',
     display:'flex',alignItems:'center',gap:16,cursor:'pointer',
-    background:'rgba(255,255,255,0.04)',
-    backdropFilter:'blur(12px)',
-    border:'1px solid rgba(255,255,255,0.08)',
-    boxShadow:'inset 0 1px 0 rgba(255,255,255,0.05)',
+    background:'#FFFFFF',
+    border:'1px solid #E2E8F0',
+    boxShadow:'0 1px 3px rgba(15,23,42,0.04)',
     transition:'all .2s',width:'100%',fontFamily:FONT,textAlign:'left',
   },
-  cardHov:{border:'1px solid rgba(124,92,252,0.3)',background:'rgba(124,92,252,0.07)',transform:'translateY(-1px)',boxShadow:'0 4px 20px rgba(91,63,212,0.15)'},
+  cardHov:{border:'1px solid rgba(79,70,229,0.3)',background:'rgba(79,70,229,0.04)',transform:'translateY(-1px)',boxShadow:'0 4px 20px rgba(15,23,42,0.08)'},
   av:{
     width:52,height:52,borderRadius:12,flexShrink:0,
-    background:'rgba(91,63,212,0.14)',border:'1px solid rgba(124,92,252,0.12)',
+    background:'rgba(79,70,229,0.08)',border:'1px solid rgba(79,70,229,0.14)',
     display:'flex',alignItems:'center',justifyContent:'center',
   },
-  cname:{fontFamily:FONT,fontSize:15,fontWeight:600,color:'#f2f2ff'},
-  cparty:{fontFamily:FONT,fontSize:12,color:'#3e3e58',marginTop:2},
-  csel:{fontFamily:FONT,fontSize:11,fontWeight:600,padding:'4px 12px',borderRadius:6,color:'#c4b0fa',background:'rgba(124,92,252,0.1)',border:'1px solid rgba(124,92,252,0.14)',flexShrink:0},
+  cname:{fontFamily:FONT,fontSize:15,fontWeight:600,color:'#0F172A'},
+  cparty:{fontFamily:FONT,fontSize:12,color:'#94A3B8',marginTop:2},
+  csel:{fontFamily:FONT,fontSize:11,fontWeight:600,padding:'4px 12px',borderRadius:6,color:'#4F46E5',background:'rgba(79,70,229,0.06)',border:'1px solid rgba(79,70,229,0.15)',flexShrink:0},
   footer:{
-    borderTop:'1px solid rgba(255,255,255,0.05)',
-    padding:'14px 32px',background:'rgba(0,0,0,0.2)',flexShrink:0,
+    borderTop:'1px solid #E2E8F0',
+    padding:'14px 32px',background:'#F1F5F9',flexShrink:0,
   },
   backBtn:{
     display:'flex',alignItems:'center',gap:8,
     background:'none',border:'none',fontFamily:FONT,fontSize:13,fontWeight:500,
-    color:'#3e3e58',cursor:'pointer',
+    color:'#94A3B8',cursor:'pointer',
   },
 }

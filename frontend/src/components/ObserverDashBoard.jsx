@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react'
 
 const KPI_DATA = [
-  { ico: 'p', stroke: '#9d7dfd', label: 'Total Votes', val: '1,234,567', trend: 'up', trendLabel: '\u2191 Live',
+  { ico: 'p', stroke: '#4F46E5', label: 'Total Votes', val: '1,234,567', trend: 'up', trendLabel: '\u2191 Live',
     svgPath: <><path d="M7 1.5v2M12 7h-2M7 12.5v-2M2 7h2"/><circle cx="7" cy="7" r="2.5"/></> },
-  { ico: 'g', stroke: '#8e8ea8', label: 'Turnout', val: '58.3%', trend: 'dn', trendLabel: 'of 2.12Cr',
+  { ico: 'g', stroke: '#475569', label: 'Turnout', val: '58.3%', trend: 'dn', trendLabel: 'of 2.12Cr',
     svgPath: <><circle cx="7" cy="7" r="5"/><path d="M7 4.5V7l2 1"/></> },
-  { ico: 'p', stroke: '#9d7dfd', label: 'Terminals', val: '45,234', trend: 'dn', trendLabel: 'of 48,000',
+  { ico: 'p', stroke: '#4F46E5', label: 'Terminals', val: '45,234', trend: 'dn', trendLabel: 'of 48,000',
     svgPath: <><rect x="2" y="3.5" width="10" height="7" rx="1.5"/></> },
-  { ico: 'g', stroke: '#8e8ea8', label: 'Alerts', val: '5', trend: 'up', trendLabel: '3 Critical',
+  { ico: 'g', stroke: '#475569', label: 'Alerts', val: '5', trend: 'up', trendLabel: '3 Critical',
     svgPath: <><path d="M7 2v2M12 7h-2M7 12v-2M2 7h2"/><circle cx="7" cy="7" r="2"/></> },
 ]
 
@@ -45,10 +45,6 @@ export default function ObserverPage() {
   const portalUrl = import.meta.env.VITE_OBSERVER_URL || 'http://localhost:3002'
   return (
     <div className="view on" id="v-obs" style={{flex:1,overflow:'hidden'}}>
-      <a href={portalUrl} target="_blank" rel="noopener noreferrer"
-        style={{display:'block',textAlign:'center',padding:'6px 0',background:'rgba(91,63,212,0.15)',color:'#c4b0fa',fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",textDecoration:'none',letterSpacing:'.02em'}}>
-        Open Full Observer Dashboard &rarr;
-      </a>
       <div className="obs-shell">
 
         {/* Sidebar */}

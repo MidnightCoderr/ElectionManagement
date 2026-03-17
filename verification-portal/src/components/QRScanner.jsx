@@ -75,7 +75,7 @@ export default function QRScanner({ onScan, onClose }) {
   // ── Styles ────────────────────────────────────────────────────────────────
   const s = {
     overlay: {
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,.92)',
+      position: 'fixed', inset: 0, background: 'rgba(15,23,42,.92)',
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       justifyContent: 'center', zIndex: 1000, padding: 24,
     },
@@ -94,14 +94,14 @@ export default function QRScanner({ onScan, onClose }) {
     },
     scanLine: {
       position: 'absolute', left: 20, right: 20, height: 2,
-      background: 'rgba(37,99,235,.8)',
-      boxShadow: '0 0 8px rgba(37,99,235,.6)',
+      background: 'rgba(79,70,229,.8)',
+      boxShadow: '0 0 8px rgba(79,70,229,.6)',
       animation: 'scanMove 2s linear infinite',
     },
     errorBox: {
-      background: 'rgba(231,76,60,.15)', border: '1px solid rgba(231,76,60,.4)',
+      background: 'rgba(185,28,28,.1)', border: '1px solid rgba(185,28,28,.3)',
       borderRadius: 12, padding: '16px 20px', maxWidth: 340, width: '100%',
-      color: '#E74C3C', fontSize: 14, textAlign: 'center', lineHeight: 1.6,
+      color: '#B91C1C', fontSize: 14, textAlign: 'center', lineHeight: 1.6,
     },
     btnRow: { display: 'flex', gap: 10, marginTop: 20, width: '100%', maxWidth: 340 },
     btn: {
@@ -109,16 +109,16 @@ export default function QRScanner({ onScan, onClose }) {
       fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer',
       transition: 'all .15s',
     },
-    closeBtn: { background: '#21262d', color: '#e6edf3', border: '1px solid #30363d' },
-    mockBtn:  { background: '#2563EB', color: '#fff' },
+    closeBtn: { background: '#1B3B6F', color: '#fff', border: '1px solid #0B1F3A' },
+    mockBtn:  { background: '#4F46E5', color: '#fff' },
     torchBtn: {
-      background: torchOn ? '#F4D03F' : '#21262d',
-      color: torchOn ? '#000' : '#e6edf3',
-      border: '1px solid #30363d',
-      padding: '12px 16px', borderRadius: 10, border: 'none',
+      background: torchOn ? '#C9A227' : '#1B3B6F',
+      color: torchOn ? '#0B1F3A' : '#fff',
+      border: '1px solid #0B1F3A',
+      padding: '12px 16px', borderRadius: 10,
       fontFamily: 'inherit', fontSize: 14, fontWeight: 700, cursor: 'pointer',
     },
-    hint: { color: '#8b949e', fontSize: 12, marginTop: 12, textAlign: 'center' },
+    hint: { color: '#94A3B8', fontSize: 12, marginTop: 12, textAlign: 'center' },
   }
 
   return (
@@ -147,7 +147,7 @@ export default function QRScanner({ onScan, onClose }) {
                 [320,320,'H280 M320,320 V280'],
               ].map(([x,y,d], i) => (
                 <path key={i} d={`M${x},${y} ${d}`}
-                  stroke="#2563EB" strokeWidth="4" strokeLinecap="round" />
+                  stroke="#4F46E5" strokeWidth="4" strokeLinecap="round" />
               ))}
             </svg>
             {active && <div style={s.scanLine} />}

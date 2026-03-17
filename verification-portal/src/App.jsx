@@ -26,15 +26,15 @@ function App() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Serif+Display:ital@0;1&display=swap');
         :root {
-          --p1:#5b3fd4;--p2:#7c5cfc;--p3:#9d7dfd;--p4:#c4b0fa;
+          --p1:#4F46E5;--p2:#4338CA;--p3:#C9A227;--p4:#E2E8F0;
           --sans:'DM Sans',system-ui,sans-serif;
           --serif:'DM Serif Display',Georgia,serif;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
           font-family: 'DM Sans', system-ui, sans-serif;
-          background: #040408;
-          color: #f2f2ff;
+          background: #F8FAFC;
+          color: #0F172A;
         }
 
         @keyframes spin  { to { transform: rotate(360deg); } }
@@ -43,7 +43,7 @@ function App() {
         @keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 
         button:hover { opacity: .9; }
-        input:focus { border-color: rgba(124,92,252,0.5) !important; box-shadow: 0 0 0 3px rgba(124,92,252,0.12) !important; }
+        input:focus { border-color: rgba(79,70,229,0.5) !important; box-shadow: 0 0 0 3px rgba(79,70,229,0.12) !important; }
       `}</style>
 
       {page === 'home' && (

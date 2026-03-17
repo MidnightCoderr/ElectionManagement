@@ -7,19 +7,19 @@ const Chev = () => (
 const ASSETS = [
   {
     name: 'Maharashtra', rate: '72.4', trend: 'up', trendLabel: '5.2% above avg',
-    gradId: 'g1', gradStart: '#5b3fd4', gradEnd: '#9d7dfd',
+    gradId: 'g1', gradStart: '#0B1F3A', gradEnd: '#4F46E5',
     path: 'M0 36 C20 31,40 24,60 20 S100 15,120 13 S160 9,200 6',
     upPath: 'M5 8V2M2 5l3-3 3 3'
   },
   {
     name: 'Karnataka', rate: '65.1', trend: 'dn', trendLabel: '1.3% below avg',
-    gradId: 'g2', gradStart: '#2e2e42', gradEnd: '#6b6b8a',
+    gradId: 'g2', gradStart: '#CBD5E1', gradEnd: '#475569',
     path: 'M0 18 C20 21,40 28,60 30 S100 32,120 28 S160 24,200 30',
     upPath: 'M5 2v6M2 5l3 3 3-3'
   },
   {
     name: 'Delhi NCR', rate: '58.3', trend: 'up', trendLabel: '2.1% above avg',
-    gradId: 'g3', gradStart: '#5b3fd4', gradEnd: '#c4b0fa',
+    gradId: 'g3', gradStart: '#4F46E5', gradEnd: '#1B3B6F',
     path: 'M0 40 C30 35,50 28,80 22 S120 17,150 12 S180 9,200 6',
     upPath: 'M5 8V2M2 5l3-3 3 3'
   },
@@ -53,10 +53,6 @@ export default function AdminPage() {
   const portalUrl = import.meta.env.VITE_ADMIN_URL || 'http://localhost:3004'
   return (
     <div className="view on" id="v-admin" style={{flex:1,overflow:'hidden'}}>
-      <a href={portalUrl} target="_blank" rel="noopener noreferrer"
-        style={{display:'block',textAlign:'center',padding:'6px 0',background:'rgba(91,63,212,0.15)',color:'#c4b0fa',fontSize:12,fontWeight:600,fontFamily:"'DM Sans',sans-serif",textDecoration:'none',letterSpacing:'.02em'}}>
-        Open Full Admin Portal &rarr;
-      </a>
       <div className="admin-shell">
 
         {/* Sidebar */}
@@ -123,7 +119,7 @@ export default function AdminPage() {
               </button>
               <input className="srch" placeholder="Search..."/>
               <div className="ico-btn">
-                <svg viewBox="0 0 14 14" fill="none" stroke="#5a5a78" strokeWidth="1.5" strokeLinecap="round">
+                <svg viewBox="0 0 14 14" fill="none" stroke="#475569" strokeWidth="1.5" strokeLinecap="round">
                   <rect x="1" y="1" width="4.5" height="4.5" rx="1"/>
                   <rect x="8.5" y="1" width="4.5" height="4.5" rx="1"/>
                   <rect x="1" y="8.5" width="4.5" height="4.5" rx="1"/>
@@ -146,7 +142,7 @@ export default function AdminPage() {
                       <div className="ac-name">{a.name}</div>
                     </div>
                     <div className="ac-ico">
-                      <svg viewBox="0 0 16 16" fill="none" stroke="#9d7dfd" strokeWidth="1.8" strokeLinecap="round">
+                      <svg viewBox="0 0 16 16" fill="none" stroke="#4F46E5" strokeWidth="1.8" strokeLinecap="round">
                         <path d="M8 2L2 6v8h3.5v-4h5v4H14V6L8 2z"/>
                       </svg>
                     </div>
@@ -178,7 +174,7 @@ export default function AdminPage() {
             <div className="sp">
               <div className="sp-hdr">
                 <div className="sp-upd">
-                  <svg viewBox="0 0 12 12" fill="none" stroke="#3e3e58" strokeWidth="1.5" strokeLinecap="round">
+                  <svg viewBox="0 0 12 12" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round">
                     <circle cx="6" cy="6" r="4.5"/>
                     <path d="M6 3.5V6l1.5 1"/>
                   </svg>
@@ -189,7 +185,7 @@ export default function AdminPage() {
               <div className="sp-title">
                 General Election 2024
                 <div className="sp-tag">
-                  <svg viewBox="0 0 14 14" fill="none" stroke="#9d7dfd" strokeWidth="1.6" strokeLinecap="round">
+                  <svg viewBox="0 0 14 14" fill="none" stroke="#4F46E5" strokeWidth="1.6" strokeLinecap="round">
                     <rect x="2" y="2" width="10" height="10" rx="1.5"/>
                     <path d="M4.5 7l2 2 3-3"/>
                   </svg>

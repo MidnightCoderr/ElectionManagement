@@ -1,13 +1,15 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap');
 
 :root {
-  --bg:#040408;--bg2:#08080f;--bg3:#0d0d18;
-  --surface:#161625;--surface2:#1c1c2e;
-  --glass:rgba(255,255,255,0.04);--glass2:rgba(255,255,255,0.07);
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
-  --text:#f2f2ff;--text2:#8a8aaa;--text3:#3e3e58;
-  --p1:#5b3fd4;--p2:#7c5cfc;--p3:#9d7dfd;--p4:#c4b0fa;
-  --g1:#1e1e2e;--g2:#2e2e42;--g3:#5a5a78;--g4:#8e8ea8;
+  --bg:#F8FAFC;--bg2:#FFFFFF;--bg3:#F1F5F9;
+  --surface:#E8EDF3;--surface2:#E2E8F0;
+  --glass:rgba(15,23,42,0.03);--glass2:rgba(15,23,42,0.05);
+  --border:#E2E8F0;--border2:#CBD5E1;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --p1:#0B1F3A;--p2:#4F46E5;--p3:#4338CA;--p4:#1B3B6F;
+  --g1:#E2E8F0;--g2:#CBD5E1;--g3:#94A3B8;--g4:#475569;
+  --gold:#C9A227;
+  --success:#15803D;--warning:#D97706;--error:#B91C1C;
   --sans:'DM Sans',system-ui,sans-serif;
   --serif:'DM Serif Display',Georgia,serif;
 }
@@ -36,7 +38,7 @@ body {
 
 ::-webkit-scrollbar{width:5px;height:5px;}
 ::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:rgba(124,92,252,0.3);border-radius:3px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 
 @keyframes fadeSlideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}

@@ -34,14 +34,14 @@ export default function VoteReceipt() {
 
   if (error) return (
     <div style={s.cast}>
-      <div style={{...s.castCircle,background:'linear-gradient(135deg,rgba(240,79,88,0.6),rgba(192,57,43,0.7))'}}>✗</div>
-      <div style={{...s.castTitle,color:'#9d7dfd'}}>Submission Failed</div>
+      <div style={{...s.castCircle,background:'linear-gradient(135deg,rgba(185,28,28,0.15),rgba(185,28,28,0.25))'}}>✗</div>
+      <div style={{...s.castTitle,color:'#B91C1C'}}>Submission Failed</div>
       <div style={s.castSub}>{error}</div>
     </div>
   )
 
   const r = receipt
-  const qrCells = Array.from({length:64},()=>`<div style="background:${Math.random()>.5?'rgba(255,255,255,0.85)':'rgba(91,63,212,0.7)'};aspect-ratio:1;border-radius:1px"></div>`).join('')
+  const qrCells = Array.from({length:64},()=>`<div style="background:${Math.random()>.5?'rgba(15,23,42,0.85)':'rgba(79,70,229,0.6)'};aspect-ratio:1;border-radius:1px"></div>`).join('')
 
   return (
     <div style={{flex:1,display:'flex',flexDirection:'column',animation:'fadeSlideUp .4s ease'}}>
@@ -70,23 +70,23 @@ export default function VoteReceipt() {
 }
 
 const s = {
-  cast:       { flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:'32px 22px',background:'linear-gradient(160deg,#04040a,#0a0a16)',animation:'fadeSlideUp .4s ease',position:'relative',overflow:'hidden' },
-  castGlow:   { position:'absolute',top:'30%',left:'50%',transform:'translate(-50%,-50%)',width:260,height:260,borderRadius:'50%',background:'radial-gradient(circle,rgba(91,63,212,0.1) 0%,transparent 70%)',pointerEvents:'none' },
-  castCircle: { width:80,height:80,borderRadius:14,background:'linear-gradient(145deg,rgba(124,92,252,0.3),rgba(91,63,212,0.4))',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(180,160,255,0.13)',boxShadow:'inset 0 2px 0 rgba(255,255,255,0.13),0 8px 24px rgba(91,63,212,0.28)',position:'relative',overflow:'hidden' },
-  castCircleShine:{ position:'absolute',top:0,left:0,right:0,height:'50%',background:'linear-gradient(180deg,rgba(255,255,255,0.13),transparent)',borderRadius:'14px 14px 0 0' },
-  castTitle:  { fontFamily:"'DM Serif Display',serif",fontSize:20,fontWeight:400,color:'#9d7dfd' },
-  castSub:    { fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:300,color:'#3e3e58' },
+  cast:       { flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:16,padding:'32px 22px',background:'#F8FAFC',animation:'fadeSlideUp .4s ease',position:'relative',overflow:'hidden' },
+  castGlow:   { position:'absolute',top:'30%',left:'50%',transform:'translate(-50%,-50%)',width:260,height:260,borderRadius:'50%',background:'radial-gradient(circle,rgba(79,70,229,0.04) 0%,transparent 70%)',pointerEvents:'none' },
+  castCircle: { width:80,height:80,borderRadius:14,background:'linear-gradient(145deg,rgba(21,128,61,0.15),rgba(21,128,61,0.25))',display:'flex',alignItems:'center',justifyContent:'center',border:'1px solid rgba(21,128,61,0.2)',boxShadow:'inset 0 2px 0 rgba(255,255,255,0.5),0 8px 24px rgba(15,23,42,0.08)',position:'relative',overflow:'hidden' },
+  castCircleShine:{ position:'absolute',top:0,left:0,right:0,height:'50%',background:'linear-gradient(180deg,rgba(255,255,255,0.4),transparent)',borderRadius:'14px 14px 0 0' },
+  castTitle:  { fontFamily:"'DM Serif Display',serif",fontSize:20,fontWeight:400,color:'#15803D' },
+  castSub:    { fontFamily:"'DM Sans',sans-serif",fontSize:12,fontWeight:300,color:'#94A3B8' },
   spinner:    { fontSize:18,display:'inline-block',animation:'spin 1s linear infinite' },
-  recHdr:     { background:'linear-gradient(135deg,rgba(91,63,212,0.6),rgba(74,54,160,0.7))',padding:16,textAlign:'center' },
+  recHdr:     { background:'linear-gradient(135deg,rgba(11,31,58,0.95),rgba(27,59,111,0.95))',padding:16,textAlign:'center' },
   recHdrTitle:{ fontFamily:"'DM Serif Display',serif",fontSize:16,fontWeight:400,color:'#fff' },
-  recBody:    { flex:1,padding:14,background:'rgba(0,0,0,0.35)' },
-  recCard:    { background:'rgba(255,255,255,0.04)',borderRadius:14,padding:16,border:'1px solid rgba(255,255,255,0.08)',boxShadow:'inset 0 1px 0 rgba(255,255,255,0.04)' },
-  qrBox:      { width:100,height:100,margin:'0 auto 14px',background:'#04040a',borderRadius:8,overflow:'hidden',border:'1px solid rgba(124,92,252,0.25)' },
-  row:        { display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'1px solid rgba(255,255,255,0.05)',fontSize:11 },
-  rowLbl:     { fontFamily:"'DM Sans',sans-serif",fontWeight:500,color:'#3e3e58',fontSize:10 },
-  rowVal:     { fontFamily:"'Courier New',monospace",fontWeight:400,color:'#f2f2ff',fontSize:10 },
-  hint:       { fontFamily:"'DM Sans',sans-serif",textAlign:'center',margin:'10px 0',color:'#3e3e58',fontSize:10 },
-  printBtn:   { width:'100%',marginTop:4,background:'linear-gradient(135deg,rgba(124,92,252,0.7),rgba(91,63,212,0.8))',color:'#fff',border:'none',borderRadius:8,padding:11,fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6 },
-  autoClose:  { fontFamily:"'DM Sans',sans-serif",textAlign:'center',color:'#3e3e58',fontSize:10,marginTop:10,display:'flex',alignItems:'center',justifyContent:'center',gap:4 },
-  newVoter:   { background:'none',border:'none',color:'#7c5cfc',fontFamily:"'DM Sans',sans-serif",fontSize:10,fontWeight:500,cursor:'pointer',padding:0 },
+  recBody:    { flex:1,padding:14,background:'#F1F5F9' },
+  recCard:    { background:'#FFFFFF',borderRadius:14,padding:16,border:'1px solid #E2E8F0',boxShadow:'0 1px 3px rgba(15,23,42,0.04)' },
+  qrBox:      { width:100,height:100,margin:'0 auto 14px',background:'#F8FAFC',borderRadius:8,overflow:'hidden',border:'1px solid rgba(79,70,229,0.2)' },
+  row:        { display:'flex',justifyContent:'space-between',padding:'5px 0',borderBottom:'1px solid #E2E8F0',fontSize:11 },
+  rowLbl:     { fontFamily:"'DM Sans',sans-serif",fontWeight:500,color:'#94A3B8',fontSize:10 },
+  rowVal:     { fontFamily:"'Courier New',monospace",fontWeight:400,color:'#0F172A',fontSize:10 },
+  hint:       { fontFamily:"'DM Sans',sans-serif",textAlign:'center',margin:'10px 0',color:'#94A3B8',fontSize:10 },
+  printBtn:   { width:'100%',marginTop:4,background:'#4F46E5',color:'#fff',border:'none',borderRadius:8,padding:11,fontFamily:"'DM Sans',sans-serif",fontSize:11,fontWeight:600,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6,transition:'background .2s' },
+  autoClose:  { fontFamily:"'DM Sans',sans-serif",textAlign:'center',color:'#94A3B8',fontSize:10,marginTop:10,display:'flex',alignItems:'center',justifyContent:'center',gap:4 },
+  newVoter:   { background:'none',border:'none',color:'#4F46E5',fontFamily:"'DM Sans',sans-serif",fontSize:10,fontWeight:500,cursor:'pointer',padding:0 },
 }

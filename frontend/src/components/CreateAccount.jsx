@@ -11,28 +11,25 @@ export default function CreateAccount() {
         <div className="create-left">
           <div className="cl-o1"></div>
           <div className="cl-o2"></div>
-          <div className="cl-art">
-            <svg width="155" height="155" viewBox="0 0 200 200" fill="none">
-              <circle cx="100" cy="100" r="70" stroke="rgba(124,92,252,0.12)" strokeWidth="1"/>
-              <circle cx="100" cy="100" r="50" stroke="rgba(124,92,252,0.1)"  strokeWidth="1"/>
-              <circle cx="100" cy="100" r="30" stroke="rgba(124,92,252,0.17)" strokeWidth="1.5"/>
-              <circle cx="100" cy="100" r="5"  fill="rgba(124,92,252,0.8)"/>
-              <line x1="100" y1="30"  x2="100" y2="70"  stroke="rgba(124,92,252,0.28)" strokeWidth="1"/>
-              <line x1="100" y1="130" x2="100" y2="170" stroke="rgba(124,92,252,0.28)" strokeWidth="1"/>
-              <line x1="30"  y1="100" x2="70"  y2="100" stroke="rgba(124,92,252,0.28)" strokeWidth="1"/>
-              <line x1="130" y1="100" x2="170" y2="100" stroke="rgba(124,92,252,0.28)" strokeWidth="1"/>
-              <circle cx="100" cy="30"  r="4" fill="rgba(124,92,252,0.48)"/>
-              <circle cx="100" cy="170" r="4" fill="rgba(124,92,252,0.48)"/>
-              <circle cx="30"  cy="100" r="4" fill="rgba(124,92,252,0.48)"/>
-              <circle cx="170" cy="100" r="4" fill="rgba(124,92,252,0.48)"/>
-              <circle cx="150" cy="50"  r="3" fill="rgba(74,74,106,0.55)"/>
-              <circle cx="50"  cy="150" r="3" fill="rgba(74,74,106,0.55)"/>
-              <circle cx="150" cy="150" r="3" fill="rgba(74,74,106,0.55)"/>
-              <circle cx="50"  cy="50"  r="3" fill="rgba(74,74,106,0.55)"/>
-              <path d="M100 70 A30 30 0 0 1 130 100" stroke="rgba(124,92,252,0.32)" strokeWidth="1.5" fill="none" strokeDasharray="4 4"/>
-              <path d="M100 130 A30 30 0 0 1 70 100" stroke="rgba(74,74,106,0.32)"  strokeWidth="1"   fill="none" strokeDasharray="3 5"/>
-            </svg>
+
+          {/* Fingerprint Scanner Animation */}
+          <div className="fp-scanner-wrap">
+            <div className="fp-scanner-box">
+              <svg viewBox="0 0 80 96" fill="none">
+                <path d="M40 6C24 6 11 18.5 11 34c0 7.5 2.8 14.4 7.4 19.8" stroke="rgba(79,70,229,0.7)" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M40 6C56 6 69 18.5 69 34c0 7.5-2.8 14.4-7.4 19.8" stroke="rgba(79,70,229,0.7)" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M19 56c-3.8-5.8-6-12.8-6-20C13 21.2 25.3 10 40 10s27 11.2 27 26c0 7.2-2.2 14.2-6 20" stroke="rgba(79,70,229,0.55)" strokeWidth="1.9" strokeLinecap="round"/>
+                <path d="M23 63c-3-5.2-4.8-11.2-4.8-17.5C18.2 31 28 21 40 21s21.8 10 21.8 24.5c0 6.3-1.8 12.3-4.8 17.5" stroke="rgba(79,70,229,0.45)" strokeWidth="1.7" strokeLinecap="round"/>
+                <path d="M27.5 70c-2.2-4.5-3.5-9.6-3.5-15C24 42.5 31.3 34 40 34s16 8.5 16 21c0 5.4-1.3 10.5-3.5 15" stroke="rgba(79,70,229,0.38)" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M32 76c-1.5-3.8-2.4-8-2.4-12.5C29.6 54.5 34.3 47 40 47s10.4 7.5 10.4 16.5c0 4.5-.9 8.7-2.4 12.5" stroke="rgba(79,70,229,0.3)" strokeWidth="1.3" strokeLinecap="round"/>
+                <path d="M36 82c-.8-3-1.2-6.2-1.2-9.8C34.8 65.8 37 60 40 60s5.2 5.8 5.2 12.2c0 3.6-.4 6.8-1.2 9.8" stroke="rgba(79,70,229,0.22)" strokeWidth="1.1" strokeLinecap="round"/>
+                <path d="M38.5 88c-.2-1.8-.4-3.8-.4-6C38.1 77 39 73 40 73s1.9 4 1.9 9c0 2.2-.2 4.2-.4 6" stroke="rgba(79,70,229,0.16)" strokeWidth="1" strokeLinecap="round"/>
+              </svg>
+              <div className="fp-scan-line"></div>
+              <div className="fp-scan-glow"></div>
+            </div>
           </div>
+
           <div className="cl-txt">
             <div className="cl-h">Capturing Democracy,<br/>Creating Transparency</div>
             <div className="cl-s">Election Management System &middot; India</div>
@@ -61,7 +58,7 @@ export default function CreateAccount() {
             <div className="pw">
               <input className="fi" type={showPass ? 'text' : 'password'} placeholder="Enter your password"/>
               <div className="pw-eye" onClick={() => setShowPass(v => !v)}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="#3e3e58" strokeWidth="1.5" strokeLinecap="round">
+                <svg viewBox="0 0 16 16" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round">
                   <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
                   <circle cx="8" cy="8" r="2"/>
                 </svg>
@@ -98,7 +95,7 @@ export default function CreateAccount() {
                 Google
               </button>
               <button className="sbtn">
-                <svg viewBox="0 0 24 24" fill="#8e8ea8" style={{width:15,height:15}}>
+                <svg viewBox="0 0 24 24" fill="#94A3B8" style={{width:15,height:15}}>
                   <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
                 Apple
