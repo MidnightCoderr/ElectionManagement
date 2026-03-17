@@ -16,14 +16,14 @@ export default function CreateAccount() {
           <div className="fp-scanner-wrap">
             <div className="fp-scanner-box">
               <svg viewBox="0 0 80 96" fill="none">
-                <path d="M40 6C24 6 11 18.5 11 34c0 7.5 2.8 14.4 7.4 19.8" stroke="rgba(79,70,229,0.7)" strokeWidth="2.2" strokeLinecap="round"/>
-                <path d="M40 6C56 6 69 18.5 69 34c0 7.5-2.8 14.4-7.4 19.8" stroke="rgba(79,70,229,0.7)" strokeWidth="2.2" strokeLinecap="round"/>
-                <path d="M19 56c-3.8-5.8-6-12.8-6-20C13 21.2 25.3 10 40 10s27 11.2 27 26c0 7.2-2.2 14.2-6 20" stroke="rgba(79,70,229,0.55)" strokeWidth="1.9" strokeLinecap="round"/>
-                <path d="M23 63c-3-5.2-4.8-11.2-4.8-17.5C18.2 31 28 21 40 21s21.8 10 21.8 24.5c0 6.3-1.8 12.3-4.8 17.5" stroke="rgba(79,70,229,0.45)" strokeWidth="1.7" strokeLinecap="round"/>
-                <path d="M27.5 70c-2.2-4.5-3.5-9.6-3.5-15C24 42.5 31.3 34 40 34s16 8.5 16 21c0 5.4-1.3 10.5-3.5 15" stroke="rgba(79,70,229,0.38)" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M32 76c-1.5-3.8-2.4-8-2.4-12.5C29.6 54.5 34.3 47 40 47s10.4 7.5 10.4 16.5c0 4.5-.9 8.7-2.4 12.5" stroke="rgba(79,70,229,0.3)" strokeWidth="1.3" strokeLinecap="round"/>
-                <path d="M36 82c-.8-3-1.2-6.2-1.2-9.8C34.8 65.8 37 60 40 60s5.2 5.8 5.2 12.2c0 3.6-.4 6.8-1.2 9.8" stroke="rgba(79,70,229,0.22)" strokeWidth="1.1" strokeLinecap="round"/>
-                <path d="M38.5 88c-.2-1.8-.4-3.8-.4-6C38.1 77 39 73 40 73s1.9 4 1.9 9c0 2.2-.2 4.2-.4 6" stroke="rgba(79,70,229,0.16)" strokeWidth="1" strokeLinecap="round"/>
+                <path d="M40 6C24 6 11 18.5 11 34c0 7.5 2.8 14.4 7.4 19.8" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M40 6C56 6 69 18.5 69 34c0 7.5-2.8 14.4-7.4 19.8" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round"/>
+                <path d="M19 56c-3.8-5.8-6-12.8-6-20C13 21.2 25.3 10 40 10s27 11.2 27 26c0 7.2-2.2 14.2-6 20" stroke="rgba(255,255,255,0.65)" strokeWidth="1.9" strokeLinecap="round"/>
+                <path d="M23 63c-3-5.2-4.8-11.2-4.8-17.5C18.2 31 28 21 40 21s21.8 10 21.8 24.5c0 6.3-1.8 12.3-4.8 17.5" stroke="rgba(255,255,255,0.55)" strokeWidth="1.7" strokeLinecap="round"/>
+                <path d="M27.5 70c-2.2-4.5-3.5-9.6-3.5-15C24 42.5 31.3 34 40 34s16 8.5 16 21c0 5.4-1.3 10.5-3.5 15" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
+                <path d="M32 76c-1.5-3.8-2.4-8-2.4-12.5C29.6 54.5 34.3 47 40 47s10.4 7.5 10.4 16.5c0 4.5-.9 8.7-2.4 12.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.3" strokeLinecap="round"/>
+                <path d="M36 82c-.8-3-1.2-6.2-1.2-9.8C34.8 65.8 37 60 40 60s5.2 5.8 5.2 12.2c0 3.6-.4 6.8-1.2 9.8" stroke="rgba(255,255,255,0.25)" strokeWidth="1.1" strokeLinecap="round"/>
+                <path d="M38.5 88c-.2-1.8-.4-3.8-.4-6C38.1 77 39 73 40 73s1.9 4 1.9 9c0 2.2-.2 4.2-.4 6" stroke="rgba(255,255,255,0.18)" strokeWidth="1" strokeLinecap="round"/>
               </svg>
               <div className="fp-scan-line"></div>
               <div className="fp-scan-glow"></div>
