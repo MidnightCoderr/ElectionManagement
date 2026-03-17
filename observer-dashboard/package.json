@@ -1,6 +1,7 @@
 {
   "name": "observer-dashboard",
   "version": "1.0.0",
+  "type": "module",
   "description": "Real-time observer dashboard with fraud alerts and audit log",
   "scripts": {
     "dev": "vite --port 3002",
