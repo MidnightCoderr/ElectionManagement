@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
-import axios from 'axios'
+import axios from 'axios' 
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
 const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false'
