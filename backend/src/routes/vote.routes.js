@@ -5,6 +5,8 @@ const { Voter, VotingRecord, Election } = require('../models/index.js');
 const { voteLimiter } = require('../middleware/rateLimit.middleware.js');
 const { authenticate } = require('../middleware/auth.middleware.js');
 const logger = require('../utils/logger.js');
+const { publishTelemetry } = require('../services/kafkaProducer.js');
+const { broadcastMessage } = require('../services/websocket.service.js');
 
 const router = express.Router();
 
@@ -106,6 +108,19 @@ router.post('/cast', voteLimiter, async (req, res) => {
 
         // 8. Update election vote count
         await election.increment('total_votes_cast');
+
+        // 9. Fire telemetry events
+        await publishTelemetry('election-telemetry', 'VOTE_CAST', {
+            voterId,
+            electionId,
+            candidateId,
+            district,
+            terminalId,
+            timestamp
+        });
+        
+        // Broadcast real-time update to dashboards
+        broadcastMessage('VOTE_CAST', { electionId, candidateId, district });
 
         res.status(201).json({
             success: true,

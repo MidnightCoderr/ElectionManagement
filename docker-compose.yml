@@ -46,6 +46,55 @@ services:
       retries: 5
 
   # ============================================
+  # Zookeeper - Kafka Coordinator
+  # ============================================
+  zookeeper:
+    image: bitnami/zookeeper:3.9
+    container_name: election-zookeeper
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper
+    networks:
+      - election-network
+    healthcheck:
+      test: ["CMD", "zkServer.sh", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Kafka - Event Streaming Broker
+  # ============================================
+  kafka:
+    image: bitnami/kafka:3.6
+    container_name: election-kafka
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_DEFAULT_REPLICATION_FACTOR=1
+      - KAFKA_CFG_NUM_PARTITIONS=3
+    ports:
+      - "9092:9092"
+    volumes:
+      - kafka_data:/bitnami/kafka
+    networks:
+      - election-network
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ============================================
   # Redis - Caching Layer
   # ============================================
   redis:
@@ -189,6 +238,8 @@ services:
       - JWT_SECRET=${JWT_SECRET:-changeme_random_256bit_secret_key_here}
       - FABRIC_PEER_ENDPOINT=peer0.electioncommission.election.com:7051
       - FABRIC_ORDERER_ENDPOINT=orderer.election.com:7050
+      - KAFKA_BROKER=kafka:9092
+      - ML_SERVICE_API_KEY=${ML_SERVICE_API_KEY:-ml-internal-secret}
     ports:
       - "3000:3000"
       - "3100:3100"
@@ -204,10 +255,11 @@ services:
       - redis
       - mqtt-broker
       - peer0.electioncommission.election.com
+      - kafka
     command: npm start
 
   # ============================================
-  # ML Analytics Service (Python)
+  # ML Analytics Service (Python/Flask HTTP)
   # ============================================
   ml-analytics:
     build:
@@ -228,6 +280,35 @@ services:
     depends_on:
       - mongodb
     command: python api.py
+
+  # ============================================
+  # ML Kafka Consumer (Python — real-time stream)
+  # ============================================
+  ml-kafka-consumer:
+    build:
+      context: ./ml-service
+      dockerfile: ../infrastructure/docker/Dockerfile.ml
+    container_name: election-ml-consumer
+    environment:
+      - KAFKA_BROKER=kafka:9092
+      - KAFKA_TOPIC=election-telemetry
+      - KAFKA_GROUP_ID=ml-fraud-detector
+      - BACKEND_ALERT_URL=http://backend:3000/api/v1/audit/alerts
+      - ML_SERVICE_API_KEY=${ML_SERVICE_API_KEY:-ml-internal-secret}
+      - ANOMALY_THRESHOLD=${ANOMALY_THRESHOLD:-0.6}
+      - FRAUD_MODEL_PATH=/app/src/models/voting_patterns.pkl
+    volumes:
+      - ./ml-service:/app
+      - ml_models:/app/src/models
+    networks:
+      - election-network
+    depends_on:
+      kafka:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    restart: on-failure
+    command: python kafka_consumer.py
 
   # ============================================
   # Voter UI (Frontend)
@@ -344,6 +425,8 @@ volumes:
   ml_models:
   prometheus_data:
   grafana_data:
+  zookeeper_data:
+  kafka_data:
 
     # ============================================
     # Networks

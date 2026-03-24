@@ -204,4 +204,87 @@ router.post('/', authenticate, async (req, res) => {
     }
 });
 
+/**
+ * @route   POST /api/v1/audit/alerts
+ * @desc    Receive fraud alert from ML Kafka consumer and broadcast via WebSocket
+ * @access  Internal (ML service) — validated by ML_SERVICE_API_KEY header
+ */
+router.post('/alerts', async (req, res) => {
+    // Lightweight internal-only auth — the ML consumer sends a shared secret
+    const internalKey = req.headers['x-ml-api-key'];
+    const expectedKey = process.env.ML_SERVICE_API_KEY || 'ml-internal-secret';
+    if (internalKey !== expectedKey) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    try {
+        const {
+            alertType,
+            severity,
+            voteId,
+            voterId,
+            terminalId,
+            district,
+            electionId,
+            reason,
+            confidence,
+            anomalyScore,
+            detectedAt,
+        } = req.body;
+
+        // Persist as audit log in MongoDB
+        const auditLog = await AuditLog.create({
+            eventType: alertType || 'FRAUD_DETECTED',
+            userId: voterId || 'ml-service',
+            ipAddress: req.ip,
+            userAgent: 'ml-kafka-consumer',
+            success: false,
+            metadata: {
+                voteId,
+                terminalId,
+                district,
+                electionId,
+                reason,
+                confidence,
+                anomalyScore,
+                detectedAt,
+            },
+            errorMessage: reason,
+        });
+
+        // Broadcast alert to all connected WebSocket clients (dashboards)
+        try {
+            const { broadcastMessage } = require('../services/websocket.service.js');
+            broadcastMessage('FRAUD_ALERT', {
+                alertId: auditLog._id,
+                severity,
+                alertType,
+                voterId,
+                terminalId,
+                district,
+                electionId,
+                reason,
+                confidence,
+                detectedAt,
+            });
+        } catch (wsErr) {
+            console.warn('WebSocket broadcast for alert failed:', wsErr.message);
+        }
+
+        res.status(201).json({
+            success: true,
+            message: 'Alert recorded and broadcasted',
+            alertId: auditLog._id,
+        });
+    } catch (error) {
+        console.error('Error recording fraud alert:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Failed to record alert',
+            error: error.message,
+        });
+    }
+});
+
 export default router;
+

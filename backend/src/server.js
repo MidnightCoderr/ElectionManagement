@@ -3,6 +3,8 @@ const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
 const { initializeDatabases, closeDatabases } = require('./db/index.js');
+const { initWebSocketServer } = require('./services/websocket.service.js');
+const { initKafkaProducer, disconnectKafkaProducer } = require('./services/kafkaProducer.js');
 
 // Load environment variables
 dotenv.config();
@@ -109,12 +111,18 @@ const startServer = async () => {
         // Connect to all databases
         await initializeDatabases();
 
+        // Initialize Kafka Producer
+        await initKafkaProducer();
+
         // Start HTTP server
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(`\n🚀 Server running on port ${PORT}`);
             console.log(`   Health check: http://localhost:${PORT}/health`);
             console.log(`   API endpoint: http://localhost:${PORT}/api/v1`);
         });
+
+        // Initialize WebSocket Server
+        initWebSocketServer(server);
     } catch (error) {
         console.error('❌ Failed to start server:', error.message);
         process.exit(1);
@@ -124,12 +132,14 @@ const startServer = async () => {
 // Graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('\n🛑 SIGTERM received, shutting down gracefully...');
+    await disconnectKafkaProducer();
     await closeDatabases();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('\n🛑 SIGINT received, shutting down gracefully...');
+    await disconnectKafkaProducer();
     await closeDatabases();
     process.exit(0);
 });
