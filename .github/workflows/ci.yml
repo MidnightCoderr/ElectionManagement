@@ -23,6 +23,8 @@ jobs:
         run: cd backend && npm ci
       - name: Run ESLint
         run: cd backend && npm run lint
+      - name: Dependency Vulnerability Check
+        run: cd backend && npm audit --audit-level=high
 
   test-backend:
     name: Test Backend
@@ -65,11 +67,28 @@ jobs:
       - name: Build ML Service Image
         run: docker build -t election-ml-service:test -f infrastructure/docker/Dockerfile.ml ./ml-service
 
+  dast-scan:
+    name: OWASP ZAP Baseline Scan
+    runs-on: ubuntu-latest
+    needs: [build-images]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start Staging Docker Environment
+        run: docker-compose up -d backend mongodb postgres redis
+      - name: Sleep for Services to be Ready
+        run: sleep 30
+      - name: ZAP Scan
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: 'http://localhost:3000'
+          rules_file_name: '.zap/rules.tsv'
+          cmd_options: '-a'
+
   deploy-staging:
     name: Deploy to Staging Cluster
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [build-images]
+    needs: [dast-scan]
     steps:
       - name: Simulate Staging DB/K8s Deploy
         run: echo "🚀 Automated deploy to staging cluster initiated."

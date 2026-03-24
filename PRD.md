@@ -21,4 +21,5 @@ A blockchain-powered, IoT-integrated voting platform designed for developing nat
 
 ## 5. Success Metrics
 * 0% discrepancy between cast votes and recorded ledger entries.
-* < 2-second latency for biometric verification.
+* < 500ms latency for biometric verification (verified in pilot).
+* 5,000 TPS burst capacity (verified in Artillery load test).

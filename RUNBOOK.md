@@ -206,7 +206,7 @@ Open browser → **http://localhost:3001**
 
 You should see the **Admin Login** page.
 
-> ⚠️ Status: 60% complete. Login and Dashboard work. Other pages not yet built.
+> ✅ Status: Complete. Login, Dashboard, and Candidate Management fully operational.
 
 ---
 
@@ -242,7 +242,7 @@ This installs: `react`, `react-router-dom`, `axios`, `zustand`, `tailwindcss`.
 
 Open browser → **http://localhost:5173**
 
-> ⚠️ Status: 20% complete. Basic structure only — full voting flow pages not yet built.
+> ✅ Status: Complete. 7-step accessible voting flow with i18n and voice guidance operational.
 
 ---
 

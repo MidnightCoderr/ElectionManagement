@@ -2,16 +2,39 @@
 
 ## Overview
 
-Machine learning service for detecting fraudulent voting patterns in real-time using Isolation Forest algorithm.
+Real-time fraud detection engine for the Election Management System. Uses a **three-model ensemble** (Isolation Forest + XGBoost + LSTM) to analyze voting telemetry streamed via Apache Kafka, and pushes alerts back to the backend via webhooks.
 
-## Features
+## Architecture
 
-- 🤖 **Anomaly Detection** - Isolation Forest ML algorithm
-- 📊 **Feature Engineering** - 6 key voting pattern features
-- 🚨 **Real-time Alerts** - Email notifications for fraud detection
-- 📈 **Batch Analysis** - Analyze multiple votes simultaneously
-- 💾 **Model Persistence** - Save/load trained models
-- 🔄 **Continuous Monitoring** - Real-time vote stream analysis
+```
+Kafka (vote-telemetry) → kafka_consumer.py → fraud_detector.py (Ensemble) → POST /api/v1/audit/alerts
+```
+
+### Ensemble Models
+
+| Model | Type | Weight | Purpose |
+|-------|------|--------|---------|
+| **Isolation Forest** | Unsupervised | 40% | Detects distance-based anomalies in tabular vote features |
+| **XGBoost** | Supervised | 40% | Classifies coordinated fraud patterns using gradient boosting |
+| **LSTM** | Deep Learning | 20% | Forecasts temporal voting surges using recurrent sequences |
+
+The combined `ensemble_confidence` score (0.0–1.0) flags a vote as fraudulent if it exceeds `0.6` (configurable via `ANOMALY_THRESHOLD`).
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `fraud_detector.py` | Core ensemble engine (train, predict, save/load) |
+| `kafka_consumer.py` | Kafka stream consumer that feeds votes into the detector |
+| `api.py` | Flask REST API (`/api/ml/analyze`, `/api/ml/train`, `/api/ml/batch-analyze`) |
+| `alert_service.py` | Email notification service for fraud alerts |
+| `monitor.py` | Real-time polling monitor for the backend vote stream |
+| `requirements.txt` | Python dependencies |
+
+### Jupyter Notebooks
+
+All `.py` files have been converted to `.ipynb` notebooks for interactive exploration:
+- `fraud_detector.ipynb`, `kafka_consumer.ipynb`, `api.ipynb`, `alert_service.ipynb`, `monitor.ipynb`
 
 ## Installation
 
@@ -20,175 +43,94 @@ cd ml-service
 pip install -r requirements.txt
 ```
 
+### Key Dependencies
+- `scikit-learn` — Isolation Forest
+- `xgboost==2.0.2` — Gradient boosting classifier
+- `tensorflow==2.15.0` — Keras LSTM network
+- `kafka-python` — Kafka consumer client
+- `flask` / `flask-cors` — REST API
+
 ## Configuration
 
-Create `.env` file:
+Environment variables (set in `.env` or Docker):
 
 ```env
-# Service
 ML_SERVICE_PORT=5000
 BACKEND_URL=http://localhost:3000
-
-# Monitoring
-POLL_INTERVAL=5  # seconds
-
-# Alerts
-ALERT_EMAIL_ENABLED=false
-SMTP_SERVER=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-password
-ALERT_RECIPIENTS=admin@example.com,security@example.com
-
-# Model
+KAFKA_BROKER=localhost:9092
+KAFKA_TOPIC=vote-telemetry
+ML_SERVICE_API_KEY=your-shared-secret
+ANOMALY_THRESHOLD=0.6
 FRAUD_MODEL_PATH=models/fraud_detector.joblib
 ```
 
 ## Usage
 
-### 1. Start API Server
+### Start the Flask API
 
 ```bash
 python api.py
 ```
 
-Server runs on `http://localhost:5000`
-
-### 2. Start Real-time Monitor
+### Start the Kafka Consumer (Production)
 
 ```bash
-python monitor.py
+python kafka_consumer.py
 ```
 
-### 3. API Endpoints
+### API Endpoints
 
-**Analyze Single Vote:**
+**Analyze a single vote:**
 ```bash
 curl -X POST http://localhost:5000/api/ml/analyze \
   -H "Content-Type: application/json" \
   -d '{
     "vote": {
-      "voterId": "VOTER_001",
-      "terminalId": "TERMINAL_001",
-      "districtId": "DISTRICT_001",
-      "timestamp": "2024-01-01T14:30:00"
+      "voterId": "V001", "terminalId": "T001",
+      "districtId": "D001", "timestamp": "2026-03-24T10:30:00"
     },
     "history": []
   }'
 ```
 
-**Train Model:**
+**Train the ensemble:**
 ```bash
 curl -X POST http://localhost:5000/api/ml/train \
   -H "Content-Type: application/json" \
-  -d '{
-    "votes": [ ... ]  // 100+ historical votes
-  }'
+  -d '{ "votes": [ ... ] }'   # 100+ historical votes required
 ```
 
-**Batch Analysis:**
-```bash
-curl -X POST http://localhost:5000/api/ml/batch-analyze \
-  -H "Content-Type: application/json" \
-  -d '{
-    "votes": [ ... ],
-    "history": [ ... ]
-  }'
-```
-
-## Features Extracted
-
-The model analyzes these patterns:
-
-1. **vote_time_hour** - Hour of day (0-23)
-2. **vote_time_minute** - Minute within hour
-3. **votes_from_terminal** - Total votes from terminal
-4. **votes_in_window** - Votes in last 5 minutes
-5. **district_vote_density** - Total district votes
-6. **time_since_last_vote** - Seconds since last terminal vote
-
-## Fraud Detection Logic
-
-**Isolation Forest Algorithm:**
-- Contamination rate: 1% (expected anomaly rate)
-- 100 decision trees
-- Anomaly score threshold: < -0.3
-
-**Fraud Indicators:**
-- Votes too close together (< 2 seconds)
-- Excessive terminal usage (> 100 votes)
-- High vote rate in window (> 50 votes/5min)
-- Voting outside normal hours (before 6 AM or after 8 PM)
-- Unusual patterns compared to training data
-
-## Alert Severity Levels
-
-- **CRITICAL** - Confidence > 90%
-- **HIGH** - Confidence 70-90%
-- **MEDIUM** - Confidence 50-70%
-- **LOW** - Confidence < 50%
-
-## Example Response
+### Example Ensemble Response
 
 ```json
 {
-  "success": true,
-  "analysis": {
-    "isFraudulent": true,
-    "confidence": 0.87,
-    "anomalyScore": -0.65,
-    "reason": "Unusually high voting rate in time window",
-    "timestamp": "2024-01-01T14:35:22"
-  }
+  "isFraudulent": true,
+  "confidence": 0.78,
+  "details": {
+    "isolationForestScore": 0.82,
+    "xgboostScore": 0.91,
+    "lstmScore": 0.35
+  },
+  "reason": "Isolation Forest detected distance anomaly | XGBoost classified tabular heuristic match"
 }
 ```
 
-## Integration with Backend
+## Features Extracted (6 dimensions)
 
-Backend should call ML service after vote cast:
+1. `vote_time_hour` — Hour of day (0–23)
+2. `vote_time_minute` — Minute within hour
+3. `votes_from_terminal` — Lifetime votes from this terminal
+4. `votes_in_window` — Global votes in last 5 minutes
+5. `district_vote_density` — Lifetime district votes
+6. `time_since_last_vote` — Seconds since last vote on this terminal
 
-```javascript
-// backend/src/routes/vote.routes.js
-const axios = require('axios');
+## Docker
 
-// After blockchain submission
-const mlResult = await axios.post('http://localhost:5000/api/ml/analyze', {
-  vote: voteData,
-  history: recentVotes,
-});
-
-if (mlResult.data.analysis.isFraudulent) {
-// Flag for review, send alert
-  logger.warn(`Potential fraud detected: ${mlResult.data.analysis.reason}`);
-}
-```
-
-## Model Training
-
-Train on historical data:
-
-```python
-from fraud_detector import FraudDetector
-
-# Load historical votes
-votes = [...]  # 100+ votes
-
-# Train
-detector = FraudDetector()
-detector.train(votes)
-
-# Save
-detector.save_model('models/fraud_detector.joblib')
-```
-
-## Tech Stack
-
-- **Framework**: Flask
-- **ML Library**: scikit-learn
-- **Algorithm**: Isolation Forest
-- **Async**: asyncio, aiohttp
-- **Serialization**: joblib
+The service runs as two containers in `docker-compose.yml`:
+- `ml-analytics` — Flask API (port 5000)
+- `ml-kafka-consumer` — Kafka stream processor
 
 ---
 
-**Version:** 1.0.0
+**Version:** 2.0.0  
+**Last Updated:** March 2026

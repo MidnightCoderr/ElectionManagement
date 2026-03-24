@@ -59,6 +59,8 @@ This document provides a quick reference. The comprehensive threat model and sec
 | Votes | RSA + AES | Ballot secrecy |
 | Blockchain | Hash commitments | Vote privacy |
 | IoT | Secure Boot v2 | Tamper resistance |
+| CI/CD | OWASP ZAP DAST | Automated dynamic scanning |
+| Dependencies| `npm audit` | Proactive vulnerability gating |
 
 ---
 

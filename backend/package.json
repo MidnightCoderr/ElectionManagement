@@ -12,7 +12,8 @@
         "test:watch": "jest --watch",
         "test:coverage": "jest --coverage",
         "lint": "eslint src/",
-        "lint:fix": "eslint src/ --fix"
+        "lint:fix": "eslint src/ --fix",
+        "security-audit": "node src/utils/securityAudit.js"
     },
     "dependencies": {
         "bcryptjs": "^2.4.3",
