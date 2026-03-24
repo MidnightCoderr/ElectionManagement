@@ -12,6 +12,9 @@ alerting:
     - static_configs:
         - targets: []
 
+rule_files:
+  - 'alerting_rules.yml'
+
 # Scrape configurations
 scrape_configs:
   # Backend API metrics
@@ -28,22 +31,27 @@ scrape_configs:
   # PostgreSQL metrics (requires postgres_exporter)
   - job_name: 'postgres'
     static_configs:
-      - targets: ['postgres:5432']
+      - targets: ['postgres-exporter:9187']
 
   # MongoDB metrics (requires mongodb_exporter)
   - job_name: 'mongodb'
     static_configs:
-      - targets: ['mongodb:27017']
+      - targets: ['mongodb-exporter:9216']
 
   # Redis metrics (requires redis_exporter)
   - job_name: 'redis'
     static_configs:
-      - targets: ['redis:6379']
+      - targets: ['redis-exporter:9121']
 
   # MQTT Broker
   - job_name: 'mqtt-broker'
     static_configs:
       - targets: ['mqtt-broker:1883']
+
+  # Kafka Broker (JMX)
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9101']
 
   # ML Analytics Service
   - job_name: 'ml-analytics'

@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
+const promClient = require('prom-client');
 const { initializeDatabases, closeDatabases } = require('./db/index.js');
 const { initWebSocketServer } = require('./services/websocket.service.js');
 const { initKafkaProducer, disconnectKafkaProducer } = require('./services/kafkaProducer.js');
@@ -20,6 +21,9 @@ const voterRoutes = require('./routes/voter.routes.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Prometheus Metrics setup
+promClient.collectDefaultMetrics({ prefix: 'election_backend_' });
 
 // Security middleware
 app.use(helmet());
@@ -55,6 +59,12 @@ app.get('/health', (req, res) => {
         service: 'election-management-api',
         version: '1.0.0',
     });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', async (req, res) => {
+    res.set('Content-Type', promClient.register.contentType);
+    res.send(await promClient.register.metrics());
 });
 
 // Mount API routes

@@ -1,0 +1,46 @@
+groups:
+  - name: election_alerts
+    rules:
+      - alert: HighAPIErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High API error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over last 5 minutes"
+
+      - alert: BackendDown
+        expr: up{job="backend-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend API is down"
+          description: "Prometheus failed to scrape backend-api for 1 minute"
+
+      - alert: DatabaseDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "PostgreSQL Database is down"
+
+      - alert: KafkaConsumerLag
+        expr: kafka_consumer_group_lag > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Kafka consumer lag exceeding threshold"
+          description: "ML Fraud consumer group lag is {{ $value }} messages behind"
+
+      - alert: FraudAlertSpike
+        expr: increase(election_backend_fraud_alerts_total[10m]) > 20
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Fraud alert spike detected"
+          description: "More than {{ $value }} fraud alerts generated in the last 10 minutes"

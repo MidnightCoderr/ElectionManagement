@@ -1,0 +1,48 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 60
+      arrivalRate: 5
+      rampTo: 50
+      name: "Warm up API"
+    - duration: 300
+      arrivalRate: 50
+      name: "Sustained moderate load"
+    - duration: 30
+      arrivalRate: 500
+      name: "Peak burst (500 TPS)"
+  processor: "./artillery-helpers.js"
+
+scenarios:
+  - name: "Voter Authentication and Vote Casting Flow"
+    weight: 100
+    flow:
+      # Step 1: Voter login (generates JWT)
+      - post:
+          url: "/api/v1/auth/voter/login"
+          json:
+            voterId: "{{ $randomNumber(1000, 999999) }}"
+            biometricHash: "dummyhash_{{ $randomNumber(1000, 999999) }}"
+            terminalId: "T01"
+          capture:
+            - json: "$.token"
+              as: "jwt_token"
+      
+      # Step 2: Fetch Active Elections
+      - get:
+          url: "/api/v1/elections/active"
+          headers:
+            Authorization: "Bearer {{ jwt_token }}"
+            
+      # Step 3: Cast Vote
+      - post:
+          url: "/api/v1/votes/cast"
+          headers:
+            Authorization: "Bearer {{ jwt_token }}"
+          json:
+            voterId: "{{ $randomNumber(1000, 999999) }}"
+            electionId: "E01"
+            candidateId: "C01"
+            district: "D01"
+            biometricHash: "dummyhash_{{ $randomString(32) }}"
+            terminalId: "T01"

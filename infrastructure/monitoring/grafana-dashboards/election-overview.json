@@ -1,0 +1,80 @@
+{
+  "title": "Election Overview Dashboard",
+  "tags": ["election", "overview"],
+  "timezone": "browser",
+  "refresh": "5s",
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Total Votes Cast",
+      "targets": [
+        {
+          "expr": "sum(election_backend_votes_cast_total)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 }
+    },
+    {
+      "type": "stat",
+      "title": "Total Fraud Alerts",
+      "targets": [
+        {
+          "expr": "sum(election_backend_fraud_alerts_total)",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 }
+    },
+    {
+      "type": "graph",
+      "title": "API Request Rate (TPS)",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "xaxis": { "mode": "time" },
+      "yaxes": [{ "format": "short" }, { "format": "short" }]
+    },
+    {
+      "type": "graph",
+      "title": "API Error Rate",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[1m]))",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "xaxis": { "mode": "time" },
+      "yaxes": [{ "format": "short" }, { "format": "short" }]
+    },
+    {
+      "type": "gauge",
+      "title": "Node.js Event Loop Lag",
+      "targets": [
+        {
+          "expr": "nodejs_eventloop_lag_seconds",
+          "refId": "A"
+        }
+      ],
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "options": {
+        "text": { "valueSize": 24 },
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            { "color": "green", "value": null },
+            { "color": "orange", "value": 0.05 },
+            { "color": "red", "value": 0.1 }
+          ]
+        }
+      }
+    }
+  ],
+  "schemaVersion": 30,
+  "version": 1
+}

@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-analytics
+  namespace: election-system
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-analytics
+  template:
+    metadata:
+      labels:
+        app: ml-analytics
+    spec:
+      containers:
+      - name: ml-analytics
+        image: yourdockerhub/election-ml-service:latest
+        command: ["python", "api.py"]
+        ports:
+        - containerPort: 5000
+        env:
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: mongo-uri
+        - name: ANOMALY_THRESHOLD
+          value: "0.85"
+        - name: FRAUD_MODEL_PATH
+          value: "/app/models/voting_patterns.pkl"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "2000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-analytics
+  namespace: election-system
+spec:
+  selector:
+    app: ml-analytics
+  ports:
+  - port: 5000
+    targetPort: 5000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-kafka-consumer
+  namespace: election-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-kafka-consumer
+  template:
+    metadata:
+      labels:
+        app: ml-kafka-consumer
+    spec:
+      containers:
+      - name: ml-kafka-consumer
+        image: yourdockerhub/election-ml-service:latest
+        command: ["python", "kafka_consumer.py"]
+        env:
+        - name: KAFKA_BROKER
+          valueFrom:
+            secretKeyRef:
+              name: kafka-secrets
+              key: broker
+        - name: KAFKA_TOPIC
+          value: "election-telemetry"
+        - name: KAFKA_GROUP_ID
+          value: "ml-fraud-detector"
+        - name: BACKEND_ALERT_URL
+          value: "http://backend-service:80/api/v1/audit/alerts"
+        - name: ML_SERVICE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: app-secrets
+              key: ml-api-key
+        - name: ANOMALY_THRESHOLD
+          value: "0.6"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          exec:
+            command: ["python", "-c", "import sys; sys.exit(0)"]
+          initialDelaySeconds: 60
+          periodSeconds: 30
+      restartPolicy: Always
