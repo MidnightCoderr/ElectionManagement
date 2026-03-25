@@ -4,7 +4,7 @@ import { Users, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
-function CandidateManagement({ user, onLogout }) {
+function CandidateManagement({ user, onLogout, embedded }) {
     const [candidates, setCandidates] = useState([]);
     const [elections, setElections] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -59,10 +59,8 @@ function CandidateManagement({ user, onLogout }) {
 
     const filtered = filterElection ? candidates.filter(c => c.electionId === filterElection || String(c.election_id) === filterElection) : candidates;
 
-    return (
-        <div className="dashboard-layout">
-            <Sidebar user={user} onLogout={onLogout} activePage="candidates" />
-            <div className="dashboard-content">
+    const content = (
+        <div className={embedded ? '' : 'dashboard-content'}>
                 <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <h1>Candidate Management</h1>
@@ -160,6 +158,14 @@ function CandidateManagement({ user, onLogout }) {
                     </div>
                 )}
             </div>
+    );
+
+    if (embedded) return content;
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar user={user} onLogout={onLogout} activePage="candidates" />
+            {content}
         </div>
     );
 }

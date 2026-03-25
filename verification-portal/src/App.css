@@ -10,8 +10,8 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: #F8FAFC;
-    color: #0F172A;
+    background: #FAF9FF;
+    color: #1D1136;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -27,7 +27,7 @@ a {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible {
-    outline: 2px solid #4F46E5;
+    outline: 2px solid #735DFF;
     outline-offset: 2px;
 }
 
@@ -36,14 +36,14 @@ select:focus-visible {
 }
 
 ::-webkit-scrollbar-track {
-    background: #F8FAFC;
+    background: #FAF9FF;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #CBD5E1;
+    background: #D4CEEC;
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #94A3B8;
+    background: #9F97C0;
 }

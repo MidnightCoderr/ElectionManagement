@@ -4,7 +4,7 @@ import { Server, Wifi, WifiOff, RefreshCw, AlertTriangle } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
-function TerminalMonitoring({ user, onLogout }) {
+function TerminalMonitoring({ user, onLogout, embedded }) {
     const [terminals, setTerminals] = useState([]);
     const [loading, setLoading] = useState(true);
     const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -46,10 +46,8 @@ function TerminalMonitoring({ user, onLogout }) {
 
     const statusColor = { ONLINE: '#10b981', OFFLINE: '#6b7280', ERROR: '#ef4444', MAINTENANCE: '#f59e0b' };
 
-    return (
-        <div className="dashboard-layout">
-            <Sidebar user={user} onLogout={onLogout} activePage="terminals" />
-            <div className="dashboard-content">
+    const content = (
+        <div className={embedded ? '' : 'dashboard-content'}>
                 <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <h1>Terminal Monitoring</h1>
@@ -149,6 +147,14 @@ function TerminalMonitoring({ user, onLogout }) {
                     </div>
                 )}
             </div>
+    );
+
+    if (embedded) return content;
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar user={user} onLogout={onLogout} activePage="terminals" />
+            {content}
         </div>
     );
 }

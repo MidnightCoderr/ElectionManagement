@@ -4,7 +4,7 @@ import { Vote, Plus, Play, Square, Trash2, RefreshCw } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
-function ElectionManagement({ user, onLogout }) {
+function ElectionManagement({ user, onLogout, embedded }) {
     const [elections, setElections] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -55,10 +55,8 @@ function ElectionManagement({ user, onLogout }) {
         return <span style={{ background: colors[status] || '#6b7280', color: '#fff', padding: '2px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 600 }}>{status}</span>;
     };
 
-    return (
-        <div className="dashboard-layout">
-            <Sidebar user={user} onLogout={onLogout} activePage="elections" />
-            <div className="dashboard-content">
+    const content = (
+        <div className={embedded ? '' : 'dashboard-content'}>
                 <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <h1>Election Management</h1>
@@ -154,6 +152,14 @@ function ElectionManagement({ user, onLogout }) {
                     </div>
                 )}
             </div>
+    );
+
+    if (embedded) return content;
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar user={user} onLogout={onLogout} activePage="elections" />
+            {content}
         </div>
     );
 }

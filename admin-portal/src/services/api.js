@@ -30,9 +30,9 @@ async function apiFetch(path, options = {}) {
 // ── Elections ────────────────────────────────────────────────────────────────
 
 const MOCK_ELECTIONS = [
-  { election_id: '1', election_name: 'General Election 2024', election_type: 'general', start_date: '2024-04-19', end_date: '2024-04-19', status: 'active', total_votes_cast: 1234567, total_voters: 2120000 },
-  { election_id: '2', election_name: 'State Assembly — Karnataka', election_type: 'state', start_date: '2024-05-10', end_date: '2024-05-10', status: 'upcoming', total_votes_cast: 0, total_voters: 3200000 },
-  { election_id: '3', election_name: 'Municipal — Delhi North', election_type: 'local', start_date: '2024-03-01', end_date: '2024-03-01', status: 'completed', total_votes_cast: 456789, total_voters: 850000 },
+  { election_id: '1', election_name: 'Student Council President 2026', election_type: 'council', start_date: '2026-04-01', end_date: '2026-04-01', status: 'active', total_votes_cast: 2847, total_voters: 4230 },
+  { election_id: '2', election_name: 'CS Department CR Election', election_type: 'class_rep', start_date: '2026-04-10', end_date: '2026-04-10', status: 'upcoming', total_votes_cast: 0, total_voters: 320 },
+  { election_id: '3', election_name: 'EE Department CR Election', election_type: 'class_rep', start_date: '2026-03-01', end_date: '2026-03-01', status: 'completed', total_votes_cast: 456, total_voters: 580 },
 ]
 
 export async function fetchElections(params = {}) {
@@ -61,9 +61,9 @@ export async function updateElectionStatus(id, status) {
 // ── Candidates ───────────────────────────────────────────────────────────────
 
 const MOCK_CANDIDATES = [
-  { candidate_id: '1', full_name: 'Rahul Verma', party_name: 'Party A', district_id: 'mumbai', status: 'active', votes_received: 523400 },
-  { candidate_id: '2', full_name: 'Sonia Patel', party_name: 'Party B', district_id: 'mumbai', status: 'active', votes_received: 412300 },
-  { candidate_id: '3', full_name: 'Amit Kumar', party_name: 'Party C', district_id: 'delhi', status: 'active', votes_received: 300867 },
+  { candidate_id: '1', full_name: 'Arjun Mehta', party_name: 'Progress Alliance', district_id: 'cs', status: 'active', votes_received: 1234 },
+  { candidate_id: '2', full_name: 'Priya Sharma', party_name: 'Student United Front', district_id: 'cs', status: 'active', votes_received: 987 },
+  { candidate_id: '3', full_name: 'Rahul Verma', party_name: 'Campus Forward', district_id: 'ee', status: 'active', votes_received: 626 },
 ]
 
 export async function fetchCandidates(params = {}) {
@@ -90,8 +90,8 @@ export async function fetchVoters(params = {}) {
   if (MOCK_MODE) {
     return {
       voters: [
-        { voter_id: '1', aadhar_number: '123456789012', full_name: 'Ramesh Kumar', district_id: 'mumbai', status: 'active', has_voted: true },
-        { voter_id: '2', aadhar_number: '234567890123', full_name: 'Priya Singh', district_id: 'delhi', status: 'active', has_voted: false },
+        { voter_id: '1', aadhar_number: '2024CS1042', full_name: 'Neha Kumar', district_id: 'cs', status: 'active', has_voted: true },
+        { voter_id: '2', aadhar_number: '2024EE2035', full_name: 'Vikram Singh', district_id: 'ee', status: 'active', has_voted: false },
       ],
       pagination: { total: 2, limit: 50, offset: 0 },
     }
@@ -102,7 +102,7 @@ export async function fetchVoters(params = {}) {
 
 export async function fetchVoterStats() {
   if (MOCK_MODE) {
-    return { stats: { total: 21200000, active: 20800000, blocked: 400000, byDistrict: [] } }
+    return { stats: { total: 4230, active: 4180, blocked: 50, byDistrict: [] } }
   }
   return apiFetch('/api/v1/voters/stats/summary')
 }

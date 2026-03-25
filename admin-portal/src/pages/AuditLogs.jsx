@@ -4,7 +4,7 @@ import { FileText, RefreshCw, Search, AlertTriangle, CheckCircle, Info } from 'l
 import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
-function AuditLogs({ user, onLogout }) {
+function AuditLogs({ user, onLogout, embedded }) {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
@@ -55,10 +55,8 @@ function AuditLogs({ user, onLogout }) {
         return { bg: '#eff6ff', color: '#1e40af' };
     };
 
-    return (
-        <div className="dashboard-layout">
-            <Sidebar user={user} onLogout={onLogout} activePage="audit" />
-            <div className="dashboard-content">
+    const content = (
+        <div className={embedded ? '' : 'dashboard-content'}>
                 <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <h1>Audit Logs</h1>
@@ -139,6 +137,14 @@ function AuditLogs({ user, onLogout }) {
                     </div>
                 )}
             </div>
+    );
+
+    if (embedded) return content;
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar user={user} onLogout={onLogout} activePage="audit" />
+            {content}
         </div>
     );
 }

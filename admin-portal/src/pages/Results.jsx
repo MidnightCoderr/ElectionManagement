@@ -4,7 +4,7 @@ import { BarChart3, Trophy, RefreshCw } from 'lucide-react';
 import Sidebar from '../components/Sidebar';
 import './Dashboard.css';
 
-function Results({ user, onLogout }) {
+function Results({ user, onLogout, embedded }) {
     const [elections, setElections] = useState([]);
     const [selectedElection, setSelectedElection] = useState('');
     const [results, setResults] = useState(null);
@@ -42,10 +42,8 @@ function Results({ user, onLogout }) {
 
     const maxVotes = results?.candidates ? Math.max(...results.candidates.map(c => c.voteCount || 0), 1) : 1;
 
-    return (
-        <div className="dashboard-layout">
-            <Sidebar user={user} onLogout={onLogout} activePage="results" />
-            <div className="dashboard-content">
+    const content = (
+        <div className={embedded ? '' : 'dashboard-content'}>
                 <header className="dashboard-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
                         <h1>Election Results</h1>
@@ -136,6 +134,14 @@ function Results({ user, onLogout }) {
                     )}
                 </div>
             </div>
+    );
+
+    if (embedded) return content;
+
+    return (
+        <div className="dashboard-layout">
+            <Sidebar user={user} onLogout={onLogout} activePage="results" />
+            {content}
         </div>
     );
 }

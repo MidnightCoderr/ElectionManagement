@@ -37,8 +37,8 @@ function Header() {
           <div style={s.icoShine}/>
         </div>
         <div>
-          <div style={s.brandSub}>Election Commission of India</div>
-          <div style={s.brandName}>e-Vote Terminal</div>
+          <div style={s.brandSub}>Student Election Commission</div>
+          <div style={s.brandName}>CampusVote Terminal</div>
         </div>
       </div>
       <div style={s.langs}>

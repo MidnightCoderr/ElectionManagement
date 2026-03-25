@@ -1,17 +1,19 @@
 import { useState, useEffect, useRef } from 'react'
 import Sidebar from '../components/Sidebar.jsx'
-import { fetchElections, fetchAuditLogs, checkHealth } from '../services/api.js'
+import { fetchElections, fetchAuditLogs, fetchCandidates, checkHealth } from '../services/api.js'
+import ElectionsContent from './ElectionManagement.jsx'
+import CandidatesContent from './CandidateManagement.jsx'
 import './Dashboard.css'
 
 // ── Fallback mock data (used when API calls fail) ────────────────────────────
 const FALLBACK_ELECTIONS = [
-  { election_id: '1', election_name: 'General Election 2024', election_type: 'general', start_date: '2024-04-19', status: 'active', total_votes_cast: 1234567 },
-  { election_id: '2', election_name: 'State Assembly — Karnataka', election_type: 'state', start_date: '2024-05-10', status: 'upcoming', total_votes_cast: 0 },
-  { election_id: '3', election_name: 'Municipal — Delhi North', election_type: 'local', start_date: '2024-03-01', status: 'completed', total_votes_cast: 456789 },
+  { election_id: '1', election_name: 'Student Council President 2026', election_type: 'council', start_date: '2026-04-01', status: 'active', total_votes_cast: 2847 },
+  { election_id: '2', election_name: 'CS Department CR Election', election_type: 'class_rep', start_date: '2026-04-10', status: 'upcoming', total_votes_cast: 0 },
+  { election_id: '3', election_name: 'EE Department CR Election', election_type: 'class_rep', start_date: '2026-03-01', status: 'completed', total_votes_cast: 456 },
 ]
 
 const ALERTS = [
-  { level: 'high',   terminal: 'TERM-00089', msg: 'Unusual voting spike',        detail: '150 votes in 5 minutes — 3x normal rate' },
+  { level: 'high',   terminal: 'TERM-00089', msg: 'Unusual voting spike',        detail: '45 votes in 5 minutes — 3x normal rate' },
   { level: 'high',   terminal: 'TERM-00234', msg: 'Multiple failed biometrics',  detail: '12 failed scans in 4 minutes' },
   { level: 'medium', terminal: 'TERM-00012', msg: 'Terminal offline',            detail: 'No heartbeat for 22 minutes' },
   { level: 'low',    terminal: 'TERM-00301', msg: 'Low battery warning',         detail: 'Battery at 8% — needs replacement' },
@@ -22,9 +24,6 @@ const PAGES = {
   elections:  'Elections',
   candidates: 'Candidates',
   voters:     'Voters',
-  terminals:  'Terminals',
-  results:    'Results',
-  audit:      'Audit Log',
   alerts:     'Alerts',
   users:      'Admin Users',
   settings:   'Settings',
@@ -182,15 +181,15 @@ export default function Dashboard({ admin, onLogout }) {
 
             {/* KPIs */}
             <div>
-              <div className="section-title">Live Overview · General Election 2024</div>
+              <div className="section-title">Live Overview · Student Council Election 2026</div>
               <div className="kpi-grid">
                 {[
                   { color: 'green',  icon: '🗳',  label: 'Total Votes',       value: votes.toLocaleString('en-IN'), sub: '↑ live updates' },
-                  { color: 'blue',   icon: '📊', label: 'Voter Turnout',      value: '58.3%',    sub: 'of 2.12 Cr registered' },
-                  { color: 'orange', icon: '🖥',  label: 'Active Terminals',  value: '45,234',   sub: 'of 48,000 total' },
-                  { color: 'purple', icon: '🏛',  label: 'Districts Covered', value: '312',       sub: 'of 350 total' },
-                  { color: 'red',    icon: '🚨', label: 'Active Alerts',      value: '5',         sub: '3 High · 2 Medium' },
-                  { color: 'gold',   icon: '⛓',  label: 'Blockchain Blocks', value: '14,892',   sub: 'last block 8s ago' },
+                  { color: 'blue',   icon: '📊', label: 'Voter Turnout',      value: '67.3%',    sub: 'of 4,230 registered students' },
+                  { color: 'orange', icon: '🖥',  label: 'Active Terminals',  value: '12',       sub: 'of 15 total' },
+                  { color: 'purple', icon: '🏫',  label: 'Departments',       value: '6',        sub: 'of 6 total' },
+                  { color: 'red',    icon: '🚨', label: 'Active Alerts',      value: '2',         sub: '1 High · 1 Medium' },
+                  { color: 'gold',   icon: '⛓',  label: 'Blockchain Blocks', value: '892',      sub: 'last block 8s ago' },
                 ].map(k => (
                   <div key={k.label} className={`kpi-card ${k.color}`}>
                     <div className="kpi-icon">{k.icon}</div>
@@ -233,16 +232,16 @@ export default function Dashboard({ admin, onLogout }) {
             <div className="two-col">
               <div className="panel">
                 <div className="panel-header">
-                  <div className="panel-title">📊 Turnout by District</div>
+                  <div className="panel-title">📊 Turnout by Department</div>
                 </div>
                 <div className="progress-bar-wrap">
                   {[
-                    { label: 'Mumbai',    pct: 72, color: '#FF6B00' },
-                    { label: 'Delhi',     pct: 65, color: '#2563EB' },
-                    { label: 'Chennai',   pct: 58, color: '#138808' },
-                    { label: 'Kolkata',   pct: 51, color: '#7c3aed' },
-                    { label: 'Hyderabad', pct: 44, color: '#E67E22' },
-                    { label: 'Bangalore', pct: 38, color: '#1DB954' },
+                    { label: 'Computer Science', pct: 82, color: '#FF6B00' },
+                    { label: 'Electrical Eng.',  pct: 75, color: '#2563EB' },
+                    { label: 'Mechanical Eng.',  pct: 68, color: '#138808' },
+                    { label: 'Business School',  pct: 61, color: '#7c3aed' },
+                    { label: 'Civil Eng.',        pct: 54, color: '#E67E22' },
+                    { label: 'Biotechnology',     pct: 48, color: '#1DB954' },
                   ].map(d => (
                     <div key={d.label} className="progress-bar-row">
                       <span className="progress-bar-label">{d.label}</span>
@@ -331,9 +330,6 @@ export default function Dashboard({ admin, onLogout }) {
                   { icon: '➕', label: 'New Election',     sub: 'Create & configure',  page: 'elections' },
                   { icon: '👤', label: 'Add Candidate',    sub: 'Register candidate',  page: 'candidates' },
                   { icon: '📋', label: 'Import Voters',    sub: 'Bulk CSV upload',     page: 'voters' },
-                  { icon: '🖥',  label: 'Register Terminal',sub: 'Add IoT device',     page: 'terminals' },
-                  { icon: '📜', label: 'Audit Log',        sub: 'View all events',     page: 'audit' },
-                  { icon: '📈', label: 'View Results',     sub: 'Live tally',          page: 'results' },
                   { icon: '👥', label: 'Manage Admins',    sub: 'Roles & access',      page: 'users' },
                   { icon: '⚙',  label: 'Settings',         sub: 'System config',       page: 'settings' },
                 ].map(a => (
@@ -349,10 +345,14 @@ export default function Dashboard({ admin, onLogout }) {
           </div>
         )}
 
-        {/* ── OTHER PAGES (placeholder) ── */}
+        {/* ── OTHER PAGES ── */}
         {page !== 'dashboard' && (
           <div className="dash-content">
-            <PlaceholderPage page={page} pageName={PAGES[page]} onBack={() => setPage('dashboard')} />
+            {page === 'elections' && <ElectionsContent user={admin} onLogout={onLogout} embedded />}
+            {page === 'candidates' && <CandidatesContent user={admin} onLogout={onLogout} embedded />}
+            {!['elections','candidates'].includes(page) && (
+              <PlaceholderPage page={page} pageName={PAGES[page]} onBack={() => setPage('dashboard')} />
+            )}
           </div>
         )}
       </div>
@@ -363,15 +363,15 @@ export default function Dashboard({ admin, onLogout }) {
 // ── Placeholder for non-dashboard pages ────────────────────────────────────
 function PlaceholderPage({ page, pageName, onBack }) {
   const configs = {
-    elections:  { icon: '🗳',  desc: 'Create, configure and monitor elections. Set dates, add candidates, assign terminals.' },
-    candidates: { icon: '👤', desc: 'Register and manage election candidates, parties and ballot symbols.' },
-    voters:     { icon: '📋', desc: 'Manage voter rolls, import CSV data, and verify biometric registrations.' },
-    terminals:  { icon: '🖥',  desc: 'Register IoT voting terminals, monitor status, push firmware updates.' },
-    results:    { icon: '📈', desc: 'View real-time election results, tallies by district, candidate and party.' },
+    elections:  { icon: '🗳',  desc: 'Create, configure and monitor student elections. Set dates, add candidates, assign terminals.' },
+    candidates: { icon: '👤', desc: 'Register and manage election candidates, parties and manifesto details.' },
+    voters:     { icon: '📋', desc: 'Manage student voter rolls, import CSV data, and verify biometric registrations.' },
+    terminals:  { icon: '🖥',  desc: 'Register voting terminals, monitor status, push firmware updates.' },
+    results:    { icon: '📈', desc: 'View real-time election results, tallies by department, candidate and position.' },
     audit:      { icon: '📜', desc: 'Full immutable audit log of all system events, votes, and admin actions.' },
     alerts:     { icon: '🚨', desc: 'Manage fraud detection alerts, investigate anomalies, configure thresholds.' },
     users:      { icon: '👥', desc: 'Manage admin users, roles, permissions and two-factor authentication.' },
-    settings:   { icon: '⚙',  desc: 'Configure system parameters, blockchain settings, MQTT, and notifications.' },
+    settings:   { icon: '⚙',  desc: 'Configure system parameters, blockchain settings, and notifications.' },
     logs:       { icon: '🔍', desc: 'Raw system and server logs for debugging and infrastructure monitoring.' },
   }
   const cfg = configs[page] || { icon: '📄', desc: 'This page is under construction.' }

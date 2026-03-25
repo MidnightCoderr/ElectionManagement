@@ -4,53 +4,53 @@ const Chev = () => (<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" s
 
 /* ─── DATA ─── */
 const ASSETS = [
-  { name:'Maharashtra', rate:'72.4', trend:'up', trendLabel:'5.2% above avg', gradId:'g1', gradStart:'#0B1F3A', gradEnd:'#4F46E5', path:'M0 36 C20 31,40 24,60 20 S100 15,120 13 S160 9,200 6', upPath:'M5 8V2M2 5l3-3 3 3' },
-  { name:'Karnataka',   rate:'65.1', trend:'dn', trendLabel:'1.3% below avg', gradId:'g2', gradStart:'#CBD5E1', gradEnd:'#475569', path:'M0 18 C20 21,40 28,60 30 S100 32,120 28 S160 24,200 30', upPath:'M5 2v6M2 5l3 3 3-3' },
-  { name:'Delhi NCR',   rate:'58.3', trend:'up', trendLabel:'2.1% above avg', gradId:'g3', gradStart:'#4F46E5', gradEnd:'#1B3B6F', path:'M0 40 C30 35,50 28,80 22 S120 17,150 12 S180 9,200 6', upPath:'M5 8V2M2 5l3-3 3 3' },
+  { name:'Computer Science', rate:'82.4', trend:'up', trendLabel:'5.2% above avg', gradId:'g1', gradStart:'#0B1F3A', gradEnd:'#4F46E5', path:'M0 36 C20 31,40 24,60 20 S100 15,120 13 S160 9,200 6', upPath:'M5 8V2M2 5l3-3 3 3' },
+  { name:'Electrical Eng.',   rate:'75.1', trend:'dn', trendLabel:'1.3% below avg', gradId:'g2', gradStart:'#CBD5E1', gradEnd:'#475569', path:'M0 18 C20 21,40 28,60 30 S100 32,120 28 S160 24,200 30', upPath:'M5 2v6M2 5l3 3 3-3' },
+  { name:'Mechanical Eng.',   rate:'68.3', trend:'up', trendLabel:'2.1% above avg', gradId:'g3', gradStart:'#4F46E5', gradEnd:'#1B3B6F', path:'M0 40 C30 35,50 28,80 22 S120 17,150 12 S180 9,200 6', upPath:'M5 8V2M2 5l3-3 3 3' },
 ]
 const STATS = [
-  { label:'Momentum', val:'0.82%' },{ label:'Blockchain Blocks', val:'14,892' },
-  { label:'Active Terminals', val:'69.6%' },{ label:'Fraud Alerts', val:'3.22%' },
+  { label:'Momentum', val:'0.82%' },{ label:'Blockchain Blocks', val:'892' },
+  { label:'Active Terminals', val:'80.0%' },{ label:'Fraud Alerts', val:'0.07%' },
 ]
 const ELECTIONS = [
-  { name:'General Election 2024', status:'Active', phase:'Polling', states:28, voters:'97.2Cr', startDate:'Apr 19, 2024' },
-  { name:'State Assembly — Karnataka', status:'Completed', phase:'Results', states:1, voters:'5.3Cr', startDate:'May 10, 2023' },
-  { name:'Municipal Elections — Delhi', status:'Scheduled', phase:'—', states:1, voters:'1.5Cr', startDate:'Jun 15, 2024' },
+  { name:'Student Council President 2026', status:'Active', phase:'Polling', states:6, voters:'4,230', startDate:'Apr 01, 2026' },
+  { name:'CS Department CR Election', status:'Completed', phase:'Results', states:1, voters:'320', startDate:'Mar 10, 2026' },
+  { name:'Sports Secretary Election', status:'Scheduled', phase:'—', states:6, voters:'4,230', startDate:'Apr 15, 2026' },
 ]
 const CANDIDATES = [
-  { name:'Rajesh Kumar', party:'Party A', constituency:'Mumbai Central', status:'Approved', votes:45234 },
-  { name:'Priya Singh', party:'Party B', constituency:'Delhi North', status:'Approved', votes:38912 },
-  { name:'Amit Sharma', party:'Party C', constituency:'Bangalore South', status:'Approved', votes:32456 },
-  { name:'Kavita Rao', party:'Party A', constituency:'Chennai East', status:'Pending', votes:0 },
-  { name:'Deepak Patel', party:'Party B', constituency:'Kolkata West', status:'Approved', votes:28901 },
+  { name:'Arjun Mehta', party:'Progress Alliance', constituency:'President', status:'Approved', votes:1234 },
+  { name:'Priya Sharma', party:'Student United Front', constituency:'President', status:'Approved', votes:987 },
+  { name:'Rahul Verma', party:'Campus Forward', constituency:'Vice President', status:'Approved', votes:626 },
+  { name:'Neha Kumar', party:'Progress Alliance', constituency:'Secretary', status:'Pending', votes:0 },
+  { name:'Vikram Singh', party:'Student United Front', constituency:'CS-301 CR', status:'Approved', votes:289 },
 ]
 const VOTERS = [
-  { id:'VTR-001', name:'Ramesh Kumar', district:'Mumbai Central', status:'Verified', voted:true },
-  { id:'VTR-002', name:'Priya Mehta', district:'Delhi North', status:'Verified', voted:true },
-  { id:'VTR-003', name:'Arun Singh', district:'Chennai South', status:'Verified', voted:false },
-  { id:'VTR-004', name:'Kavita Sharma', district:'Bangalore', status:'Pending', voted:false },
-  { id:'VTR-005', name:'Deepak Gupta', district:'Kolkata East', status:'Verified', voted:true },
-  { id:'VTR-006', name:'Sunita Rao', district:'Hyderabad', status:'Flagged', voted:false },
+  { id:'STU-001', name:'Aditi Kumar', district:'Computer Science', status:'Verified', voted:true },
+  { id:'STU-002', name:'Rohan Mehta', district:'Electrical Eng.', status:'Verified', voted:true },
+  { id:'STU-003', name:'Sneha Singh', district:'Mechanical Eng.', status:'Verified', voted:false },
+  { id:'STU-004', name:'Karan Sharma', district:'Business School', status:'Pending', voted:false },
+  { id:'STU-005', name:'Deepak Gupta', district:'Civil Eng.', status:'Verified', voted:true },
+  { id:'STU-006', name:'Sunita Rao', district:'Biotechnology', status:'Flagged', voted:false },
 ]
 const TERMINAL_DATA = [
-  { id:'TERM-001', loc:'Mumbai Central', status:'online', votes:342, battery:92, uptime:'99.8%' },
-  { id:'TERM-012', loc:'Delhi North', status:'offline', votes:0, battery:45, uptime:'87.2%' },
-  { id:'TERM-022', loc:'Chennai South', status:'online', votes:289, battery:78, uptime:'99.5%' },
-  { id:'TERM-045', loc:'Mumbai West', status:'online', votes:512, battery:85, uptime:'99.9%' },
-  { id:'TERM-089', loc:'Bangalore', status:'warn', votes:267, battery:34, uptime:'95.1%' },
-  { id:'TERM-301', loc:'Hyderabad', status:'warn', votes:145, battery:8, uptime:'92.3%' },
+  { id:'TERM-001', loc:'CS Building - Lab A', status:'online', votes:342, battery:92, uptime:'99.8%' },
+  { id:'TERM-012', loc:'EE Building - Room 201', status:'offline', votes:0, battery:45, uptime:'87.2%' },
+  { id:'TERM-022', loc:'Library Foyer', status:'online', votes:289, battery:78, uptime:'99.5%' },
+  { id:'TERM-045', loc:'Student Center', status:'online', votes:512, battery:85, uptime:'99.9%' },
+  { id:'TERM-089', loc:'Mech Building', status:'warn', votes:267, battery:34, uptime:'95.1%' },
+  { id:'TERM-301', loc:'Admin Block', status:'warn', votes:145, battery:8, uptime:'92.3%' },
 ]
 const RESULTS = [
-  { constituency:'Mumbai Central', winner:'Rajesh Kumar', party:'Party A', votes:45234, margin:6322, status:'Declared' },
-  { constituency:'Delhi North', winner:'Priya Singh', party:'Party B', votes:38912, margin:4201, status:'Declared' },
-  { constituency:'Bangalore South', winner:'Amit Sharma', party:'Party C', votes:32456, margin:2890, status:'Counting' },
-  { constituency:'Kolkata West', winner:'—', party:'—', votes:0, margin:0, status:'Awaiting' },
+  { constituency:'President', winner:'Arjun Mehta', party:'Progress Alliance', votes:1234, margin:247, status:'Declared' },
+  { constituency:'Vice President', winner:'Rahul Verma', party:'Campus Forward', votes:626, margin:112, status:'Declared' },
+  { constituency:'Secretary', winner:'—', party:'—', votes:0, margin:0, status:'Counting' },
+  { constituency:'CS-301 CR', winner:'—', party:'—', votes:0, margin:0, status:'Awaiting' },
 ]
 const AUDIT_LOG = [
-  { time:'14:23:05', event:'ELECTION_CREATED', user:'Admin', desc:'General Election 2024 created', ip:'192.168.1.10' },
-  { time:'14:22:30', event:'CANDIDATE_ADDED', user:'Admin', desc:'Rajesh Kumar added to Mumbai Central', ip:'192.168.1.10' },
-  { time:'14:21:00', event:'TERMINAL_DEPLOY', user:'System', desc:'48,000 terminals deployed', ip:'—' },
-  { time:'14:18:00', event:'VOTER_REGISTERED', user:'Admin', desc:'Batch import: 5,000 voters', ip:'192.168.1.12' },
+  { time:'14:23:05', event:'ELECTION_CREATED', user:'Admin', desc:'Student Council Election 2026 created', ip:'192.168.1.10' },
+  { time:'14:22:30', event:'CANDIDATE_ADDED', user:'Admin', desc:'Arjun Mehta added to President', ip:'192.168.1.10' },
+  { time:'14:21:00', event:'TERMINAL_DEPLOY', user:'System', desc:'12 terminals deployed across campus', ip:'—' },
+  { time:'14:18:00', event:'VOTER_REGISTERED', user:'Admin', desc:'Batch import: 500 students', ip:'192.168.1.12' },
   { time:'14:15:00', event:'CONFIG_CHANGE', user:'SuperAdmin', desc:'Biometric threshold updated (95→97%)', ip:'192.168.1.10' },
 ]
 
@@ -76,7 +76,7 @@ function DashboardView() {
       </div>
     </div>
     <div className="admin-content">
-      <div className="admin-section-title">Top Elections · General 2024 · 3 Active</div>
+      <div className="admin-section-title">Top Elections · Student Council 2026 · 3 Active</div>
       <div className="asset-row">
         {ASSETS.map(a=>(
           <div key={a.name} className="ac">
@@ -90,8 +90,8 @@ function DashboardView() {
       </div>
       <div className="sp">
         <div className="sp-hdr"><div className="sp-upd"><svg viewBox="0 0 12 12" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1"/></svg> Last update · 2 min ago</div><button className="vbtn">Full Report →</button></div>
-        <div className="sp-title">General Election 2024<div className="sp-tag"><svg viewBox="0 0 14 14" fill="none" stroke="#4F46E5" strokeWidth="1.6" strokeLinecap="round"><rect x="2" y="2" width="10" height="10" rx="1.5"/><path d="M4.5 7l2 2 3-3"/></svg></div></div>
-        <div className="sp-body"><div><div className="sp-rl">Total Votes Cast</div><div className="sp-rv">1,234,567</div><div className="sp-acts"><button className="rb p"><span>View Results</span></button><button className="rb o">Export</button></div></div><div className="pb-box"><div className="pb-title">Election Period</div><div className="pb-sub">Contribution (Hours)</div><div className="pb-track"><div className="pb-fill"></div><div className="pb-thumb"></div></div><div className="pb-lbls"><span>0h</span><span>8h</span></div><div className="pb-tabs"><div className="pb-tab">1H</div><div className="pb-tab">4H</div><div className="pb-tab on">8H</div><div className="pb-tab">12H</div></div></div></div>
+        <div className="sp-title">Student Council Election 2026<div className="sp-tag"><svg viewBox="0 0 14 14" fill="none" stroke="#4F46E5" strokeWidth="1.6" strokeLinecap="round"><rect x="2" y="2" width="10" height="10" rx="1.5"/><path d="M4.5 7l2 2 3-3"/></svg></div></div>
+        <div className="sp-body"><div><div className="sp-rl">Total Votes Cast</div><div className="sp-rv">2,847</div><div className="sp-acts"><button className="rb p"><span>View Results</span></button><button className="rb o">Export</button></div></div><div className="pb-box"><div className="pb-title">Election Period</div><div className="pb-sub">Contribution (Hours)</div><div className="pb-track"><div className="pb-fill"></div><div className="pb-thumb"></div></div><div className="pb-lbls"><span>0h</span><span>8h</span></div><div className="pb-tabs"><div className="pb-tab">1H</div><div className="pb-tab">4H</div><div className="pb-tab on">8H</div><div className="pb-tab">12H</div></div></div></div>
       </div>
       <div className="stats-row">{STATS.map(s=>(<div key={s.label} className="stat"><div><div className="stat-lbl">{s.label}</div><div className="stat-val">{s.val}</div></div><div className="stat-chev"><Chev /></div></div>))}</div>
     </div>
@@ -111,7 +111,7 @@ function ElectionsView() {
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
           <div>
             <div style={{fontFamily:'var(--serif)',fontSize:14,color:'var(--text)',marginBottom:4}}>{e.name}</div>
-            <div style={{fontSize:11,color:'var(--text3)'}}>Start: {e.startDate} · {e.states} state(s) · {e.voters} eligible voters</div>
+            <div style={{fontSize:11,color:'var(--text3)'}}>Start: {e.startDate} · {e.states} dept(s) · {e.voters} eligible students</div>
           </div>
           <span style={{padding:'3px 10px',borderRadius:99,fontSize:9,fontWeight:700, background:e.status==='Active'?'rgba(21,128,61,0.08)':e.status==='Completed'?'rgba(79,70,229,0.08)':'rgba(217,119,6,0.08)', color:e.status==='Active'?'var(--success)':e.status==='Completed'?'var(--p2)':'var(--warning)'}}>{e.status}</span>
         </div>
@@ -135,7 +135,7 @@ function CandidatesView() {
     </div>
     <div className="panel">
       <table className="audit-table">
-        <thead><tr><th>Candidate</th><th>Party</th><th>Constituency</th><th>Status</th><th>Votes</th></tr></thead>
+        <thead><tr><th>Candidate</th><th>Party</th><th>Position</th><th>Status</th><th>Votes</th></tr></thead>
         <tbody>
           {CANDIDATES.map(c=>(
             <tr key={c.name}>
@@ -157,15 +157,15 @@ function VotersView() {
   return <div className="admin-content">
     <div className="admin-section-title">Voter Registry</div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-      <span style={{fontSize:11,color:'var(--text3)'}}>12,456 voters registered</span>
+      <span style={{fontSize:11,color:'var(--text3)'}}>4,230 students registered</span>
       <div style={{display:'flex',gap:6}}>
         <button className="tbtn" style={{padding:'6px 14px',fontSize:10}}>Import CSV</button>
-        <button className="dep-btn" style={{padding:'6px 14px',fontSize:10}}>+ Register Voter</button>
+        <button className="dep-btn" style={{padding:'6px 14px',fontSize:10}}>+ Register Student</button>
       </div>
     </div>
     <div className="panel">
       <table className="audit-table">
-        <thead><tr><th>Voter ID</th><th>Name</th><th>District</th><th>Status</th><th>Voted</th></tr></thead>
+        <thead><tr><th>Student ID</th><th>Name</th><th>Department</th><th>Status</th><th>Voted</th></tr></thead>
         <tbody>
           {VOTERS.map(v=>(
             <tr key={v.id}>
@@ -219,15 +219,15 @@ function TerminalsView() {
 function ResultsView() {
   return <div className="admin-content">
     <div className="admin-section-title">Election Results</div>
-    <div className="kpi-row" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:12}}>
-      <div className="kpi"><div className="kpi-lbl">Declared</div><div className="kpi-val" style={{color:'var(--success)'}}>2</div></div>
-      <div className="kpi"><div className="kpi-lbl">Counting</div><div className="kpi-val" style={{color:'var(--warning)'}}>1</div></div>
-      <div className="kpi"><div className="kpi-lbl">Awaiting</div><div className="kpi-val" style={{color:'var(--text3)'}}>1</div></div>
-      <div className="kpi"><div className="kpi-lbl">Total Votes</div><div className="kpi-val">1,234,567</div></div>
+    <div className="kpi-row" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:8}}>
+      <div className="kpi"><div className="kpi-lbl">Online</div><div className="kpi-val" style={{color:'var(--success)'}}>10</div></div>
+      <div className="kpi"><div className="kpi-lbl">Warning</div><div className="kpi-val" style={{color:'var(--warning)'}}>2</div></div>
+      <div className="kpi"><div className="kpi-lbl">Offline</div><div className="kpi-val" style={{color:'var(--error)'}}>0</div></div>
+      <div className="kpi"><div className="kpi-lbl">Total Votes</div><div className="kpi-val">2,847</div></div>
     </div>
     <div className="panel">
       <table className="audit-table">
-        <thead><tr><th>Constituency</th><th>Winner</th><th>Party</th><th>Votes</th><th>Margin</th><th>Status</th></tr></thead>
+        <thead><tr><th>Position</th><th>Winner</th><th>Party</th><th>Votes</th><th>Margin</th><th>Status</th></tr></thead>
         <tbody>
           {RESULTS.map(r=>(
             <tr key={r.constituency}>
@@ -283,7 +283,7 @@ export default function AdminPage() {
         <div className="obs-sb">
           <div className="obs-sb-hdr">
             <div className="obs-sb-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><circle cx="8" cy="8" r="2.5"/><circle cx="8" cy="8" r="5.5" strokeWidth="1.2" opacity=".5"/></svg></div>
-            <div><div className="obs-sb-sub">Election Commission</div><div className="obs-sb-name">Admin Portal</div></div>
+            <div><div className="obs-sb-sub">Student Election Board</div><div className="obs-sb-name">Admin Portal</div></div>
           </div>
           {sections.map(sec=>(
             <div key={sec}>

@@ -13,9 +13,6 @@ const NAV = [
   {
     section: 'Operations',
     items: [
-      { id: 'terminals',  icon: '🖥',  label: 'Terminals',  badge: '3',  badgeColor: 'orange' },
-      { id: 'results',    icon: '📈', label: 'Results' },
-      { id: 'audit',      icon: '📜', label: 'Audit Log' },
       { id: 'alerts',     icon: '🚨', label: 'Alerts',      badge: '5',  badgeColor: '' },
     ],
   },
@@ -36,7 +33,7 @@ export default function Sidebar({ activePage, onNavigate, admin }) {
       <div className="sidebar-brand">
         <div className="sidebar-brand-icon">☸</div>
         <div className="sidebar-brand-text">
-          <div className="top">Election Commission</div>
+          <div className="top">Student Election Board</div>
           <div className="bottom">Admin Portal</div>
         </div>
       </div>

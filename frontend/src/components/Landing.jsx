@@ -31,7 +31,7 @@ export default function Landing() {
 
         <div className="hero-announce">
           <div className="announce-dot"></div>
-          Blockchain-verified elections &mdash; Learn how it works &nbsp;&rarr;
+          Blockchain-verified student elections &mdash; Learn how it works &nbsp;&rarr;
         </div>
 
         {/* Floating nodes — animated entry */}
@@ -41,8 +41,8 @@ export default function Landing() {
               <polygon points="5,1 9,8 1,8" fill="none"/>
             </svg>
           </div>
-          <div className="fnode-name">&bull; Maharashtra</div>
-          <div className="fnode-val">72,456 votes</div>
+          <div className="fnode-name">&bull; Computer Science</div>
+          <div className="fnode-val">1,456 votes</div>
         </div>
 
         <div className="fnode-l2 fnode-anim" style={{animationDelay:'0.3s'}}>
@@ -52,8 +52,8 @@ export default function Landing() {
               <circle cx="5" cy="5" r="4" fill="none"/>
             </svg>
           </div>
-          <div className="fnode-name">&bull; Delhi NCR</div>
-          <div className="fnode-val">58,234 votes</div>
+          <div className="fnode-name">&bull; Electrical Eng.</div>
+          <div className="fnode-val">1,234 votes</div>
         </div>
 
         <div className="fnode-r1 fnode-anim" style={{animationDelay:'0.2s'}}>
@@ -62,8 +62,8 @@ export default function Landing() {
               <path d="M2 8l3-6 3 6" strokeLinecap="round"/>
             </svg>
           </div>
-          <div className="fnode-name">&bull; Karnataka</div>
-          <div className="fnode-val">65,102 votes</div>
+          <div className="fnode-name">&bull; Mechanical Eng.</div>
+          <div className="fnode-val">1,102 votes</div>
         </div>
 
         <div className="fnode-r2 fnode-anim" style={{animationDelay:'0.4s'}}>
@@ -72,8 +72,8 @@ export default function Landing() {
               <path d="M2 6l2-3 2 2 2-4" strokeLinecap="round" fill="none"/>
             </svg>
           </div>
-          <div className="fnode-name">&bull; Chennai</div>
-          <div className="fnode-val">44,890 votes</div>
+          <div className="fnode-name">&bull; Business School</div>
+          <div className="fnode-val">890 votes</div>
         </div>
 
         {/* Connecting SVG curves */}
@@ -90,7 +90,7 @@ export default function Landing() {
           <span className="hero-line2 hero-glow-text" style={{animationDelay:'0.2s'}}>Protected.</span>
           <span className="hero-line3 hero-glow-text" style={{animationDelay:'0.4s'}}>Counted.</span>
           <div className="hero-sub">
-            Where blockchain technology meets democratic integrity &mdash; secure, transparent, verifiable.
+            Where blockchain technology meets campus democracy &mdash; secure, transparent, verifiable.
           </div>
         </div>
 
@@ -138,7 +138,7 @@ export default function Landing() {
 
         {/* Election Horizons */}
         <div className="defi-label">
-          <div className="defi-label-t">Election Horizons</div>
+          <div className="defi-label-t">Campus Elections</div>
           <div className="defi-under"></div>
         </div>
       </div>

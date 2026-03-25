@@ -1,19 +1,19 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 
 /* ─── DATA ─── */
 const KPI_DATA = [
-  { ico: 'p', stroke: '#4F46E5', label: 'Total Votes', val: '1,234,567', trend: 'up', trendLabel: '\u2191 Live',
+  { ico: 'p', stroke: '#4F46E5', label: 'Total Votes', val: '2,847', trend: 'up', trendLabel: '↑ Live',
     svgPath: <><path d="M7 1.5v2M12 7h-2M7 12.5v-2M2 7h2"/><circle cx="7" cy="7" r="2.5"/></> },
-  { ico: 'g', stroke: '#475569', label: 'Turnout', val: '58.3%', trend: 'dn', trendLabel: 'of 2.12Cr',
+  { ico: 'g', stroke: '#475569', label: 'Turnout', val: '67.3%', trend: 'dn', trendLabel: 'of 4,230',
     svgPath: <><circle cx="7" cy="7" r="5"/><path d="M7 4.5V7l2 1"/></> },
-  { ico: 'p', stroke: '#4F46E5', label: 'Terminals', val: '45,234', trend: 'dn', trendLabel: 'of 48,000',
+  { ico: 'p', stroke: '#4F46E5', label: 'Terminals', val: '12', trend: 'dn', trendLabel: 'of 15',
     svgPath: <><rect x="2" y="3.5" width="10" height="7" rx="1.5"/></> },
-  { ico: 'g', stroke: '#475569', label: 'Alerts', val: '5', trend: 'up', trendLabel: '3 Critical',
+  { ico: 'g', stroke: '#475569', label: 'Alerts', val: '2', trend: 'up', trendLabel: '1 Critical',
     svgPath: <><path d="M7 2v2M12 7h-2M7 12v-2M2 7h2"/><circle cx="7" cy="7" r="2"/></> },
 ]
 const DIST_DATA = [
-  { label: 'Mumbai', pct: 72 },{ label: 'Delhi', pct: 65 },{ label: 'Chennai', pct: 58 },
-  { label: 'Kolkata', pct: 51 },{ label: 'Bangalore', pct: 38 },
+  { label: 'Computer Science', pct: 82 },{ label: 'Electrical Eng.', pct: 75 },{ label: 'Mechanical Eng.', pct: 68 },
+  { label: 'Business School', pct: 61 },{ label: 'Civil Eng.', pct: 54 },
 ]
 const ALERT_DATA = [
   { sev:'h', sevLabel:'Critical', msg:'Voting spike detected', det:'TERM-045 · 150 votes / 5 min', time:'14:22' },
@@ -42,40 +42,23 @@ const AUDIT_LOG = [
   { time:'14:18:30', event:'AUTH_FAILED',    user:'TERM-089',    desc:'Biometric auth failed: Voter #12,449',   txHash:'—' },
 ]
 const TERMINAL_DATA = [
-  { id:'TERM-001', loc:'Mumbai Central', status:'online', votes:342, battery:92 },
-  { id:'TERM-012', loc:'Delhi North',    status:'offline',votes:0,   battery:45 },
-  { id:'TERM-022', loc:'Chennai South',  status:'online', votes:289, battery:78 },
-  { id:'TERM-045', loc:'Mumbai West',    status:'online', votes:512, battery:85 },
-  { id:'TERM-078', loc:'Kolkata East',   status:'online', votes:198, battery:91 },
-  { id:'TERM-089', loc:'Bangalore',      status:'warn',   votes:267, battery:34 },
-  { id:'TERM-156', loc:'Delhi South',    status:'online', votes:334, battery:88 },
-  { id:'TERM-301', loc:'Hyderabad',      status:'warn',   votes:145, battery:8  },
+  { id:'TERM-001', loc:'CS Building - Lab A', status:'online', votes:342, battery:92 },
+  { id:'TERM-012', loc:'EE Building - Room 201', status:'offline',votes:0,   battery:45 },
+  { id:'TERM-022', loc:'Library Foyer',  status:'online', votes:289, battery:78 },
+  { id:'TERM-045', loc:'Student Center',    status:'online', votes:512, battery:85 },
+  { id:'TERM-078', loc:'Mech Building',   status:'online', votes:198, battery:91 },
+  { id:'TERM-089', loc:'Business School',      status:'warn',   votes:267, battery:34 },
+  { id:'TERM-156', loc:'Admin Block',    status:'online', votes:334, battery:88 },
+  { id:'TERM-301', loc:'Sports Complex',      status:'warn',   votes:145, battery:8  },
 ]
 
 const NAV_ITEMS = [
   { id:'overview',  section:'Monitor', label:'Overview',  icon:<><rect x="1" y="8" width="3" height="4" rx=".8"/><rect x="5.5" y="5" width="3" height="7" rx=".8"/><rect x="10" y="2" width="3" height="10" rx=".8"/></> },
   { id:'realtime',  section:'Monitor', label:'Real-Time', icon:<><circle cx="7" cy="7" r="5"/><path d="M7 4.5V7l1.5 1.5"/></> },
   { id:'alerts',    section:'Monitor', label:'Alerts',    icon:<><path d="M7 2v2M12 7h-2M7 12v-2M2 7h2"/><circle cx="7" cy="7" r="2"/></>, badge:'5' },
-  { id:'audit',     section:'Tools',   label:'Audit Log', icon:<><path d="M2 4h10M2 7h7M2 10h5"/></> },
-  { id:'verify',    section:'Tools',   label:'Verify',    icon:<><circle cx="6" cy="6" r="4"/><path d="M11 11l-2-2"/></> },
-  { id:'terminals', section:'Tools',   label:'Terminals', icon:<><rect x="2" y="4" width="10" height="7" rx="1.5"/><path d="M5 7h4"/></> },
 ]
 
-/* ─── Terminal Grid (dot map) ─── */
-function TerminalGrid() {
-  const ref = useRef(null)
-  useEffect(() => {
-    if (!ref.current) return
-    ref.current.innerHTML = ''
-    for (let i = 0; i < 120; i++) {
-      const d = document.createElement('div')
-      const r = Math.random()
-      d.className = 'tdot ' + (r < .06 ? 'of' : r < .14 ? 'wa' : 'on')
-      ref.current.appendChild(d)
-    }
-  }, [])
-  return <div className="tgrid" ref={ref}></div>
-}
+
 
 /* ─── VIEW: Overview ─── */
 function OverviewView() {
@@ -83,7 +66,7 @@ function OverviewView() {
     <div className="obs-toprow">
       <div>
         <div className="obs-title">Overview</div>
-        <div className="obs-sub">General Election 2024 · Live feed</div>
+        <div className="obs-sub">Student Council Election 2026 · Live feed</div>
       </div>
       <div className="obs-tbrow">
         <button className="tbtn"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M6 2v8M2 6h8"/></svg> Export</button>
@@ -102,12 +85,8 @@ function OverviewView() {
     </div>
     <div className="two-col">
       <div className="panel">
-        <div className="ph"><div className="pt"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="1" y="7" width="2.5" height="4" rx=".5"/><rect x="4.75" y="4.5" width="2.5" height="6.5" rx=".5"/><rect x="8.5" y="2" width="2.5" height="9" rx=".5"/></svg> Turnout by District</div><button className="pa">View All</button></div>
+        <div className="ph"><div className="pt"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="1" y="7" width="2.5" height="4" rx=".5"/><rect x="4.75" y="4.5" width="2.5" height="6.5" rx=".5"/><rect x="8.5" y="2" width="2.5" height="9" rx=".5"/></svg> Turnout by Department</div><button className="pa">View All</button></div>
         {DIST_DATA.map(d => (<div key={d.label} className="dr"><span className="dl">{d.label}</span><div className="dt"><div className="df" style={{width:`${d.pct}%`}}></div></div><span className="dv">{d.pct}%</span></div>))}
-        <div style={{marginTop:16}}>
-          <div className="pt" style={{marginBottom:9,fontSize:12}}><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="13" height="13"><rect x="1.5" y="4" width="9" height="7" rx="1.2"/><path d="M4 4V2.5A1.5 1.5 0 015.5 1h1A1.5 1.5 0 018 2.5V4"/></svg> Terminal Status</div>
-          <TerminalGrid />
-        </div>
       </div>
       <div className="panel">
         <div className="ph"><div className="pt"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="13" height="13"><path d="M6 1.5v2M10.5 6h-2M6 10.5v-2M1.5 6h2"/><circle cx="6" cy="6" r="2.2"/></svg> Recent Alerts</div><button className="pa">All</button></div>
@@ -236,13 +215,13 @@ function VerifyView() {
 /* ─── VIEW: Terminals ─── */
 function TerminalsView() {
   return <>
-    <div className="obs-toprow"><div><div className="obs-title">Terminals</div><div className="obs-sub">EVM terminal status & management</div></div>
+    <div className="obs-toprow"><div><div className="obs-title">Terminals</div><div className="obs-sub">Voting terminal status & management</div></div>
       <div className="obs-tbrow"><button className="tbtn">Filter</button><button className="tbtn p">Refresh All</button></div>
     </div>
     <div className="kpi-row" style={{gridTemplateColumns:'repeat(4,1fr)',marginBottom:8}}>
-      <div className="kpi"><div className="kpi-lbl">Online</div><div className="kpi-val" style={{color:'var(--success)'}}>45,102</div></div>
-      <div className="kpi"><div className="kpi-lbl">Warning</div><div className="kpi-val" style={{color:'var(--warning)'}}>132</div></div>
-      <div className="kpi"><div className="kpi-lbl">Offline</div><div className="kpi-val" style={{color:'var(--error)'}}>12</div></div>
+      <div className="kpi"><div className="kpi-lbl">Online</div><div className="kpi-val" style={{color:'var(--success)'}}>10</div></div>
+      <div className="kpi"><div className="kpi-lbl">Warning</div><div className="kpi-val" style={{color:'var(--warning)'}}>2</div></div>
+      <div className="kpi"><div className="kpi-lbl">Offline</div><div className="kpi-val" style={{color:'var(--error)'}}>1</div></div>
       <div className="kpi"><div className="kpi-lbl">Uptime</div><div className="kpi-val">99.7%</div></div>
     </div>
     <div className="panel">
@@ -280,7 +259,7 @@ export default function ObserverPage() {
         <div className="obs-sb">
           <div className="obs-sb-hdr">
             <div className="obs-sb-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round"><circle cx="8" cy="8" r="2.5"/><circle cx="8" cy="8" r="5.5" strokeWidth="1.2" opacity=".5"/></svg></div>
-            <div><div className="obs-sb-sub">Election Commission</div><div className="obs-sb-name">Observer</div></div>
+            <div><div className="obs-sb-sub">Student Election Board</div><div className="obs-sb-name">Observer</div></div>
           </div>
           {sections.map(sec => (
             <div key={sec}>
@@ -303,9 +282,6 @@ export default function ObserverPage() {
           {tab==='overview'  && <OverviewView />}
           {tab==='realtime'  && <RealTimeView />}
           {tab==='alerts'    && <AlertsView />}
-          {tab==='audit'     && <AuditLogView />}
-          {tab==='verify'    && <VerifyView />}
-          {tab==='terminals' && <TerminalsView />}
         </div>
       </div>
     </div>

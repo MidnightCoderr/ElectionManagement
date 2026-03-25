@@ -4,6 +4,7 @@ import VoterUI        from './components/VoterUI.jsx'
 import ObserverDashBoard     from './components/ObserverDashBoard.jsx'
 import AdminPage          from './components/AdminPage.jsx'
 import VerificationPortal from './components/VerificationPortal.jsx'
+import CandidatePortal from './components/CandidatePortal.jsx'
 import CreateAccount  from './components/CreateAccount.jsx'
 import './index.css'
 
@@ -12,6 +13,8 @@ const TABS = [
     icon: <><path d="M2 6l5-4 5 4"/><rect x="3.5" y="6" width="7" height="5" rx=".8"/></> },
   { id: 'voter',   path: '/voter',     label: 'Voter Portal',  exact: false,
     icon: <><circle cx="7" cy="5" r="2.5"/><path d="M2.5 12.5c0-2.49 2.01-4.5 4.5-4.5s4.5 2.01 4.5 4.5"/></> },
+  { id: 'candidate', path: '/candidate', label: 'Candidate',   exact: false,
+    icon: <><path d="M7 1v4M5 3h4"/><circle cx="7" cy="9" r="3"/></> },
   { id: 'obs',     path: '/observer',  label: 'Observer',      exact: false,
     icon: <><path d="M1 7s2.5-4.5 6-4.5S13 7 13 7s-2.5 4.5-6 4.5S1 7 1 7z"/><circle cx="7" cy="7" r="2"/></> },
   { id: 'admin',   path: '/dashboard', label: 'Admin Portal',  exact: false,
@@ -37,7 +40,7 @@ function Nav() {
     <div className="nav">
       <div className="nav-brand" onClick={() => navigate('/')}>
         <div className="nav-orb" />
-        <span className="nav-brand-name">ElectionOS</span>
+        <span className="nav-brand-name">CampusVote</span>
       </div>
 
       {TABS.map(({ id, path, label, exact, icon }) => (
@@ -80,6 +83,7 @@ export default function App() {
         <Routes>
           <Route path="/"          element={<Landing />} />
           <Route path="/voter"     element={<VoterUI />} />
+          <Route path="/candidate" element={<CandidatePortal />} />
           <Route path="/observer"  element={<ObserverDashBoard />} />
           <Route path="/dashboard" element={<AdminPage />} />
           <Route path="/verify"    element={<VerificationPortal />} />
