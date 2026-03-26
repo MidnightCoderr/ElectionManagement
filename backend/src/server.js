@@ -104,18 +104,23 @@ app.get('/api/v1', (req, res) => {
 });
 
 // ML Service Proxy — forward /api/ml/* to the Python Flask service
+// Note: Express strips the mount prefix from req.url, so req.url is the remainder after /api/ml
+// Flask routes are defined at /health, /api/ml/analyze etc. We re-add /api/ml for analyze/batch routes.
 app.use('/api/ml', (req, res) => {
     const mlBaseUrl = process.env.PYTHON_ML_SERVICE_URL || 'http://localhost:5000';
-    const targetUrl = new URL(req.url, mlBaseUrl);
+    // req.url here is e.g. '/analyze', '/batch-analyze', '/health'
+    // Flask exposes /health at root and /api/ml/analyze etc at /api/ml/...
+    const flaskPath = req.url === '/health' ? '/health' : `/api/ml${req.url}`;
+    const targetUrl = new URL(flaskPath, mlBaseUrl);
     const isHttps = targetUrl.protocol === 'https:';
     const mod = isHttps ? https : http;
 
     const options = {
         hostname: targetUrl.hostname,
-        port: targetUrl.port || (isHttps ? 443 : 80),
-        path: targetUrl.pathname + (targetUrl.search || ''),
-        method: req.method,
-        headers: { ...req.headers, host: targetUrl.hostname },
+        port:     targetUrl.port || (isHttps ? 443 : 80),
+        path:     targetUrl.pathname + (targetUrl.search || ''),
+        method:   req.method,
+        headers:  { ...req.headers, host: targetUrl.hostname },
     };
 
     const proxyReq = mod.request(options, (proxyRes) => {

@@ -17,7 +17,7 @@ export function getAuditLogs(params = {}) {
 }
 
 /**
- * Get detailed results for an election (aggregated tally).
+ * Get detailed results for an election.
  */
 export function getElectionResults(electionId) {
   return api.get(`/api/v1/results/${electionId}`);
@@ -28,4 +28,32 @@ export function getElectionResults(electionId) {
  */
 export function getDashboardStats() {
   return api.get('/api/v1/elections?limit=10&offset=0');
+}
+
+/**
+ * Submit a candidate application (POST to /api/v1/candidates).
+ * Used by CandidatePortal for self-registration.
+ * @param {{ electionId, fullName, partyName, districtId, manifesto, email, phone, studentId, cgpa, year }} data
+ */
+export function submitCandidateApplication(data) {
+  return api.post('/api/v1/candidates', {
+    electionId:  data.electionId,
+    fullName:    data.name,
+    partyName:   data.department || 'Independent',
+    partySymbol: data.year || '',
+    districtId:  data.department || 'General',
+    manifesto:   data.manifesto,
+    studentId:   data.studentId,
+    email:       data.email,
+    phone:       data.phone,
+    cgpa:        data.cgpa,
+  });
+}
+
+/**
+ * Get all candidates for an election (for status tracking).
+ */
+export function getCandidatesByElection(electionId) {
+  const qs = new URLSearchParams({ electionId }).toString();
+  return api.get(`/api/v1/candidates?${qs}`);
 }

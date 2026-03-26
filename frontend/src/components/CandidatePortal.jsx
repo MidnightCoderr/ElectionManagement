@@ -1,74 +1,103 @@
 import { useState, useEffect } from 'react'
+import { getElections } from '../api/elections.js'
+import { submitCandidateApplication, getCandidatesByElection } from '../api/admin.js'
 
-const MOCK_ELECTIONS = [
-  { id: 'sc-2026', name: 'Student Council President 2026', position: 'President', department: 'All Departments', status: 'active', deadline: '2026-04-15' },
-  { id: 'cs-cr-2026', name: 'CS-301 Class Representative', position: 'Class Representative', department: 'Computer Science', status: 'active', deadline: '2026-04-10' },
-  { id: 'ee-cr-2026', name: 'EE-201 Class Representative', position: 'Class Representative', department: 'Electrical Engineering', status: 'active', deadline: '2026-04-10' },
-  { id: 'sc-vp-2026', name: 'Student Council Vice President', position: 'Vice President', department: 'All Departments', status: 'active', deadline: '2026-04-15' },
-  { id: 'sc-sec-2026', name: 'Student Council Secretary', position: 'Secretary', department: 'All Departments', status: 'upcoming', deadline: '2026-04-20' },
-  { id: 'sports-sec', name: 'Sports Secretary', position: 'Sports Secretary', department: 'All Departments', status: 'active', deadline: '2026-04-12' },
-]
-
-const POSITIONS = ['President', 'Vice President', 'Secretary', 'Sports Secretary', 'Class Representative', 'Cultural Secretary', 'Technical Secretary']
 const DEPARTMENTS = ['Computer Science', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Business School', 'Biotechnology']
 const YEARS = ['1st Year', '2nd Year', '3rd Year', '4th Year']
 
-const ELIGIBILITY = [
-  { label: 'Minimum CGPA of 7.0', icon: '📊', key: 'cgpa' },
-  { label: 'No active disciplinary cases', icon: '✅', key: 'discipline' },
-  { label: 'Enrolled in relevant department', icon: '🏫', key: 'enrollment' },
-  { label: 'Minimum 75% attendance', icon: '📅', key: 'attendance' },
-  { label: 'No pending academic dues', icon: '💰', key: 'dues' },
+const ELIGIBILITY_RULES = [
+  { label: 'Minimum CGPA of 7.0',          icon: '📊', key: 'cgpa' },
+  { label: 'No active disciplinary cases',  icon: '✅', key: 'discipline' },
+  { label: 'Enrolled in relevant dept.',    icon: '🏫', key: 'enrollment' },
+  { label: 'Minimum 75% attendance',        icon: '📅', key: 'attendance' },
+  { label: 'No pending academic dues',      icon: '💰', key: 'dues' },
 ]
 
 export default function CandidatePortal() {
-  const [view, setView] = useState('browse') // browse | apply | status
+  const [view, setView]             = useState('browse')
+  const [elections, setElections]   = useState([])
+  const [loadingElec, setLoadingEl] = useState(true)
   const [selectedElection, setSelectedElection] = useState(null)
-  const [applications, setApplications] = useState([])
-  const [form, setForm] = useState({ name: '', studentId: '', department: '', year: '', cgpa: '', manifesto: '', phone: '', email: '' })
-  const [eligibility, setEligibility] = useState({})
+  const [applications, setApplications]         = useState([]) // local + fetched
+  const [form, setForm]     = useState({ name:'', studentId:'', department:'', year:'', cgpa:'', manifesto:'', phone:'', email:'' })
+  const [eligibility, setElig] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState(null)
   const [filterDept, setFilterDept] = useState('')
-  const [hoverCard, setHoverCard] = useState(null)
+  const [hoverCard, setHoverCard]   = useState(null)
 
-  // Simulate eligibility check
+  /* Fetch live elections on mount */
+  useEffect(() => {
+    async function load() {
+      try {
+        const r = await getElections({ limit: 20 })
+        setElections(r.elections || [])
+      } catch {
+        setElections([]) // fall back to empty — browseable but empty
+      }
+      setLoadingEl(false)
+    }
+    load()
+  }, [])
+
+  /* Eligibility check whenever form changes */
   useEffect(() => {
     if (form.cgpa && form.department && form.studentId) {
       const cgpaVal = parseFloat(form.cgpa)
-      setEligibility({
-        cgpa: cgpaVal >= 7.0,
-        discipline: true,
-        enrollment: !!form.department,
-        attendance: true,
-        dues: true,
+      setElig({
+        cgpa:        cgpaVal >= 7.0,
+        discipline:  true,
+        enrollment:  !!form.department,
+        attendance:  true,
+        dues:        true,
       })
+    } else {
+      setElig({})
     }
   }, [form.cgpa, form.department, form.studentId])
 
-  const allEligible = Object.values(eligibility).length === 5 && Object.values(eligibility).every(Boolean)
-  const filtered = filterDept ? MOCK_ELECTIONS.filter(e => e.department === filterDept || e.department === 'All Departments') : MOCK_ELECTIONS
+  const allEligible = Object.keys(eligibility).length === 5 && Object.values(eligibility).every(Boolean)
+  const filtered = filterDept
+    ? elections.filter(e => !e.district_id || e.district_id === filterDept)
+    : elections
 
   function handleApply(election) {
     setSelectedElection(election)
+    setSubmitError(null)
     setView('apply')
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (!allEligible) return
+    if (!allEligible || !selectedElection) return
     setSubmitting(true)
-    setTimeout(() => {
+    setSubmitError(null)
+    try {
+      await submitCandidateApplication({
+        electionId: selectedElection.election_id,
+        name:       form.name,
+        department: form.department,
+        year:       form.year,
+        manifesto:  form.manifesto,
+        studentId:  form.studentId,
+        email:      form.email,
+        phone:      form.phone,
+        cgpa:       form.cgpa,
+      })
+      // Record locally so status tab shows immediately
       setApplications(prev => [...prev, {
-        id: `APP-${Date.now()}`,
-        election: selectedElection,
+        id:         `APP-${Date.now()}`,
+        election:   selectedElection,
         ...form,
-        status: 'pending',
-        appliedAt: new Date().toISOString(),
+        status:     'pending',
+        appliedAt:  new Date().toISOString(),
       }])
-      setSubmitting(false)
-      setForm({ name: '', studentId: '', department: '', year: '', cgpa: '', manifesto: '', phone: '', email: '' })
+      setForm({ name:'', studentId:'', department:'', year:'', cgpa:'', manifesto:'', phone:'', email:'' })
       setView('status')
-    }, 1500)
+    } catch (err) {
+      setSubmitError(err.message || 'Submission failed. Please try again.')
+    }
+    setSubmitting(false)
   }
 
   return (
@@ -77,12 +106,12 @@ export default function CandidatePortal() {
       <div style={s.header}>
         <div>
           <h1 style={s.title}>🎓 Candidate Portal</h1>
-          <p style={s.subtitle}>Apply for student council & class representative positions</p>
+          <p style={s.subtitle}>Apply for student council &amp; class representative positions</p>
         </div>
         <div style={s.tabs}>
           {[
-            { id: 'browse', label: '📋 Browse Elections', count: MOCK_ELECTIONS.length },
-            { id: 'apply', label: '✏️ Apply' },
+            { id: 'browse', label: '📋 Browse Elections', count: elections.length },
+            { id: 'apply',  label: '✏️ Apply' },
             { id: 'status', label: '📊 My Applications', count: applications.length },
           ].map(tab => (
             <button
@@ -110,27 +139,44 @@ export default function CandidatePortal() {
                 <option value="">All Departments</option>
                 {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
-              <span style={s.filterCount}>{filtered.length} positions available</span>
+              <span style={s.filterCount}>
+                {loadingElec ? 'Loading…' : `${filtered.length} positions available`}
+              </span>
             </div>
+
+            {loadingElec && (
+              <div style={{textAlign:'center',padding:60,color:'#5B5480',fontSize:14}}>Loading elections…</div>
+            )}
+
+            {!loadingElec && filtered.length === 0 && (
+              <div style={s.emptyState}>
+                <div style={s.emptyIcon}>📭</div>
+                <h3 style={s.emptyTitle}>No Open Elections</h3>
+                <p style={s.emptyText}>There are no active or upcoming elections currently. Check back later.</p>
+              </div>
+            )}
 
             <div style={s.grid}>
               {filtered.map(el => (
                 <div
-                  key={el.id}
-                  style={{ ...s.card, ...(hoverCard === el.id ? s.cardHover : {}) }}
-                  onMouseEnter={() => setHoverCard(el.id)}
+                  key={el.election_id}
+                  style={{ ...s.card, ...(hoverCard === el.election_id ? s.cardHover : {}) }}
+                  onMouseEnter={() => setHoverCard(el.election_id)}
                   onMouseLeave={() => setHoverCard(null)}
                 >
                   <div style={s.cardTop}>
                     <div style={{ ...s.statusBadge, ...(el.status === 'active' ? s.badgeActive : s.badgeUpcoming) }}>
-                      {el.status === 'active' ? '🟢 Open' : '🟡 Upcoming'}
+                      {el.status === 'active' ? '🟢 Open' : el.status === 'completed' ? '🔴 Closed' : '🟡 Upcoming'}
                     </div>
-                    <span style={s.deadline}>Deadline: {el.deadline}</span>
+                    <span style={s.deadline}>
+                      Ends: {el.end_date ? new Date(el.end_date).toLocaleDateString() : 'TBD'}
+                    </span>
                   </div>
-                  <h3 style={s.cardTitle}>{el.name}</h3>
+                  <h3 style={s.cardTitle}>{el.election_name}</h3>
                   <div style={s.cardMeta}>
-                    <span style={s.metaTag}>🎯 {el.position}</span>
-                    <span style={s.metaTag}>🏫 {el.department}</span>
+                    <span style={s.metaTag}>🎯 {el.election_type || 'General'}</span>
+                    {el.district_id && <span style={s.metaTag}>🏫 {el.district_id}</span>}
+                    <span style={s.metaTag}>👥 {el.total_voters || 0} voters</span>
                   </div>
                   <div style={s.cardEligibility}>
                     <span style={s.eligLabel}>📋 Eligibility:</span>
@@ -141,7 +187,7 @@ export default function CandidatePortal() {
                     onClick={() => el.status === 'active' && handleApply(el)}
                     disabled={el.status !== 'active'}
                   >
-                    {el.status === 'active' ? 'Apply Now →' : 'Coming Soon'}
+                    {el.status === 'active' ? 'Apply Now →' : el.status === 'completed' ? 'Election Closed' : 'Coming Soon'}
                   </button>
                 </div>
               ))}
@@ -156,8 +202,8 @@ export default function CandidatePortal() {
               <div style={s.selectedBanner}>
                 <span style={s.selectedIcon}>🗳️</span>
                 <div>
-                  <div style={s.selectedName}>{selectedElection.name}</div>
-                  <div style={s.selectedPos}>{selectedElection.position} · {selectedElection.department}</div>
+                  <div style={s.selectedName}>{selectedElection.election_name}</div>
+                  <div style={s.selectedPos}>{selectedElection.election_type} · {selectedElection.district_id || 'All Departments'}</div>
                 </div>
                 <button style={s.changBtn} onClick={() => setView('browse')}>Change</button>
               </div>
@@ -174,6 +220,13 @@ export default function CandidatePortal() {
               <div style={s.formGrid}>
                 <div style={s.formLeft}>
                   <h3 style={s.formSectionTitle}>📝 Registration Form</h3>
+
+                  {submitError && (
+                    <div style={{background:'rgba(255,75,108,0.07)',border:'1px solid rgba(255,75,108,0.2)',borderRadius:12,padding:'10px 14px',marginBottom:16,fontSize:12,color:'#c0392b'}}>
+                      ⚠ {submitError}
+                    </div>
+                  )}
+
                   <form onSubmit={handleSubmit}>
                     <div style={s.fieldGrid}>
                       <div style={s.field}>
@@ -226,7 +279,7 @@ export default function CandidatePortal() {
                       style={{ ...s.submitBtn, ...((!allEligible || submitting) ? s.submitDisabled : {}) }}
                       disabled={!allEligible || submitting}
                     >
-                      {submitting ? '⏳ Submitting...' : allEligible ? '🚀 Submit Application' : '❌ Eligibility Not Met'}
+                      {submitting ? '⏳ Submitting…' : allEligible ? '🚀 Submit Application' : '❌ Eligibility Not Met'}
                     </button>
                   </form>
                 </div>
@@ -235,7 +288,7 @@ export default function CandidatePortal() {
                 <div style={s.formRight}>
                   <h3 style={s.formSectionTitle}>✅ Eligibility Check</h3>
                   <div style={s.eligPanel}>
-                    {ELIGIBILITY.map(req => {
+                    {ELIGIBILITY_RULES.map(req => {
                       const met = eligibility[req.key]
                       const pending = met === undefined
                       return (
@@ -252,7 +305,6 @@ export default function CandidatePortal() {
                       : <span style={s.eligSumPend}>Fill in your details above to check eligibility.</span>
                     }
                   </div>
-
                   <div style={s.infoBox}>
                     <h4 style={s.infoTitle}>📌 Important Notes</h4>
                     <ul style={s.infoList}>
@@ -280,19 +332,19 @@ export default function CandidatePortal() {
               </div>
             ) : (
               <div style={s.appList}>
-                {applications.map((app, i) => (
+                {applications.map((app) => (
                   <div key={app.id} style={s.appCard}>
                     <div style={s.appHeader}>
                       <div>
-                        <h3 style={s.appTitle}>{app.election.name}</h3>
-                        <p style={s.appMeta}>{app.election.position} · {app.election.department}</p>
+                        <h3 style={s.appTitle}>{app.election.election_name}</h3>
+                        <p style={s.appMeta}>{app.election.election_type} · {app.election.district_id || 'All Departments'}</p>
                       </div>
-                      <div style={{ ...s.appStatus, ...(app.status === 'pending' ? s.appStatusPending : app.status === 'approved' ? s.appStatusApproved : s.appStatusRejected) }}>
-                        {app.status === 'pending' ? '⏳ Under Review' : app.status === 'approved' ? '✅ Approved' : '❌ Rejected'}
+                      <div style={{ ...s.appStatus, ...(app.status === 'pending' ? s.appStatusPending : app.status === 'approved' || app.status === 'active' ? s.appStatusApproved : s.appStatusRejected) }}>
+                        {app.status === 'pending' ? '⏳ Under Review' : app.status === 'approved' || app.status === 'active' ? '✅ Approved' : '❌ Rejected'}
                       </div>
                     </div>
                     <div style={s.appDetails}>
-                      <span>👤 {app.name}</span>
+                      <span>👤 {app.name || app.full_name}</span>
                       <span>🆔 {app.studentId}</span>
                       <span>🏫 {app.department}</span>
                       <span>📅 Applied: {new Date(app.appliedAt).toLocaleDateString()}</span>
@@ -318,92 +370,80 @@ export default function CandidatePortal() {
 
 /* ── Styles ── */
 const s = {
-  wrap: { flex: 1, display: 'flex', flexDirection: 'column', background: '#FAFAFA', color: '#1D1136', fontFamily: "'Inter', 'DM Sans', sans-serif", overflow: 'auto', minHeight: '100vh' },
-  header: { padding: '32px 40px 24px', borderBottom: '1px solid #EDE9FE', background: 'linear-gradient(135deg, rgba(115,93,255,0.06), rgba(255,75,108,0.04), rgba(255,213,34,0.03))' },
-  title: { fontSize: 28, fontWeight: 800, margin: 0, background: 'linear-gradient(135deg, #735DFF, #FF4B6C, #FFD522)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
-  subtitle: { fontSize: 14, color: '#5B5480', margin: '6px 0 0' },
-  tabs: { display: 'flex', gap: 8, marginTop: 20 },
-  tab: { padding: '10px 20px', borderRadius: 100, background: '#FFFFFF', border: '1px solid #EDE9FE', color: '#5B5480', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all .2s', fontFamily: 'inherit', boxShadow: '0 1px 3px rgba(29,17,54,0.04)' },
-  tabActive: { background: 'linear-gradient(135deg, #735DFF, #FF4B6C)', borderColor: 'transparent', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(115,93,255,0.25)' },
-  tabBadge: { background: 'rgba(255,213,34,0.3)', color: '#1D1136', padding: '2px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700 },
-  content: { flex: 1, padding: '28px 40px' },
-
-  // Filter
-  filterRow: { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 },
-  filterSelect: { padding: '10px 16px', borderRadius: 12, border: '1px solid #EDE9FE', background: '#FFFFFF', color: '#1D1136', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 1px 3px rgba(29,17,54,0.04)' },
+  wrap:        { flex: 1, display: 'flex', flexDirection: 'column', background: '#FAFAFA', color: '#1D1136', fontFamily: "'Inter', 'DM Sans', sans-serif", overflow: 'auto', minHeight: '100vh' },
+  header:      { padding: '32px 40px 24px', borderBottom: '1px solid #EDE9FE', background: 'linear-gradient(135deg, rgba(115,93,255,0.06), rgba(255,75,108,0.04), rgba(255,213,34,0.03))' },
+  title:       { fontSize: 28, fontWeight: 800, margin: 0, background: 'linear-gradient(135deg, #735DFF, #FF4B6C, #FFD522)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' },
+  subtitle:    { fontSize: 14, color: '#5B5480', margin: '6px 0 0' },
+  tabs:        { display: 'flex', gap: 8, marginTop: 20 },
+  tab:         { padding: '10px 20px', borderRadius: 100, background: '#FFFFFF', border: '1px solid #EDE9FE', color: '#5B5480', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all .2s', fontFamily: 'inherit', boxShadow: '0 1px 3px rgba(29,17,54,0.04)' },
+  tabActive:   { background: 'linear-gradient(135deg, #735DFF, #FF4B6C)', borderColor: 'transparent', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(115,93,255,0.25)' },
+  tabBadge:    { background: 'rgba(255,213,34,0.3)', color: '#1D1136', padding: '2px 8px', borderRadius: 8, fontSize: 11, fontWeight: 700 },
+  content:     { flex: 1, padding: '28px 40px' },
+  filterRow:   { display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 },
+  filterSelect:{ padding: '10px 16px', borderRadius: 12, border: '1px solid #EDE9FE', background: '#FFFFFF', color: '#1D1136', fontSize: 13, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 1px 3px rgba(29,17,54,0.04)' },
   filterCount: { fontSize: 13, color: '#5B5480' },
-
-  // Cards grid
-  grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 },
-  card: { background: '#FFFFFF', border: '1px solid #EDE9FE', borderRadius: 20, padding: 24, transition: 'all .25s', cursor: 'default', boxShadow: '0 2px 8px rgba(29,17,54,0.04)' },
-  cardHover: { border: '1px solid rgba(255,75,108,0.3)', background: '#FFFFFF', transform: 'translateY(-4px)', boxShadow: '0 12px 40px rgba(255,75,108,0.12)' },
-  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  grid:        { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 18 },
+  card:        { background: '#FFFFFF', border: '1px solid #EDE9FE', borderRadius: 20, padding: 24, transition: 'all .25s', cursor: 'default', boxShadow: '0 2px 8px rgba(29,17,54,0.04)' },
+  cardHover:   { border: '1px solid rgba(255,75,108,0.3)', background: '#FFFFFF', transform: 'translateY(-4px)', boxShadow: '0 12px 40px rgba(255,75,108,0.12)' },
+  cardTop:     { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   statusBadge: { padding: '5px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600 },
   badgeActive: { background: 'rgba(34,197,94,0.1)', color: '#16a34a' },
-  badgeUpcoming: { background: 'rgba(255,213,34,0.15)', color: '#b8860b' },
-  deadline: { fontSize: 11, color: '#9F97C0' },
-  cardTitle: { fontSize: 17, fontWeight: 700, margin: '0 0 12px', color: '#1D1136' },
-  cardMeta: { display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' },
-  metaTag: { fontSize: 12, color: '#5B5480', background: '#F5F3FF', padding: '4px 12px', borderRadius: 100, border: '1px solid #EDE9FE' },
+  badgeUpcoming:{ background: 'rgba(255,213,34,0.15)', color: '#b8860b' },
+  deadline:    { fontSize: 11, color: '#9F97C0' },
+  cardTitle:   { fontSize: 17, fontWeight: 700, margin: '0 0 12px', color: '#1D1136' },
+  cardMeta:    { display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' },
+  metaTag:     { fontSize: 12, color: '#5B5480', background: '#F5F3FF', padding: '4px 12px', borderRadius: 100, border: '1px solid #EDE9FE' },
   cardEligibility: { background: '#FFF9E6', borderRadius: 12, padding: '10px 14px', marginBottom: 16, border: '1px solid rgba(255,213,34,0.2)' },
-  eligLabel: { fontSize: 11, fontWeight: 700, color: '#b8860b' },
-  eligText: { fontSize: 11, color: '#5B5480', display: 'block', marginTop: 4 },
-  applyBtn: { width: '100%', padding: '12px', borderRadius: 100, border: 'none', background: 'linear-gradient(135deg, #FF4B6C, #735DFF)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all .25s', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(255,75,108,0.25)' },
+  eligLabel:   { fontSize: 11, fontWeight: 700, color: '#b8860b' },
+  eligText:    { fontSize: 11, color: '#5B5480', display: 'block', marginTop: 4 },
+  applyBtn:    { width: '100%', padding: '12px', borderRadius: 100, border: 'none', background: 'linear-gradient(135deg, #FF4B6C, #735DFF)', color: '#fff', fontSize: 14, fontWeight: 700, cursor: 'pointer', transition: 'all .25s', fontFamily: 'inherit', boxShadow: '0 4px 16px rgba(255,75,108,0.25)' },
   applyBtnDisabled: { opacity: 0.4, cursor: 'not-allowed', background: '#D4CEEC', boxShadow: 'none' },
-
-  // Form
-  formWrap: { maxWidth: 1100 },
+  formWrap:    { maxWidth: 1100 },
   selectedBanner: { display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(135deg, rgba(115,93,255,0.06), rgba(255,75,108,0.04))', border: '1px solid #EDE9FE', borderRadius: 16, padding: '16px 20px', marginBottom: 28 },
-  selectedIcon: { fontSize: 28 },
-  selectedName: { fontSize: 16, fontWeight: 700, color: '#1D1136' },
+  selectedIcon:{ fontSize: 28 },
+  selectedName:{ fontSize: 16, fontWeight: 700, color: '#1D1136' },
   selectedPos: { fontSize: 12, color: '#5B5480', marginTop: 2 },
-  changBtn: { marginLeft: 'auto', padding: '8px 18px', borderRadius: 100, background: '#FFFFFF', border: '1px solid #EDE9FE', color: '#5B5480', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' },
-  noElection: { textAlign: 'center', padding: 60, color: '#5B5480' },
-  formGrid: { display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28 },
-  formLeft: {},
-  formRight: {},
+  changBtn:    { marginLeft: 'auto', padding: '8px 18px', borderRadius: 100, background: '#FFFFFF', border: '1px solid #EDE9FE', color: '#5B5480', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', transition: 'all .2s' },
+  noElection:  { textAlign: 'center', padding: 60, color: '#5B5480' },
+  formGrid:    { display: 'grid', gridTemplateColumns: '1fr 360px', gap: 28 },
+  formLeft:    {},
+  formRight:   {},
   formSectionTitle: { fontSize: 16, fontWeight: 700, margin: '0 0 18px', color: '#1D1136' },
-  fieldGrid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
-  field: { display: 'flex', flexDirection: 'column' },
-  label: { fontSize: 12, fontWeight: 600, color: '#5B5480', marginBottom: 6 },
-  input: { padding: '12px 16px', borderRadius: 12, border: '1px solid #EDE9FE', background: '#FFFFFF', color: '#1D1136', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', transition: 'border .2s, box-shadow .2s', width: '100%' },
-  submitBtn: { marginTop: 24, width: '100%', padding: '14px', borderRadius: 100, border: 'none', background: 'linear-gradient(135deg, #FF4B6C, #735DFF)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'all .25s', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(255,75,108,0.25)' },
+  fieldGrid:   { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 },
+  field:       { display: 'flex', flexDirection: 'column' },
+  label:       { fontSize: 12, fontWeight: 600, color: '#5B5480', marginBottom: 6 },
+  input:       { padding: '12px 16px', borderRadius: 12, border: '1px solid #EDE9FE', background: '#FFFFFF', color: '#1D1136', fontSize: 13, fontFamily: 'inherit', boxSizing: 'border-box', outline: 'none', transition: 'border .2s, box-shadow .2s', width: '100%' },
+  submitBtn:   { marginTop: 24, width: '100%', padding: '14px', borderRadius: 100, border: 'none', background: 'linear-gradient(135deg, #FF4B6C, #735DFF)', color: '#fff', fontSize: 15, fontWeight: 700, cursor: 'pointer', transition: 'all .25s', fontFamily: 'inherit', boxShadow: '0 4px 20px rgba(255,75,108,0.25)' },
   submitDisabled: { opacity: 0.5, cursor: 'not-allowed' },
-
-  // Eligibility panel
-  eligPanel: { display: 'flex', flexDirection: 'column', gap: 8 },
-  eligRow: { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: '#FFFFFF', border: '1px solid #EDE9FE', transition: 'all .2s' },
-  eligPass: { borderColor: 'rgba(34,197,94,0.25)', background: 'rgba(34,197,94,0.06)' },
-  eligFail: { borderColor: 'rgba(255,75,108,0.25)', background: 'rgba(255,75,108,0.06)' },
-  eligIcon: { fontSize: 16 },
-  eligText2: { fontSize: 13, color: '#1D1136' },
+  eligPanel:   { display: 'flex', flexDirection: 'column', gap: 8 },
+  eligRow:     { display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 12, background: '#FFFFFF', border: '1px solid #EDE9FE', transition: 'all .2s' },
+  eligPass:    { borderColor: 'rgba(34,197,94,0.25)', background: 'rgba(34,197,94,0.06)' },
+  eligFail:    { borderColor: 'rgba(255,75,108,0.25)', background: 'rgba(255,75,108,0.06)' },
+  eligIcon:    { fontSize: 16 },
+  eligText2:   { fontSize: 13, color: '#1D1136' },
   eligSummary: { marginTop: 16, padding: '12px 14px', borderRadius: 12, background: '#F5F3FF' },
   eligSumPass: { color: '#16a34a', fontSize: 13, fontWeight: 600 },
   eligSumPend: { color: '#5B5480', fontSize: 13 },
-  infoBox: { marginTop: 20, padding: '16px', borderRadius: 16, background: '#FFF9E6', border: '1px solid rgba(255,213,34,0.25)' },
-  infoTitle: { fontSize: 13, fontWeight: 700, margin: '0 0 10px', color: '#b8860b' },
-  infoList: { margin: 0, padding: '0 0 0 18px', fontSize: 12, color: '#5B5480', lineHeight: 1.8 },
-
-  // Empty state
-  emptyState: { textAlign: 'center', padding: '80px 40px' },
-  emptyIcon: { fontSize: 56, marginBottom: 16 },
-  emptyTitle: { fontSize: 22, fontWeight: 700, margin: '0 0 8px', color: '#1D1136' },
-  emptyText: { fontSize: 14, color: '#5B5480', marginBottom: 24 },
-
-  // Application list
-  appList: { display: 'flex', flexDirection: 'column', gap: 16 },
-  appCard: { background: '#FFFFFF', border: '1px solid #EDE9FE', borderRadius: 20, padding: 24, boxShadow: '0 2px 8px rgba(29,17,54,0.04)' },
-  appHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-  appTitle: { fontSize: 17, fontWeight: 700, margin: 0, color: '#1D1136' },
-  appMeta: { fontSize: 12, color: '#5B5480', margin: '4px 0 0' },
-  appStatus: { padding: '6px 14px', borderRadius: 100, fontSize: 12, fontWeight: 700 },
-  appStatusPending: { background: 'rgba(255,213,34,0.15)', color: '#b8860b' },
-  appStatusApproved: { background: 'rgba(34,197,94,0.1)', color: '#16a34a' },
+  infoBox:     { marginTop: 20, padding: '16px', borderRadius: 16, background: '#FFF9E6', border: '1px solid rgba(255,213,34,0.25)' },
+  infoTitle:   { fontSize: 13, fontWeight: 700, margin: '0 0 10px', color: '#b8860b' },
+  infoList:    { margin: 0, padding: '0 0 0 18px', fontSize: 12, color: '#5B5480', lineHeight: 1.8 },
+  emptyState:  { textAlign: 'center', padding: '80px 40px' },
+  emptyIcon:   { fontSize: 56, marginBottom: 16 },
+  emptyTitle:  { fontSize: 22, fontWeight: 700, margin: '0 0 8px', color: '#1D1136' },
+  emptyText:   { fontSize: 14, color: '#5B5480', marginBottom: 24 },
+  appList:     { display: 'flex', flexDirection: 'column', gap: 16 },
+  appCard:     { background: '#FFFFFF', border: '1px solid #EDE9FE', borderRadius: 20, padding: 24, boxShadow: '0 2px 8px rgba(29,17,54,0.04)' },
+  appHeader:   { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  appTitle:    { fontSize: 17, fontWeight: 700, margin: 0, color: '#1D1136' },
+  appMeta:     { fontSize: 12, color: '#5B5480', margin: '4px 0 0' },
+  appStatus:   { padding: '6px 14px', borderRadius: 100, fontSize: 12, fontWeight: 700 },
+  appStatusPending:  { background: 'rgba(255,213,34,0.15)', color: '#b8860b' },
+  appStatusApproved: { background: 'rgba(34,197,94,0.1)',  color: '#16a34a' },
   appStatusRejected: { background: 'rgba(255,75,108,0.1)', color: '#FF4B6C' },
-  appDetails: { display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: '#5B5480', marginBottom: 16 },
+  appDetails:  { display: 'flex', gap: 20, flexWrap: 'wrap', fontSize: 13, color: '#5B5480', marginBottom: 16 },
   appTimeline: { display: 'flex', alignItems: 'center', gap: 4 },
-  timelineStep: { display: 'flex', alignItems: 'center', gap: 6, flex: 1 },
+  timelineStep:{ display: 'flex', alignItems: 'center', gap: 6, flex: 1 },
   timelineDot: { width: 10, height: 10, borderRadius: '50%', background: '#EDE9FE', border: '2px solid #D4CEEC' },
   timelineDotDone: { background: '#22C55E', borderColor: '#22C55E' },
-  timelineLabel: { fontSize: 11, color: '#9F97C0' },
+  timelineLabel:   { fontSize: 11, color: '#9F97C0' },
 }

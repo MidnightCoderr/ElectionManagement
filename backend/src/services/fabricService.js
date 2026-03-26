@@ -269,6 +269,22 @@ class FabricService {
     }
 
     /**
+     * Get election results filtered by district
+     */
+    async getResultsByDistrict(electionId, districtId) {
+        try {
+            if (!this.contract) await this.connect();
+            const result = await this.contract.evaluateTransaction(
+                'GetResultsByDistrict', electionId, districtId
+            );
+            return JSON.parse(result.toString());
+        } catch (error) {
+            console.warn('Fabric - GetResultsByDistrict not available:', error.message);
+            return []; // Graceful fallback
+        }
+    }
+
+    /**
      * Disconnect from Fabric network
      */
     async disconnect() {
