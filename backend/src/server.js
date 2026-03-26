@@ -29,17 +29,24 @@ promClient.collectDefaultMetrics({ prefix: 'election_backend_' });
 app.use(helmet());
 
 // CORS configuration
-app.use(cors({
-    origin: process.env.CORS_ORIGIN?.split(',') || '*',
+const corsOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'];
+const corsOptions = {
+    origin: corsOrigins,
     credentials: true,
-}));
+};
+app.use(cors(corsOptions));
+
+if (!process.env.JWT_SECRET) {
+    console.warn('⚠️  JWT_SECRET is not set. Using default secret reduces security.');
+}
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging middleware
-import logger from '../utils/logger.js';
+const logger = require('./utils/logger.js');
 
 app.use((req, res, next) => {
   logger.info('API_REQUEST', {

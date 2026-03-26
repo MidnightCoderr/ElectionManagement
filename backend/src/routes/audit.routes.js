@@ -1,7 +1,6 @@
-import express from 'express';
-import AuditLog from '../models/auditLog.model.js';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
-
+const express = require('express');
+const AuditLog = require('../models/auditLog.model.js');
+const { authenticate, authorize } = require('../middleware/auth.middleware.js');
 const router = express.Router();
 
 /**
@@ -287,4 +286,3 @@ router.post('/alerts', async (req, res) => {
 });
 
 export default router;
-

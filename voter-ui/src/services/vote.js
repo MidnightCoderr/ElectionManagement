@@ -21,10 +21,10 @@ function randomHex(n = 16) {
 
 /**
  * Cast a vote on the blockchain.
- * @param {{ candidateId: string, voterId: string, terminalId: string, electionId: string }} payload
+ * @param {{ candidateId: string, voterId: string, terminalId: string, electionId: string, district: string, biometricHash: string }} payload
  * @returns {Promise<VoteReceipt>}
  */
-export async function castVote({ candidateId, voterId, terminalId = 'TERM-00001', electionId = 'ge-2024' }) {
+export async function castVote({ candidateId, voterId, terminalId = 'TERM-00001', electionId = 'ge-2024', district = 'Mumbai Central', biometricHash = 'mock-hash-123' }) {
   if (MOCK_MODE) {
     await mockDelay(1500)
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -40,7 +40,7 @@ export async function castVote({ candidateId, voterId, terminalId = 'TERM-00001'
 
   const data = await apiFetch('/api/v1/votes/cast', {
     method: 'POST',
-    body: JSON.stringify({ candidateId, voterId, terminalId, electionId }),
+    body: JSON.stringify({ candidateId, voterId, terminalId, electionId, district, biometricHash }),
   })
 
   return {

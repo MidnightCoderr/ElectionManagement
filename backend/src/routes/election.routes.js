@@ -1,6 +1,8 @@
 const express = require('express');
 const { Election, Candidate  } = require('../models/index.js');
 const fabricService = require('../services/fabricService.js');
+const iotService = require('../services/iotService.js');
+const resultsService = require('../services/resultsService.js');
 const { authenticate, authorize  } = require('../middleware/auth.middleware.js');
 
 const router = express.Router();
@@ -383,8 +385,7 @@ router.put('/:id/status', authenticate, authorize('admin'), async (req, res) => 
         // If activating, broadcast to IoT terminals
         if (status === 'active') {
             try {
-                const iotService = await import('../services/iotService.js');
-                await iotService.default.broadcastActivation(election.election_id);
+                await iotService.broadcastActivation(election.election_id);
             } catch (err) {
                 console.error('Error broadcasting activation:', err.message);
             }
@@ -393,8 +394,7 @@ router.put('/:id/status', authenticate, authorize('admin'), async (req, res) => 
         // If completing, trigger result tallying
         if (status === 'completed') {
             try {
-                const resultsService = await import('../services/resultsService.js');
-                await resultsService.default.triggerTally(election.election_id);
+                await resultsService.triggerTally(election.election_id);
             } catch (err) {
                 console.error('Error triggering tally:', err.message);
             }

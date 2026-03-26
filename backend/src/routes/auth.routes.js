@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { Voter } = require('../models/index.js');
-const { generateToken } = require('../middleware/auth.middleware.js');
+const { generateToken, verifyToken } = require('../middleware/auth.middleware.js');
 const { authLimiter } = require('../middleware/rateLimit.middleware.js');
 const logger = require('../utils/logger.js');
 
@@ -259,8 +259,6 @@ router.get('/verify', async (req, res) => {
         }
 
         const token = authHeader.substring(7);
-        const { verifyToken } = await import('../middleware/auth.middleware.js');
-
         const decoded = verifyToken(token);
 
         res.json({

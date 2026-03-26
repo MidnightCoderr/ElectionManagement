@@ -1,7 +1,8 @@
-import express from 'express';
-import { Voter } from '../models/index.js';
-import { authenticate, authorize } from '../middleware/auth.middleware.js';
-import AuditLog from '../models/auditLog.model.js';
+const express = require('express');
+const { Op } = require('sequelize');
+const { Voter, VotingRecord, Election } = require('../models/index.js');
+const { authenticate, authorize } = require('../middleware/auth.middleware.js');
+const AuditLog = require('../models/auditLog.model.js');
 
 const router = express.Router();
 
@@ -186,8 +187,6 @@ router.get('/:voterId/voting-history', authenticate, async (req, res) => {
                 message: 'Access denied',
             });
         }
-
-        const { VotingRecord, Election } = await import('../models/index.js');
 
         const votingHistory = await VotingRecord.findAll({
             where: { voter_id: voterId },

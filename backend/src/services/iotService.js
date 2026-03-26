@@ -36,10 +36,9 @@ class IoTService extends EventEmitter {
                 this.connected = true;
 
                 // Subscribe to terminal topics
-                this.client.subscribe('terminals/+/status');
-                this.client.subscribe('terminals/+/health');
-                this.client.subscribe('terminals/+/votes');
-                this.client.subscribe('terminals/+/alerts');
+                this.client.subscribe('election/terminal/+/status', { qos: 1 });
+                this.client.subscribe('election/terminal/+/tamper', { qos: 1 });
+                this.client.subscribe('election/vote/submit', { qos: 2 });
 
                 logger.auditLog({
                     event_type: 'MQTT_CONNECTED',
@@ -77,28 +76,26 @@ class IoTService extends EventEmitter {
         try {
             const payload = JSON.parse(message.toString());
             const parts = topic.split('/');
-            const terminalId = parts[1];
-            const messageType = parts[2];
+            if (parts[0] === 'election' && parts[1] === 'vote' && parts[2] === 'submit') {
+                const terminalId = payload.terminal_id || payload.terminalId;
+                return this.handleVoteSubmission(terminalId, payload);
+            }
 
-            switch (messageType) {
-                case 'status':
-                    this.handleStatusUpdate(terminalId, payload);
-                    break;
+            if (parts[0] === 'election' && parts[1] === 'terminal') {
+                const terminalId = parts[2];
+                const messageType = parts[3];
 
-                case 'health':
-                    this.handleHealthUpdate(terminalId, payload);
-                    break;
-
-                case 'votes':
-                    this.handleVoteSubmission(terminalId, payload);
-                    break;
-
-                case 'alerts':
-                    this.handleAlert(terminalId, payload);
-                    break;
-
-                default:
-                    logger.warn(`Unknown message type: ${messageType}`);
+                switch (messageType) {
+                    case 'status':
+                        return this.handleStatusUpdate(terminalId, payload);
+                    case 'tamper':
+                        return this.handleAlert(terminalId, payload);
+                    case 'health':
+                        return this.handleHealthUpdate(terminalId, payload);
+                    default:
+                        logger.warn(`Unknown terminal message type: ${messageType}`);
+                        return;
+                }
             }
 
         } catch (error) {
@@ -226,7 +223,7 @@ class IoTService extends EventEmitter {
             timestamp: Date.now()
         };
 
-        this.client.publish('terminals/broadcast/control', JSON.stringify(message));
+        this.client.publish('election/command', JSON.stringify(message));
 
         await logger.auditLog({
             event_type: 'TERMINALS_ACTIVATED',
@@ -248,7 +245,7 @@ class IoTService extends EventEmitter {
             timestamp: Date.now()
         };
 
-        this.client.publish('terminals/broadcast/control', JSON.stringify(message));
+        this.client.publish('election/command', JSON.stringify(message));
 
         await logger.auditLog({
             event_type: 'TERMINALS_DEACTIVATED',
@@ -263,7 +260,7 @@ class IoTService extends EventEmitter {
      * Send confirmation to specific terminal
      */
     sendConfirmation(terminalId, data) {
-        const topic = `terminals/${terminalId}/confirmation`;
+        const topic = `election/vote/ack/${terminalId}`;
         this.client.publish(topic, JSON.stringify(data));
     }
 
@@ -279,7 +276,7 @@ class IoTService extends EventEmitter {
             timestamp: Date.now()
         };
 
-        this.client.publish(`terminals/${terminalId}/control`, JSON.stringify(message));
+        this.client.publish(`election/terminal/${terminalId}/command`, JSON.stringify(message));
 
         await logger.auditLog({
             event_type: 'TERMINAL_DISABLED',

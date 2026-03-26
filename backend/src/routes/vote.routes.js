@@ -10,14 +10,17 @@ const { broadcastMessage } = require('../services/websocket.service.js');
 
 const router = express.Router();
 
+const voteService = require('../services/voteService.js');
+
 /**
  * POST /api/v1/votes/cast
  * Cast a vote
  */
 router.post('/cast', voteLimiter, async (req, res) => {
-    logger.info('VOTE_CAST', {
+    logger.info('VOTE_CAST_REQUEST', {
         voterId: req.body.voterId,
-        candidateId: req.body.candidateId,
+        electionId: req.body.electionId,
+        terminalId: req.body.terminalId,
         ip: req.ip,
         timestamp: new Date().toISOString()
     });
@@ -30,6 +33,8 @@ router.post('/cast', voteLimiter, async (req, res) => {
             district,
             biometricHash,
             terminalId,
+            zkpCommitment,
+            encryptedVote
         } = req.body;
 
         // Validate required fields
@@ -40,114 +45,32 @@ router.post('/cast', voteLimiter, async (req, res) => {
             });
         }
 
-        // 1. Check voter exists and hasn't voted yet (database check)
-        const voter = await Voter.findByPk(voterId);
-        if (!voter) {
-            return res.status(404).json({
-                error: 'Voter not found',
-                message: 'Voter is not registered',
-            });
-        }
-
-        // 2. Check election status
-        const election = await Election.findByPk(electionId);
-        if (!election) {
-            return res.status(404).json({
-                error: 'Election not found',
-            });
-        }
-
-        if (election.status !== 'active') {
-            return res.status(400).json({
-                error: 'Election not active',
-                message: `Election status: ${election.status}`,
-            });
-        }
-
-        // 3. Check if already voted in database
-        const existingVote = await VotingRecord.findOne({
-            where: { voter_id: voterId, election_id: electionId },
-        });
-
-        if (existingVote) {
-            return res.status(409).json({
-                error: 'Already voted',
-                message: 'You have already cast your vote in this election',
-            });
-        }
-
-        // 4. Create verification hash (biometric + timestamp)
-        const timestamp = new Date().toISOString();
-        const verificationHash = crypto
-            .createHash('sha256')
-            .update(biometricHash + timestamp)
-            .digest('hex');
-
-        // 5. Submit vote to blockchain
-        const voteId = await fabricService.castVote(
+        // Use VoteService for the full business logic (ZKP, Encryption, Fabric, SQL, Kafka)
+        const result = await voteService.castVote({
             voterId,
             electionId,
             candidateId,
-            district,
-            verificationHash,
-            terminalId
-        );
-
-        // 6. Record vote in PostgreSQL database
-        const votingRecord = await VotingRecord.create({
-            voter_id: voterId,
-            election_id: electionId,
-            terminal_id: terminalId,
-            vote_timestamp: new Date(),
-            blockchain_tx_id: voteId,
-            verification_hash: verificationHash,
-        });
-
-        // 7. Update voter status
-        await voter.update({ has_voted: true });
-
-        // 8. Update election vote count
-        await election.increment('total_votes_cast');
-
-        // 9. Fire telemetry events
-        await publishTelemetry('election-telemetry', 'VOTE_CAST', {
-            voterId,
-            electionId,
-            candidateId,
-            district,
+            districtId: district,
             terminalId,
-            timestamp
+            biometricHash,
+            zkpCommitment,
+            encryptedVote,
+            timestamp: Date.now()
         });
-        
-        // Broadcast real-time update to dashboards
-        broadcastMessage('VOTE_CAST', { electionId, candidateId, district });
 
         res.status(201).json({
             success: true,
             message: 'Vote cast successfully',
-            voteId,
-            timestamp,
-            receipt: {
-                receiptId: verificationHash,
-                timestamp,
-                blockchainTxId: voteId,
-                terminalId,
-                blockNumber: null,
-            },
+            voteId: result.voteId,
+            receipt: result.receipt,
+            blockchainTxId: result.blockchainTxId
         });
 
     } catch (error) {
-        console.error('Vote casting error:', error.message);
+        logger.error('Vote casting error:', error.message);
 
-        // Handle double-voting attempt from blockchain
-        if (error.message.includes('DOUBLE_VOTE_ATTEMPT')) {
-            return res.status(409).json({
-                error: 'Double voting prevented',
-                message: 'Blockchain verification shows you have already voted',
-            });
-        }
-
-        res.status(500).json({
+        const status = error.message.includes('already voted') ? 409 : 500;
+        res.status(status).json({
             error: 'Vote casting failed',
             message: error.message,
         });

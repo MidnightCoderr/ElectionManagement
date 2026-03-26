@@ -118,7 +118,28 @@ class VoteService {
                 zkpCommitment
             });
 
-            // 8. Log audit event
+            // 8. Fire telemetry events for ML analysis
+            const { publishTelemetry } = require('./kafkaProducer.js');
+            await publishTelemetry('election-telemetry', 'VOTE_CAST', {
+                voterId,
+                electionId,
+                candidateId,
+                district: districtId,
+                terminalId,
+                timestamp: timestamp || Date.now(),
+                voteId
+            });
+
+            // 9. Broadcast real-time update to dashboards
+            const { broadcastMessage } = require('./websocket.service.js');
+            broadcastMessage('VOTE_CAST', { 
+                electionId, 
+                candidateId, 
+                district: districtId,
+                timestamp: timestamp || Date.now()
+            });
+
+            // 10. Log audit event
             await logger.auditLog({
                 event_type: 'VOTE_CAST',
                 user_id: voterId,

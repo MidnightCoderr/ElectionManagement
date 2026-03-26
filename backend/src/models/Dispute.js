@@ -2,7 +2,7 @@
  * Dispute Model (MongoDB)
  */
 
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const disputeSchema = new mongoose.Schema({
     dispute_id: {
@@ -60,4 +60,4 @@ const disputeSchema = new mongoose.Schema({
     timestamps: true
 });
 
-export default mongoose.model('Dispute', disputeSchema);
+module.exports = mongoose.model('Dispute', disputeSchema);

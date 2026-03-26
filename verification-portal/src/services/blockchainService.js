@@ -4,7 +4,7 @@
  * Swap MOCK_MODE to false and set VITE_API_BASE_URL to use the real backend.
  */
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false';
 
 // ── Types ─────────────────────────────────────────────────────────────────

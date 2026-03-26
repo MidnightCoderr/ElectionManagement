@@ -1,5 +1,6 @@
 const { Gateway, Wallets } = require('fabric-network');
-const fs = require('fs/promises');
+const fsPromises = require('fs/promises');
+const fs = require('fs');
 const path = require('path');
 
 
@@ -13,6 +14,15 @@ class FabricService {
         this.chaincodeName = process.env.FABRIC_CHAINCODE_NAME || 'voting';
     }
 
+    ensureAssets(ccpPath, walletPath) {
+        if (!fs.existsSync(ccpPath)) {
+            throw new Error(`Hyperledger Fabric connection profile missing at ${ccpPath}`);
+        }
+        if (!fs.existsSync(walletPath)) {
+            throw new Error(`Fabric wallet directory not found at ${walletPath}. Run blockchain/scripts/startNetwork.sh first.`);
+        }
+    }
+
     /**
      * Initialize connection to Hyperledger Fabric network
      */
@@ -20,10 +30,11 @@ class FabricService {
         try {
             // Load connection profile
             const ccpPath = path.resolve(__dirname, '../../..', 'blockchain', 'network', 'connection-profile.json');
-            const connectionProfile = JSON.parse(await fs.readFile(ccpPath, 'utf8'));
+            const walletPath = path.resolve(__dirname, '../../..', 'blockchain', 'wallet');
+            this.ensureAssets(ccpPath, walletPath);
+            const connectionProfile = JSON.parse(await fsPromises.readFile(ccpPath, 'utf8'));
 
             // Create wallet
-            const walletPath = path.resolve(__dirname, '../../..', 'blockchain', 'wallet');
             this.wallet = await Wallets.newFileSystemWallet(walletPath);
 
             // Check if user exists in wallet
@@ -168,6 +179,42 @@ class FabricService {
         } catch (error) {
             console.error('Fabric - Get Vote Error:', error.message);
             throw new Error(`Failed to get vote: ${error.message}`);
+        }
+    }
+
+    async submitVote(votePayload = {}) {
+        const {
+            voterId,
+            electionId,
+            candidateId,
+            districtId,
+            district,
+            verificationHash,
+            terminalId,
+        } = votePayload;
+
+        return this.castVote(
+            voterId,
+            electionId,
+            candidateId,
+            districtId || district,
+            verificationHash,
+            terminalId
+        );
+    }
+
+    async getVoteDetails(voteId) {
+        return this.getVoteById(voteId);
+    }
+
+    async getVotesByElection(electionId) {
+        try {
+            if (!this.contract) await this.connect();
+            const payload = await this.contract.evaluateTransaction('GetVotesByElection', electionId);
+            return JSON.parse(payload.toString());
+        } catch (error) {
+            console.warn('Fabric - getVotesByElection not available:', error.message);
+            return [];
         }
     }
 

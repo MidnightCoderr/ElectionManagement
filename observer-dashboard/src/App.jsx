@@ -8,7 +8,7 @@ import StatusBar from './components/StatusBar.jsx'
 import useWebSocket from './hooks/useWebSocket.js'
 import { MOCK_RESULTS } from './data/mockData.js'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'
+const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000'
 const MOCK_MODE = import.meta.env.VITE_MOCK_MODE !== 'false'
 
 function App() {
