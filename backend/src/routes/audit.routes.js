@@ -285,4 +285,4 @@ router.post('/alerts', async (req, res) => {
     }
 });
 
-export default router;
+module.exports = router;

@@ -1,9 +1,34 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { registerVoter } from '../api/auth.js'
 
 export default function CreateAccount() {
   const navigate = useNavigate()
   const [showPass, setShowPass] = useState(false)
+  const [form, setForm] = useState({ firstName:'', lastName:'', aadhar:'', district:'', biometric:'biometric-template-demo' })
+  const [status, setStatus] = useState(null) // null | 'loading' | 'success' | {error:string}
+
+  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!/^\d{12}$/.test(form.aadhar)) {
+      setStatus({ error: 'Aadhar number must be exactly 12 digits.' })
+      return
+    }
+    setStatus('loading')
+    try {
+      await registerVoter({
+        aadharNumber:     form.aadhar,
+        fullName:         `${form.firstName} ${form.lastName}`.trim(),
+        biometricTemplate: form.biometric,
+        districtId:       form.district || 'General',
+      })
+      setStatus('success')
+    } catch (err) {
+      setStatus({ error: err.message || 'Registration failed. Please try again.' })
+    }
+  }
 
   return (
     <div className="view on" id="v-create" style={{flex:1,overflow:'auto'}}>
@@ -49,14 +74,32 @@ export default function CreateAccount() {
               Already have an account? <a href="#" onClick={e => { e.preventDefault(); navigate('/') }}>Log in</a>
             </div>
 
+            {status === 'success' && (
+              <div style={{
+                background:'rgba(21,128,61,0.07)',border:'1px solid rgba(21,128,61,0.2)',
+                borderRadius:10,padding:14,fontSize:12,color:'#166534',marginBottom:12
+              }}>
+                ✅ Voter registered successfully! <a href="#" onClick={e=>{e.preventDefault();navigate('/')}}>Go home</a>
+              </div>
+            )}
+            {status?.error && (
+              <div style={{
+                background:'rgba(185,28,28,0.06)',border:'1px solid rgba(185,28,28,0.15)',
+                borderRadius:10,padding:12,fontSize:11,color:'#b91c1c',marginBottom:10
+              }}>
+                ⚠ {status.error}
+              </div>
+            )}
+
             <div className="fr">
-              <input className="fi" type="text" placeholder="First name" defaultValue="Arjun"/>
-              <input className="fi" type="text" placeholder="Last name"/>
+              <input className="fi" type="text" placeholder="First name" value={form.firstName} onChange={set('firstName')} />
+              <input className="fi" type="text" placeholder="Last name"  value={form.lastName}  onChange={set('lastName')}  />
             </div>
-            <input className="fi" type="email" placeholder="Email" style={{display:'block',marginBottom:9}}/>
+            <input className="fi" type="text" placeholder="Aadhar Number (12 digits)" value={form.aadhar}   onChange={set('aadhar')}   style={{display:'block',marginBottom:9}}/>
+            <input className="fi" type="text" placeholder="District / Department"      value={form.district} onChange={set('district')} style={{display:'block',marginBottom:9}}/>
 
             <div className="pw">
-              <input className="fi" type={showPass ? 'text' : 'password'} placeholder="Enter your password"/>
+              <input className="fi" type={showPass ? 'text' : 'password'} placeholder="Biometric Template (demo)" value={form.biometric} onChange={set('biometric')}/>
               <div className="pw-eye" onClick={() => setShowPass(v => !v)}>
                 <svg viewBox="0 0 16 16" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round">
                   <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
@@ -76,7 +119,10 @@ export default function CreateAccount() {
               </div>
             </div>
 
-            <button className="lbtn"><span>Create account</span></button>
+            <button className="lbtn" onClick={handleSubmit} disabled={status==='loading'}
+              style={{opacity:status==='loading'?0.7:1}}>
+              <span>{status==='loading' ? 'Registering…' : 'Create account'}</span>
+            </button>
 
             <div className="or-r">
               <div className="or-l"></div>

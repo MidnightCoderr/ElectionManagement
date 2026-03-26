@@ -14,30 +14,6 @@ const router = express.Router();
  * Register a new voter
  */
 router.post('/register-voter', async (req, res) => {
-
-    logger.info('VOTER_REGISTERED', {
-        email,
-        ip: req.ip,
-        timestamp: new Date().toISOString()
-    });
-
-    logger.warn('LOGIN_ATTEMPT', {
-        email,
-        success: true,
-        ip: req.ip
-    });
-
-    logger.warn('FAILED_LOGIN', {
-        email,
-        ip: req.ip
-    });
-
-    logger.error('SUSPICIOUS_ACTIVITY', {
-        reason: 'Multiple votes from same IP',
-        ip: req.ip
-    });
-
-
     try {
         const {
             aadharNumber,
@@ -45,6 +21,12 @@ router.post('/register-voter', async (req, res) => {
             biometricTemplate,
             districtId,
         } = req.body;
+
+        logger.info('VOTER_REGISTRATION_ATTEMPT', {
+            aadharNumber: aadharNumber ? aadharNumber.slice(-4) : 'unknown',
+            ip: req.ip,
+            timestamp: new Date().toISOString()
+        });
 
         // Validate required fields
         if (!aadharNumber || !fullName || !biometricTemplate || !districtId) {

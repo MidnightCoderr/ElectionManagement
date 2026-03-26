@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { getElections } from '../api/elections.js'
+import { getMlHealth } from '../api/ml.js'
 
 /* ─── DATA ─── */
 const KPI_DATA = [
@@ -62,19 +64,53 @@ const NAV_ITEMS = [
 
 /* ─── VIEW: Overview ─── */
 function OverviewView() {
+  const [elections, setElections] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  const [mlHealth, setMlHealth] = useState(null)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const r = await getElections({ limit: 10 })
+        setElections(r.elections || [])
+      } catch {}
+      setLoading(false)
+    }
+    async function loadMl() {
+      try { const r = await getMlHealth(); setMlHealth(r) } catch { setMlHealth({ status: 'offline' }) }
+    }
+    load(); loadMl()
+    const interval = setInterval(load, 30000)
+    const mlInterval = setInterval(loadMl, 60000)
+    return () => { clearInterval(interval); clearInterval(mlInterval) }
+  }, [])
+
+  const active    = elections.filter(e => e.status === 'active')
+  const totalVotes= elections.reduce((s, e) => s + (e.total_votes_cast || 0), 0)
+  const totalVoters = elections.reduce((s, e) => s + (e.total_voters || 0), 0)
+  const turnout   = totalVoters > 0 ? ((totalVotes / totalVoters) * 100).toFixed(1) + '%' : '—'
+
+  const kpis = [
+    { ico:'p', stroke:'#4F46E5', label:'Total Votes',  val: loading ? '…' : totalVotes.toLocaleString(), trendLabel:'Live', trend:'up', svgPath:<><path d="M7 1.5v2M12 7h-2M7 12.5v-2M2 7h2"/><circle cx="7" cy="7" r="2.5"/></> },
+    { ico:'g', stroke:'#475569', label:'Turnout',      val: loading ? '…' : turnout, trendLabel:`of ${totalVoters.toLocaleString()}`, trend:'dn', svgPath:<><circle cx="7" cy="7" r="5"/><path d="M7 4.5V7l2 1"/></> },
+    { ico:'p', stroke:'#4F46E5', label:'Active Elections', val: loading ? '…' : String(active.length), trendLabel:'running', trend:'up', svgPath:<><rect x="2" y="3.5" width="10" height="7" rx="1.5"/></> },
+    { ico:'g', stroke:'#475569', label:'Total Elections', val: loading ? '…' : String(elections.length), trendLabel:'configured', trend:'up', svgPath:<><path d="M7 2v2M12 7h-2M7 12v-2M2 7h2"/><circle cx="7" cy="7" r="2"/></> },
+  ]
+
   return <>
     <div className="obs-toprow">
       <div>
         <div className="obs-title">Overview</div>
-        <div className="obs-sub">Student Council Election 2026 · Live feed</div>
+        <div className="obs-sub">{active[0]?.election_name || 'Election Dashboard'} · Live feed</div>
       </div>
       <div className="obs-tbrow">
         <button className="tbtn"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M6 2v8M2 6h8"/></svg> Export</button>
-        <button className="tbtn p">Refresh</button>
+        <button className="tbtn p" onClick={()=>{setLoading(true);getElections({limit:10}).then(r=>setElections(r.elections||[])).finally(()=>setLoading(false))}}>Refresh</button>
       </div>
     </div>
     <div className="kpi-row">
-      {KPI_DATA.map((k, i) => (
+      {kpis.map((k, i) => (
         <div key={i} className="kpi">
           <div className={`kpi-ico ${k.ico}`}><svg viewBox="0 0 14 14" fill="none" stroke={k.stroke} strokeWidth="1.6" strokeLinecap="round">{k.svgPath}</svg></div>
           <div className="kpi-lbl">{k.label}</div>
@@ -85,13 +121,28 @@ function OverviewView() {
     </div>
     <div className="two-col">
       <div className="panel">
-        <div className="ph"><div className="pt"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="1" y="7" width="2.5" height="4" rx=".5"/><rect x="4.75" y="4.5" width="2.5" height="6.5" rx=".5"/><rect x="8.5" y="2" width="2.5" height="9" rx=".5"/></svg> Turnout by Department</div><button className="pa">View All</button></div>
+        <div className="ph"><div className="pt"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><rect x="1" y="7" width="2.5" height="4" rx=".5"/><rect x="4.75" y="4.5" width="2.5" height="6.5" rx=".5"/><rect x="8.5" y="2" width="2.5" height="9" rx=".5"/></svg> Turnout by Dept</div><button className="pa">All</button></div>
         {DIST_DATA.map(d => (<div key={d.label} className="dr"><span className="dl">{d.label}</span><div className="dt"><div className="df" style={{width:`${d.pct}%`}}></div></div><span className="dv">{d.pct}%</span></div>))}
       </div>
       <div className="panel">
         <div className="ph"><div className="pt"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" width="13" height="13"><path d="M6 1.5v2M10.5 6h-2M6 10.5v-2M1.5 6h2"/><circle cx="6" cy="6" r="2.2"/></svg> Recent Alerts</div><button className="pa">All</button></div>
         {ALERT_DATA.slice(0,4).map((a, i) => (<div key={i} className="ar"><span className={`asev ${a.sev}`}>{a.sevLabel}</span><div><div className="amsg">{a.msg}</div><div className="adet">{a.det}</div></div></div>))}
       </div>
+    </div>
+    {/* ML Fraud Detection Widget */}
+    <div className="panel" style={{marginTop:12,padding:13,display:'flex',alignItems:'center',gap:12}}>
+      <div style={{width:34,height:34,borderRadius:9,flexShrink:0,background:mlHealth?.status==='healthy'?'rgba(21,128,61,0.1)':'rgba(185,28,28,0.08)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+        <svg viewBox="0 0 16 16" fill="none" stroke={mlHealth?.status==='healthy'?'#166534':'#991b1b'} strokeWidth="1.5" strokeLinecap="round" width="17" height="17"><circle cx="8" cy="8" r="6"/><path d="M5 8h2l1.5-3 2 6 1.5-3H14"/></svg>
+      </div>
+      <div style={{flex:1}}>
+        <div style={{fontSize:11,fontWeight:700,color:'var(--text)'}}>ML Fraud Detection Engine</div>
+        <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>{
+          mlHealth===null?'Checking status…':mlHealth.status==='healthy'?`Online · v${mlHealth.version||'1.0.0'} · Anomaly threshold: 85%`:'ML service offline — start with: python ml-service/api.py'
+        }</div>
+      </div>
+      <span style={{padding:'3px 10px',borderRadius:99,fontSize:9,fontWeight:700,background:mlHealth?.status==='healthy'?'rgba(21,128,61,0.08)':'rgba(185,28,28,0.08)',color:mlHealth?.status==='healthy'?'var(--success)':'var(--error)'}}>
+        {mlHealth?.status==='healthy'?'ONLINE':'OFFLINE'}
+      </span>
     </div>
   </>
 }

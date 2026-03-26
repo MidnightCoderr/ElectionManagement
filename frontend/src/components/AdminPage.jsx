@@ -1,4 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { adminLogin, getStoredAdmin, logout } from '../api/auth.js'
+import { getElections, createElection, updateElectionStatus, getCandidates } from '../api/elections.js'
+import { getVoters, getAuditLogs } from '../api/admin.js'
+import { getResults } from '../api/votes.js'
+import { getMlHealth } from '../api/ml.js'
+
 
 const Chev = () => (<svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M3.5 2l3 3-3 3"/></svg>)
 
@@ -8,9 +14,9 @@ const ASSETS = [
   { name:'Electrical Eng.',   rate:'75.1', trend:'dn', trendLabel:'1.3% below avg', gradId:'g2', gradStart:'#CBD5E1', gradEnd:'#475569', path:'M0 18 C20 21,40 28,60 30 S100 32,120 28 S160 24,200 30', upPath:'M5 2v6M2 5l3 3 3-3' },
   { name:'Mechanical Eng.',   rate:'68.3', trend:'up', trendLabel:'2.1% above avg', gradId:'g3', gradStart:'#4F46E5', gradEnd:'#1B3B6F', path:'M0 40 C30 35,50 28,80 22 S120 17,150 12 S180 9,200 6', upPath:'M5 8V2M2 5l3-3 3 3' },
 ]
-const STATS = [
-  { label:'Momentum', val:'0.82%' },{ label:'Blockchain Blocks', val:'892' },
-  { label:'Active Terminals', val:'80.0%' },{ label:'Fraud Alerts', val:'0.07%' },
+const STATS_STATIC = [
+  { label:'Blockchain Blocks', val:'892' },
+  { label:'Fraud Alerts', val:'0.07%' },
 ]
 const ELECTIONS = [
   { name:'Student Council President 2026', status:'Active', phase:'Polling', states:6, voters:'4,230', startDate:'Apr 01, 2026' },
@@ -64,11 +70,25 @@ const ALL_NAV = [
   { id:'audit',      section:'Operations', label:'Audit Log',   badge:null, icon:<><circle cx="7" cy="7" r="5"/><path d="M7 4.5V7l1.5 1"/></> },
 ]
 
-/* ─── VIEW: Dashboard (original) ─── */
-function DashboardView() {
+/* ─── VIEW: Dashboard ─── */
+function DashboardView({ elections, mlHealth }) {
+  const active   = elections.filter(e => e.status === 'active')
+  const upcoming = elections.filter(e => e.status === 'upcoming')
+  const done     = elections.filter(e => e.status === 'completed')
+  const totalVotes = elections.reduce((s, e) => s + (e.total_votes_cast || 0), 0)
+  const totalVoters= elections.reduce((s, e) => s + (e.total_voters || 0), 0)
+  const turnout = totalVoters > 0 ? ((totalVotes / totalVoters) * 100).toFixed(1) : 0
+
+  const liveStats = [
+    { label:'Active Elections',  val: String(active.length) },
+    { label:'Blockchain Blocks', val:'892' },
+    { label:'Voter Turnout',     val:`${turnout}%` },
+    { label:'Fraud Alerts',      val:'0.07%' },
+  ]
+
   return <>
     <div className="admin-topbar">
-      <div className="at-user"><div className="at-av">AS</div><div><div className="at-name">Arjun Sharma</div><div className="at-role">Super Admin · PRO</div></div></div>
+      <div className="at-user"><div className="at-av">AS</div><div><div className="at-name">Admin</div><div className="at-role">Super Admin · PRO</div></div></div>
       <div className="at-right">
         <button className="dep-btn"><svg viewBox="0 0 12 12" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round"><path d="M6 2v7M3 6l3 3 3-3"/></svg> Export Data</button>
         <input className="srch" placeholder="Search..."/>
@@ -76,88 +96,121 @@ function DashboardView() {
       </div>
     </div>
     <div className="admin-content">
-      <div className="admin-section-title">Top Elections · Student Council 2026 · 3 Active</div>
-      <div className="asset-row">
-        {ASSETS.map(a=>(
-          <div key={a.name} className="ac">
-            <div className="ac-top"><div><div className="ac-type">Proof of Participation</div><div className="ac-name">{a.name}</div></div><div className="ac-ico"><svg viewBox="0 0 16 16" fill="none" stroke="#4F46E5" strokeWidth="1.8" strokeLinecap="round"><path d="M8 2L2 6v8h3.5v-4h5v4H14V6L8 2z"/></svg></div></div>
-            <div className="ac-lbl">Voter Turnout</div>
-            <div className="ac-rate">{a.rate}<span>%</span></div>
-            <div className={`ac-sub ${a.trend}`}><svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d={a.upPath}/></svg>{a.trendLabel}</div>
-            <div className="ac-spark"><svg width="100%" height="44" viewBox="0 0 200 44" preserveAspectRatio="none"><defs><linearGradient id={a.gradId} x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stopColor={a.gradStart}/><stop offset="100%" stopColor={a.gradEnd}/></linearGradient></defs><path d={a.path} stroke={`url(#${a.gradId})`} strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg></div>
-          </div>
-        ))}
-      </div>
+      <div className="admin-section-title">Dashboard · {active.length} Active · {upcoming.length} Upcoming · {done.length} Completed</div>
+      {elections.length === 0 && <div style={{color:'var(--text3)',fontSize:12,padding:16}}>No elections found. Create one in the Elections tab.</div>}
       <div className="sp">
-        <div className="sp-hdr"><div className="sp-upd"><svg viewBox="0 0 12 12" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1"/></svg> Last update · 2 min ago</div><button className="vbtn">Full Report →</button></div>
-        <div className="sp-title">Student Council Election 2026<div className="sp-tag"><svg viewBox="0 0 14 14" fill="none" stroke="#4F46E5" strokeWidth="1.6" strokeLinecap="round"><rect x="2" y="2" width="10" height="10" rx="1.5"/><path d="M4.5 7l2 2 3-3"/></svg></div></div>
-        <div className="sp-body"><div><div className="sp-rl">Total Votes Cast</div><div className="sp-rv">2,847</div><div className="sp-acts"><button className="rb p"><span>View Results</span></button><button className="rb o">Export</button></div></div><div className="pb-box"><div className="pb-title">Election Period</div><div className="pb-sub">Contribution (Hours)</div><div className="pb-track"><div className="pb-fill"></div><div className="pb-thumb"></div></div><div className="pb-lbls"><span>0h</span><span>8h</span></div><div className="pb-tabs"><div className="pb-tab">1H</div><div className="pb-tab">4H</div><div className="pb-tab on">8H</div><div className="pb-tab">12H</div></div></div></div>
+        <div className="sp-hdr"><div className="sp-upd"><svg viewBox="0 0 12 12" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round"><circle cx="6" cy="6" r="4.5"/><path d="M6 3.5V6l1.5 1"/></svg> Live</div></div>
+        <div className="sp-title">{active[0]?.election_name || 'No Active Election'}<div className="sp-tag"><svg viewBox="0 0 14 14" fill="none" stroke="#4F46E5" strokeWidth="1.6" strokeLinecap="round"><rect x="2" y="2" width="10" height="10" rx="1.5"/><path d="M4.5 7l2 2 3-3"/></svg></div></div>
+        <div className="sp-body"><div><div className="sp-rl">Total Votes Cast</div><div className="sp-rv">{totalVotes.toLocaleString()}</div></div></div>
       </div>
-      <div className="stats-row">{STATS.map(s=>(<div key={s.label} className="stat"><div><div className="stat-lbl">{s.label}</div><div className="stat-val">{s.val}</div></div><div className="stat-chev"><Chev /></div></div>))}</div>
+      {/* ML Fraud Detection Widget */}
+      <div className="panel" style={{marginBottom:10,padding:12,display:'flex',alignItems:'center',gap:12}}>
+        <div style={{width:32,height:32,borderRadius:8,flexShrink:0,background:mlHealth?.status==='healthy'?'rgba(21,128,61,0.1)':'rgba(185,28,28,0.08)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg viewBox="0 0 16 16" fill="none" stroke={mlHealth?.status==='healthy'?'#166534':'#991b1b'} strokeWidth="1.5" strokeLinecap="round" width="16" height="16">
+            <circle cx="8" cy="8" r="6"/><path d="M5 8h2l1.5-3 2 6 1.5-3H14"/>
+          </svg>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:10,fontWeight:700,color:'var(--text)'}}>ML Fraud Detection</div>
+          <div style={{fontSize:9,color:'var(--text3)'}}>{
+            mlHealth===null?'Checking…':mlHealth.status==='healthy'?`Online · v${mlHealth.version||'1.0.0'}`:'Offline — run: python ml-service/api.py'
+          }</div>
+        </div>
+        <span style={{padding:'2px 8px',borderRadius:99,fontSize:9,fontWeight:700,background:mlHealth?.status==='healthy'?'rgba(21,128,61,0.08)':'rgba(185,28,28,0.08)',color:mlHealth?.status==='healthy'?'var(--success)':'var(--error)'}}>
+          {mlHealth?.status==='healthy'?'ONLINE':'OFFLINE'}
+        </span>
+      </div>
+      <div className="stats-row">{liveStats.map(s=>(<div key={s.label} className="stat"><div><div className="stat-lbl">{s.label}</div><div className="stat-val">{s.val}</div></div><div className="stat-chev"><Chev /></div></div>))}</div>
     </div>
   </>
 }
 
 /* ─── VIEW: Elections ─── */
-function ElectionsView() {
+function ElectionsView({ elections, loading, onRefresh }) {
+  if (loading) return <div className="admin-content"><div style={{color:'var(--text3)',fontSize:12,padding:16}}>Loading elections…</div></div>
   return <div className="admin-content">
     <div className="admin-section-title">Elections Management</div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-      <span style={{fontSize:11,color:'var(--text3)'}}>3 elections configured</span>
+      <span style={{fontSize:11,color:'var(--text3)'}}>{elections.length} elections configured</span>
       <button className="dep-btn" style={{padding:'6px 14px',fontSize:10}}>+ New Election</button>
     </div>
-    {ELECTIONS.map(e=>(
-      <div key={e.name} className="panel" style={{marginBottom:10,padding:16}}>
+    {elections.map(e=>(
+      <div key={e.election_id} className="panel" style={{marginBottom:10,padding:16}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
           <div>
-            <div style={{fontFamily:'var(--serif)',fontSize:14,color:'var(--text)',marginBottom:4}}>{e.name}</div>
-            <div style={{fontSize:11,color:'var(--text3)'}}>Start: {e.startDate} · {e.states} dept(s) · {e.voters} eligible students</div>
+            <div style={{fontFamily:'var(--serif)',fontSize:14,color:'var(--text)',marginBottom:4}}>{e.election_name}</div>
+            <div style={{fontSize:11,color:'var(--text3)'}}>Start: {new Date(e.start_date).toLocaleDateString()} · {(e.total_votes_cast||0).toLocaleString()} votes cast · {e.election_type}</div>
           </div>
-          <span style={{padding:'3px 10px',borderRadius:99,fontSize:9,fontWeight:700, background:e.status==='Active'?'rgba(21,128,61,0.08)':e.status==='Completed'?'rgba(79,70,229,0.08)':'rgba(217,119,6,0.08)', color:e.status==='Active'?'var(--success)':e.status==='Completed'?'var(--p2)':'var(--warning)'}}>{e.status}</span>
+          <span style={{padding:'3px 10px',borderRadius:99,fontSize:9,fontWeight:700, background:e.status==='active'?'rgba(21,128,61,0.08)':e.status==='completed'?'rgba(79,70,229,0.08)':'rgba(217,119,6,0.08)', color:e.status==='active'?'var(--success)':e.status==='completed'?'var(--p2)':'var(--warning)'}}>{e.status}</span>
         </div>
         <div style={{display:'flex',gap:6,marginTop:10}}>
           <button className="tbtn" style={{padding:'4px 12px',fontSize:10}}>View Details</button>
-          <button className="tbtn" style={{padding:'4px 12px',fontSize:10}}>Configure</button>
-          {e.status==='Active' && <button className="tbtn p" style={{padding:'4px 12px',fontSize:10}}>Live Dashboard</button>}
+          {e.status==='upcoming' && <button className="tbtn p" style={{padding:'4px 12px',fontSize:10}} onClick={()=>updateElectionStatus(e.election_id,'active').then(onRefresh)}>Activate</button>}
+          {e.status==='active'   && <button className="tbtn p" style={{padding:'4px 12px',fontSize:10}} onClick={()=>updateElectionStatus(e.election_id,'completed').then(onRefresh)}>Complete</button>}
         </div>
       </div>
     ))}
+    {elections.length === 0 && <div style={{color:'var(--text3)',fontSize:12,padding:16}}>No elections yet.</div>}
   </div>
 }
 
-/* ─── VIEW: Candidates ─── */
-function CandidatesView() {
+/* ─── VIEW: Candidates (live) ─── */
+function CandidatesView({ elections }) {
+  const [candidates, setCands] = useState([])
+  const [loading, setLoading]  = useState(false)
+  const [selElec, setSelElec]  = useState('')
+
+  const activeId = elections.find(e=>e.status==='active')?.election_id ||
+                   elections[0]?.election_id || ''
+
+  useEffect(() => {
+    const id = selElec || activeId
+    if (!id) return
+    setLoading(true)
+    getCandidates(id).then(r => setCands(r.candidates || [])).catch(()=>setCands([])).finally(()=>setLoading(false))
+  }, [selElec, activeId])
+
   return <div className="admin-content">
     <div className="admin-section-title">Candidates</div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-      <span style={{fontSize:11,color:'var(--text3)'}}>{CANDIDATES.length} candidates registered</span>
+      <div style={{display:'flex',gap:8,alignItems:'center'}}>
+        <span style={{fontSize:11,color:'var(--text3)'}}>{candidates.length} candidates</span>
+        {elections.length > 0 && (
+          <select style={{fontSize:10,padding:'3px 8px',borderRadius:6,border:'1px solid var(--border)',background:'var(--g1)',color:'var(--text)'}} value={selElec||activeId} onChange={e=>setSelElec(e.target.value)}>
+            {elections.map(e=><option key={e.election_id} value={e.election_id}>{e.election_name}</option>)}
+          </select>
+        )}
+      </div>
       <button className="dep-btn" style={{padding:'6px 14px',fontSize:10}}>+ Add Candidate</button>
     </div>
-    <div className="panel">
-      <table className="audit-table">
-        <thead><tr><th>Candidate</th><th>Party</th><th>Position</th><th>Status</th><th>Votes</th></tr></thead>
-        <tbody>
-          {CANDIDATES.map(c=>(
-            <tr key={c.name}>
-              <td style={{fontWeight:600}}>{c.name}</td>
-              <td><span style={{padding:'2px 8px',borderRadius:99,fontSize:9,background:'rgba(79,70,229,0.06)',color:'var(--p2)'}}>{c.party}</span></td>
-              <td>{c.constituency}</td>
-              <td><span style={{padding:'2px 8px',borderRadius:99,fontSize:9,fontWeight:700, background:c.status==='Approved'?'rgba(21,128,61,0.08)':'rgba(217,119,6,0.08)', color:c.status==='Approved'?'var(--success)':'var(--warning)'}}>{c.status}</span></td>
-              <td>{c.votes.toLocaleString()}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    {loading ? <div style={{color:'var(--text3)',fontSize:12,padding:16}}>Loading candidates…</div> : (
+      <div className="panel">
+        <table className="audit-table">
+          <thead><tr><th>Candidate</th><th>Party</th><th>District</th><th>Status</th></tr></thead>
+          <tbody>
+            {candidates.map(c=>(
+              <tr key={c.candidate_id}>
+                <td style={{fontWeight:600}}>{c.full_name || c.candidate_name}</td>
+                <td><span style={{padding:'2px 8px',borderRadius:99,fontSize:9,background:'rgba(79,70,229,0.06)',color:'var(--p2)'}}>{c.party_name}</span></td>
+                <td>{c.district_id || '—'}</td>
+                <td><span style={{padding:'2px 8px',borderRadius:99,fontSize:9,fontWeight:700,background:c.status==='active'?'rgba(21,128,61,0.08)':'rgba(217,119,6,0.08)',color:c.status==='active'?'var(--success)':'var(--warning)'}}>{c.status}</span></td>
+              </tr>
+            ))}
+            {candidates.length===0 && <tr><td colSpan={4} style={{textAlign:'center',color:'var(--text3)',fontSize:11}}>No candidates found. Add candidates to an upcoming election.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    )}
   </div>
 }
 
 /* ─── VIEW: Voters ─── */
-function VotersView() {
+function VotersView({ voters, loading }) {
+  if (loading) return <div className="admin-content"><div style={{color:'var(--text3)',fontSize:12,padding:16}}>Loading voters…</div></div>
   return <div className="admin-content">
     <div className="admin-section-title">Voter Registry</div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-      <span style={{fontSize:11,color:'var(--text3)'}}>4,230 students registered</span>
+      <span style={{fontSize:11,color:'var(--text3)'}}>{voters.length} voters loaded</span>
       <div style={{display:'flex',gap:6}}>
         <button className="tbtn" style={{padding:'6px 14px',fontSize:10}}>Import CSV</button>
         <button className="dep-btn" style={{padding:'6px 14px',fontSize:10}}>+ Register Student</button>
@@ -165,17 +218,18 @@ function VotersView() {
     </div>
     <div className="panel">
       <table className="audit-table">
-        <thead><tr><th>Student ID</th><th>Name</th><th>Department</th><th>Status</th><th>Voted</th></tr></thead>
+        <thead><tr><th>Voter ID</th><th>Name</th><th>District</th><th>Status</th><th>Voted</th></tr></thead>
         <tbody>
-          {VOTERS.map(v=>(
-            <tr key={v.id}>
-              <td style={{fontFamily:'monospace',fontWeight:600}}>{v.id}</td>
-              <td>{v.name}</td>
-              <td>{v.district}</td>
-              <td><span style={{padding:'2px 8px',borderRadius:99,fontSize:9,fontWeight:700, background:v.status==='Verified'?'rgba(21,128,61,0.08)':v.status==='Pending'?'rgba(217,119,6,0.08)':'rgba(185,28,28,0.08)', color:v.status==='Verified'?'var(--success)':v.status==='Pending'?'var(--warning)':'var(--error)'}}>{v.status}</span></td>
-              <td>{v.voted ? <span style={{color:'var(--success)',fontWeight:600}}>✓ Yes</span> : <span style={{color:'var(--text3)'}}>—</span>}</td>
+          {voters.map(v=>(
+            <tr key={v.voter_id || v.id}>
+              <td style={{fontFamily:'monospace',fontWeight:600}}>{String(v.voter_id || v.id || '—').slice(0,12)}</td>
+              <td>{v.full_name || v.name}</td>
+              <td>{v.district_id || v.district}</td>
+              <td><span style={{padding:'2px 8px',borderRadius:99,fontSize:9,fontWeight:700, background:v.status==='active'?'rgba(21,128,61,0.08)':'rgba(217,119,6,0.08)', color:v.status==='active'?'var(--success)':'var(--warning)'}}>{v.status}</span></td>
+              <td>{v.has_voted ? <span style={{color:'var(--success)',fontWeight:600}}>✓ Yes</span> : <span style={{color:'var(--text3)'}}>—</span>}</td>
             </tr>
           ))}
+          {voters.length === 0 && <tr><td colSpan={5} style={{textAlign:'center',color:'var(--text3)',fontSize:11}}>No voters registered yet.</td></tr>}
         </tbody>
       </table>
     </div>
@@ -246,26 +300,28 @@ function ResultsView() {
 }
 
 /* ─── VIEW: Audit Log ─── */
-function AuditView() {
+function AuditView({ logs, loading }) {
+  if (loading) return <div className="admin-content"><div style={{color:'var(--text3)',fontSize:12,padding:16}}>Loading audit logs…</div></div>
   return <div className="admin-content">
     <div className="admin-section-title">Admin Audit Log</div>
     <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}}>
-      <span style={{fontSize:11,color:'var(--text3)'}}>Showing 5 recent actions</span>
+      <span style={{fontSize:11,color:'var(--text3)'}}>Showing {logs.length} recent actions</span>
       <button className="tbtn p" style={{fontSize:10}}>Export Full Log</button>
     </div>
     <div className="panel">
       <table className="audit-table">
-        <thead><tr><th>Time</th><th>Event</th><th>User</th><th>Description</th><th>IP Address</th></tr></thead>
+        <thead><tr><th>Time</th><th>Event</th><th>User</th><th>Description</th><th>IP</th></tr></thead>
         <tbody>
-          {AUDIT_LOG.map((r,i)=>(
+          {logs.map((r,i)=>(
             <tr key={i}>
-              <td style={{fontFamily:'monospace',fontSize:10,color:'var(--text3)'}}>{r.time}</td>
-              <td><span className={`ev-badge ${r.event.includes('CREATED')||r.event.includes('ADDED')?'ev-vote':r.event.includes('REGISTERED')||r.event.includes('DEPLOY')?'ev-auth':'ev-alert'}`}>{r.event}</span></td>
-              <td style={{fontSize:11,fontWeight:500}}>{r.user}</td>
-              <td>{r.desc}</td>
-              <td style={{fontFamily:'monospace',fontSize:10,color:'var(--text3)'}}>{r.ip}</td>
+              <td style={{fontFamily:'monospace',fontSize:10,color:'var(--text3)'}}>{r.time || (r.createdAt ? new Date(r.createdAt).toLocaleTimeString() : '—')}</td>
+              <td><span className={`ev-badge ${(r.event||r.action||'').includes('CREATED')||(r.event||'').includes('ADDED')?'ev-vote':(r.event||'').includes('AUTH')||(r.event||'').includes('REGISTER')?'ev-auth':'ev-alert'}`}>{r.event || r.action}</span></td>
+              <td style={{fontSize:11,fontWeight:500}}>{r.user || r.userId || 'System'}</td>
+              <td>{r.desc || r.description || r.details}</td>
+              <td style={{fontFamily:'monospace',fontSize:10,color:'var(--text3)'}}>{r.ip || '—'}</td>
             </tr>
           ))}
+          {logs.length === 0 && <tr><td colSpan={5} style={{textAlign:'center',color:'var(--text3)',fontSize:11}}>No audit logs yet.</td></tr>}
         </tbody>
       </table>
     </div>
@@ -274,7 +330,70 @@ function AuditView() {
 
 /* ─── MAIN ─── */
 export default function AdminPage() {
-  const [tab, setTab] = useState('dashboard')
+  const [tab, setTab]         = useState('dashboard')
+  const [adminUser, setAdmin] = useState(getStoredAdmin)
+  const [loginForm, setLF]    = useState({ username:'', password:'' })
+  const [loginErr, setLE]     = useState(null)
+  const [loginLoading, setLL] = useState(false)
+
+  // Data state
+  const [elections, setElections] = useState([])
+  const [voters, setVoters]       = useState([])
+  const [auditLogs, setAuditLogs] = useState([])
+  const [mlHealth, setMlHealth]   = useState(null)
+  const [loadingEl, setLoadingEl] = useState(false)
+  const [loadingVo, setLoadingVo] = useState(false)
+  const [loadingAu, setLoadingAu] = useState(false)
+
+  // Load elections
+  async function fetchElections() {
+    setLoadingEl(true)
+    try { const r = await getElections(); setElections(r.elections || []) } catch {}
+    setLoadingEl(false)
+  }
+
+  useEffect(() => {
+    if (adminUser) {
+      fetchElections()
+      getMlHealth().then(r => setMlHealth(r)).catch(() => setMlHealth({ status: 'offline' }))
+    }
+  }, [adminUser])
+
+  useEffect(() => {
+    if (!adminUser) return
+    if (tab === 'voters' && voters.length === 0) {
+      setLoadingVo(true)
+      getVoters({ limit: 50 }).then(r => setVoters(r.voters || r.data || [])).catch(()=>{}).finally(()=>setLoadingVo(false))
+    }
+    if (tab === 'audit' && auditLogs.length === 0) {
+      setLoadingAu(true)
+      getAuditLogs({ limit: 50 }).then(r => setAuditLogs(r.logs || r.data || [])).catch(()=>{}).finally(()=>setLoadingAu(false))
+    }
+  }, [tab, adminUser])
+
+  // Admin login gate
+  async function handleLogin(e) {
+    e.preventDefault(); setLE(null); setLL(true)
+    try { await adminLogin({ username: loginForm.username, password: loginForm.password }); setAdmin(getStoredAdmin()) }
+    catch (err) { setLE(err.message || 'Login failed') }
+    setLL(false)
+  }
+
+  if (!adminUser) return (
+    <div className="view on" style={{flex:1,display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{width:340,background:'var(--card,#fff)',border:'1px solid var(--border)',borderRadius:16,padding:28,boxShadow:'0 8px 32px rgba(15,23,42,0.1)'}}>
+        <div style={{fontFamily:'var(--serif)',fontSize:18,marginBottom:4}}>Admin Login</div>
+        <div style={{fontSize:11,color:'var(--text3)',marginBottom:18}}>Use admin / admin123 for demo</div>
+        {loginErr && <div style={{color:'var(--error,#b91c1c)',fontSize:11,marginBottom:10}}>{loginErr}</div>}
+        <form onSubmit={handleLogin}>
+          <input className="fi" type="text" placeholder="Username" value={loginForm.username} onChange={e=>setLF(f=>({...f,username:e.target.value}))} style={{display:'block',marginBottom:8}}/>
+          <input className="fi" type="password" placeholder="Password" value={loginForm.password} onChange={e=>setLF(f=>({...f,password:e.target.value}))} style={{display:'block',marginBottom:14}}/>
+          <button className="lbtn" type="submit" disabled={loginLoading} style={{opacity:loginLoading?0.7:1}}><span>{loginLoading?'Logging in…':'Login'}</span></button>
+        </form>
+      </div>
+    </div>
+  )
+
   const sections = [...new Set(ALL_NAV.map(n=>n.section))]
 
   return (
@@ -297,16 +416,22 @@ export default function AdminPage() {
               ))}
             </div>
           ))}
-          <div className="obs-user"><div className="obs-av">AS</div><div><div className="obs-uname">Arjun Sharma</div><div className="obs-urole">Super Admin</div></div></div>
+          <div className="obs-user">
+            <div className="obs-av">{(adminUser?.username||'A')[0].toUpperCase()}{(adminUser?.username||'dm')[1]?.toUpperCase()||'D'}</div>
+            <div><div className="obs-uname">{adminUser?.username || 'Admin'}</div><div className="obs-urole">{adminUser?.role || 'Admin'}</div></div>
+          </div>
+          <div style={{padding:'8px 12px',borderTop:'1px solid rgba(255,255,255,0.06)'}}>
+            <button className="tbtn" style={{width:'100%',fontSize:10,justifyContent:'center'}} onClick={()=>{logout();setAdmin(null)}}>Logout</button>
+          </div>
         </div>
         <div className="admin-body">
-          {tab==='dashboard'  && <DashboardView />}
-          {tab==='elections'  && <ElectionsView />}
-          {tab==='candidates' && <CandidatesView />}
-          {tab==='voters'     && <VotersView />}
-          {tab==='terminals'  && <TerminalsView />}
-          {tab==='results'    && <ResultsView />}
-          {tab==='audit'      && <AuditView />}
+          {tab==='dashboard'  && <DashboardView  elections={elections} mlHealth={mlHealth} />}
+          {tab==='elections'  && <ElectionsView  elections={elections} loading={loadingEl} onRefresh={fetchElections} />}
+          {tab==='candidates' && <CandidatesView elections={elections} />}
+          {tab==='voters'     && <VotersView     voters={voters}   loading={loadingVo} />}
+          {tab==='terminals'  && <TerminalsView  />}
+          {tab==='results'    && <ResultsView    />}
+          {tab==='audit'      && <AuditView      logs={auditLogs}  loading={loadingAu} />}
         </div>
       </div>
     </div>

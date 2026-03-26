@@ -1,8 +1,10 @@
 const express = require('express');
 const { Op } = require('sequelize');
 const { Voter, VotingRecord, Election } = require('../models/index.js');
+const { sequelize } = require('../db/index.js');
 const { authenticate, authorize } = require('../middleware/auth.middleware.js');
 const AuditLog = require('../models/auditLog.model.js');
+
 
 const router = express.Router();
 
@@ -252,4 +254,4 @@ router.get('/stats/summary', authenticate, authorize(['admin']), async (req, res
     }
 });
 
-export default router;
+module.exports = router;

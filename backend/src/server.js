@@ -3,6 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
 const promClient = require('prom-client');
+const https = require('https');
+const http = require('http');
+const { URL } = require('url');
 const { initializeDatabases, closeDatabases } = require('./db/index.js');
 const { initWebSocketServer } = require('./services/websocket.service.js');
 const { initKafkaProducer, disconnectKafkaProducer } = require('./services/kafkaProducer.js');
@@ -100,15 +103,32 @@ app.get('/api/v1', (req, res) => {
     });
 });
 
-// Error handling middleware
-app.use((req, res, next) => {
-  logger.info('API_REQUEST', {
-    method: req.method,
-    path: req.path,
-    ip: req.ip,
-    timestamp: new Date().toISOString()
-  });
-  next();
+// ML Service Proxy — forward /api/ml/* to the Python Flask service
+app.use('/api/ml', (req, res) => {
+    const mlBaseUrl = process.env.PYTHON_ML_SERVICE_URL || 'http://localhost:5000';
+    const targetUrl = new URL(req.url, mlBaseUrl);
+    const isHttps = targetUrl.protocol === 'https:';
+    const mod = isHttps ? https : http;
+
+    const options = {
+        hostname: targetUrl.hostname,
+        port: targetUrl.port || (isHttps ? 443 : 80),
+        path: targetUrl.pathname + (targetUrl.search || ''),
+        method: req.method,
+        headers: { ...req.headers, host: targetUrl.hostname },
+    };
+
+    const proxyReq = mod.request(options, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res, { end: true });
+    });
+
+    proxyReq.on('error', (err) => {
+        logger.error('ML_PROXY_ERROR', { error: err.message });
+        res.status(502).json({ error: 'ML service unavailable', detail: err.message });
+    });
+
+    req.pipe(proxyReq, { end: true });
 });
 
 // 404 handler

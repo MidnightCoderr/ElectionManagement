@@ -94,15 +94,7 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* CTA — only Open App */}
-        <div className="hero-btns">
-          <button className="hbtn-open" onClick={() => navigate('/voter')}>
-            Open App
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M2 5h6M5 2l3 3-3 3"/>
-            </svg>
-          </button>
-        </div>
+
 
         {/* Scroll indicator */}
         <div className="scroll-ind">
