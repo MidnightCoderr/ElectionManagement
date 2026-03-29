@@ -94,27 +94,13 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 18px;
 }
 
 .top-actions {
   display: flex;
   gap: 10px;
   align-items: center;
-}
-
-.app-header__center {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px;
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface-1) 80%, transparent);
-}
-
-.app-header__right {
-  margin-left: auto;
 }
 
 .utility-link,
@@ -129,33 +115,12 @@ a {
   cursor: pointer;
 }
 
-.utility-link--button {
-  background: color-mix(in srgb, var(--surface-1) 92%, transparent);
-  color: var(--ink);
-}
-
-.utility-link--muted {
-  color: var(--ink-muted);
-  background: transparent;
-}
-
-.user-chip {
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  padding: 8px 12px;
-  font-size: 0.82rem;
-  color: var(--ink-muted);
-  background: var(--surface-1);
-}
-
 .app-header__roles {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 8px;
   flex-wrap: wrap;
-  border-top: 1px solid var(--line-soft);
-  padding-top: 10px;
 }
 
 .brand-lockup {
@@ -205,7 +170,7 @@ a {
 
 .role-tab {
   text-decoration: none;
-  padding: 8px 12px;
+  padding: 9px 12px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
@@ -278,21 +243,6 @@ a {
   align-items: center;
   gap: 8px;
   margin-left: auto;
-}
-
-.top-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--ink-muted);
-  font-size: 0.84rem;
-}
-
-.top-status__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--accent);
 }
 
 .app-primary-action__icon {
@@ -381,42 +331,25 @@ a {
   max-width: 12ch;
 }
 
-.landing-task-chips {
+.landing-role-picker {
   margin-top: 12px;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
 }
 
-.landing-task-chips span {
+.landing-role-picker span {
   color: var(--ink-muted);
   font-size: 0.93rem;
 }
 
-.task-chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.task-chip {
+.landing-role-picker select {
   border: 1px solid var(--line-strong);
-  border-radius: 999px;
-  background: var(--surface-1);
+  border-radius: var(--radius-control);
+  background: #fff;
   color: var(--ink);
-  padding: 8px 12px;
-  font-size: 0.84rem;
-  cursor: pointer;
-}
-
-.task-chip:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--em-shadow-sm);
-}
-
-.task-chip--muted {
-  opacity: 0.74;
+  padding: 10px 12px;
+  font-size: 0.9rem;
 }
 
 .landing-hero__lede,
@@ -532,8 +465,7 @@ a {
   border: 1px solid var(--line-soft);
   background: var(--surface-2);
   color: var(--ink-muted);
-  font-size: 0.88rem;
-  font-weight: 500;
+  font-size: 0.89rem;
 }
 
 .status-dot {
@@ -560,7 +492,7 @@ a {
 
 .role-grid {
   display: grid;
-  grid-template-columns: 1.55fr 0.65fr;
+  grid-template-columns: 1.3fr 0.7fr;
   gap: 18px;
 }
 
@@ -586,7 +518,6 @@ a {
 .role-card--primary {
   grid-row: span 2;
   padding: 32px;
-  min-height: 320px;
 }
 
 .role-card--admin {
@@ -665,30 +596,6 @@ a {
   height: 8px;
   border-radius: 999px;
   background: var(--success);
-}
-
-.operator-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.operator-pill {
-  border: 1px solid var(--line-soft);
-  border-radius: 999px;
-  padding: 6px 10px;
-  font-size: 0.76rem;
-  color: var(--ink-soft);
-  background: var(--surface-2);
-}
-
-.operator-pill__dot {
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: var(--success);
-  margin-right: 6px;
 }
 
 .election-board {
@@ -1001,17 +908,6 @@ a {
     min-height: auto;
     padding: 12px 0;
   }
-
-  .app-header__top {
-    flex-wrap: wrap;
-  }
-
-  .app-header__center {
-    order: 3;
-    width: 100%;
-    justify-content: flex-start;
-    overflow: auto;
-  }
 }
 
 @media (max-width: 720px) {
@@ -1054,6 +950,11 @@ a {
 
   .role-tab {
     text-align: left;
+  }
+
+  .landing-role-picker {
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .step-card {

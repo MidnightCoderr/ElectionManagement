@@ -1,0 +1,44 @@
+@import '../../shared-ui/tokens.css';
+
+:root {
+  --bg: var(--em-bg);
+  --bg2: var(--em-bg-subtle);
+  --bg3: #e9e2d3;
+  --surface: var(--em-surface);
+  --surface2: var(--em-surface-muted);
+  --glass: rgba(24, 23, 18, 0.03);
+  --glass2: rgba(24, 23, 18, 0.06);
+  --border: var(--em-border);
+  --border2: var(--em-border-strong);
+  --text: var(--em-text);
+  --text2: var(--em-text-muted);
+  --text3: var(--em-text-soft);
+  --p1: var(--em-primary);
+  --p2: var(--em-primary-strong);
+  --p3: var(--em-success);
+  --p4: #88af9d;
+  --g1: #f7f4ed;
+  --g2: var(--em-border);
+  --g3: #b7ab92;
+  --g4: #7f7766;
+  --muted: var(--em-text-muted);
+  --saffron: var(--em-accent);
+  --danger: var(--em-danger);
+  --green: var(--em-success);
+  --orange: var(--em-warning);
+  --red: var(--em-danger);
+  --sans: var(--em-font-sans);
+  --serif: var(--em-font-serif);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+@keyframes fadeSlideUp { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+@keyframes spin { to { transform:rotate(360deg) } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes pop { 0%{transform:scale(.8);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes fpscan { 0%{top:-2px;opacity:0} 6%{opacity:1} 50%{top:calc(100% + 2px);opacity:1} 56%{opacity:0} 100%{top:-2px;opacity:0} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+@keyframes ell { 0%,70%,100%{opacity:0} 35%{opacity:1} }
