@@ -1,0 +1,90 @@
+@import '../../shared-ui/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        @apply bg-dark-950 text-[#1b1710] font-sans antialiased;
+    }
+
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+        background: #f6f4ee;
+    }
+    ::-webkit-scrollbar-thumb {
+        background: #c9bfab;
+        border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+        background: #ad9f86;
+    }
+}
+
+@layer components {
+    .sidebar-item {
+        @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm text-muted transition-all duration-200 cursor-pointer;
+    }
+    .sidebar-item:hover {
+        @apply text-[#1b1710] bg-dark-700;
+    }
+    .sidebar-item.active {
+        @apply text-[#1b1710] bg-accent-purple/15 border border-accent-purple/30;
+    }
+
+    .metric-card {
+        @apply bg-dark-800 border border-dark-600/50 rounded-xl p-5 flex flex-col gap-2 transition-all duration-200;
+    }
+    .metric-card:hover {
+        @apply border-accent-purple/45;
+        transform: translateY(-2px);
+        box-shadow: 0 10px 28px rgba(25, 21, 12, 0.08);
+    }
+
+    .sparkline-up {
+        filter: drop-shadow(0 0 6px rgba(34, 197, 94, 0.4));
+    }
+    .sparkline-down {
+        filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.4));
+    }
+
+    .glass-card {
+        @apply bg-dark-800 border border-dark-600/40 rounded-xl;
+    }
+
+    .tag {
+        @apply px-3 py-1 rounded-full text-xs font-semibold;
+    }
+
+    .gradient-card {
+        background: linear-gradient(140deg, #215f4e 0%, #18483b 100%);
+    }
+
+    .btn-primary {
+        @apply bg-accent-purple hover:bg-accent-purple/90 text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition-all duration-200;
+        box-shadow: 0 4px 14px rgba(33, 95, 78, 0.22);
+    }
+    .btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 20px rgba(33, 95, 78, 0.28);
+    }
+
+    .tab-btn {
+        @apply px-4 py-1.5 rounded-md text-xs font-semibold text-muted transition-all duration-200 cursor-pointer;
+    }
+    .tab-btn.active {
+        @apply bg-dark-600 text-[#1b1710];
+    }
+    .tab-btn:hover:not(.active) {
+        @apply text-[#5f594a];
+    }
+}

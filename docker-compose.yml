@@ -311,70 +311,26 @@ services:
     command: python kafka_consumer.py
 
   # ============================================
-  # Voter UI (Frontend)
+  # Consolidated Frontend
   # ============================================
-  voter-ui:
+  frontend:
     build:
-      context: ./voter-ui
+      context: ./frontend
       dockerfile: ../infrastructure/docker/Dockerfile.frontend
-    container_name: election-voter-ui
+    container_name: election-frontend
     environment:
       - VITE_API_URL=http://localhost:3000/api
       - VITE_WS_URL=ws://localhost:3100
     ports:
       - "3001:3001"
     volumes:
-      - ./voter-ui:/app
+      - ./frontend:/app
       - /app/node_modules
     networks:
       - election-network
     depends_on:
       - backend
     command: npm run dev -- --host 0.0.0.0 --port 3001
-
-  # ============================================
-  # Observer Dashboard (Frontend)
-  # ============================================
-  observer-dashboard:
-    build:
-      context: ./observer-dashboard
-      dockerfile: ../infrastructure/docker/Dockerfile.frontend
-    container_name: election-observer-dashboard
-    environment:
-      - VITE_API_URL=http://localhost:3000/api
-      - VITE_WS_URL=ws://localhost:3100
-    ports:
-      - "3002:3002"
-    volumes:
-      - ./observer-dashboard:/app
-      - /app/node_modules
-    networks:
-      - election-network
-    depends_on:
-      - backend
-    command: npm run dev -- --host 0.0.0.0 --port 3002
-
-  # ============================================
-  # Admin Portal (Frontend)
-  # ============================================
-  admin-portal:
-    build:
-      context: ./admin-portal
-      dockerfile: ../infrastructure/docker/Dockerfile.frontend
-    container_name: election-admin-portal
-    environment:
-      - VITE_API_URL=http://localhost:3000/api
-      - VITE_WS_URL=ws://localhost:3100
-    ports:
-      - "3003:3003"
-    volumes:
-      - ./admin-portal:/app
-      - /app/node_modules
-    networks:
-      - election-network
-    depends_on:
-      - backend
-    command: npm run dev -- --host 0.0.0.0 --port 3003
 
   # ============================================
   # Prometheus - Monitoring

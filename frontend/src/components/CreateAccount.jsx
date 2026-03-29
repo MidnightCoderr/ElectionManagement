@@ -1,155 +1,163 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { registerVoter } from '../api/auth.js'
 
+const STEPS = [
+  { key: 'student', label: 'Student ID', placeholder: 'e.g. 2026CS1042' },
+  { key: 'name', label: 'Full name', placeholder: 'e.g. Ayush Sharma' },
+  { key: 'department', label: 'Department', placeholder: 'e.g. Computer Science' },
+  { key: 'confirm', label: 'Confirm', placeholder: '' },
+]
+
 export default function CreateAccount() {
   const navigate = useNavigate()
-  const [showPass, setShowPass] = useState(false)
-  const [form, setForm] = useState({ firstName:'', lastName:'', aadhar:'', district:'', biometric:'biometric-template-demo' })
-  const [status, setStatus] = useState(null) // null | 'loading' | 'success' | {error:string}
+  const [currentStep, setCurrentStep] = useState(0)
+  const [form, setForm] = useState({
+    student: '',
+    name: '',
+    department: '',
+    aadhar: '',
+    biometric: 'biometric-template-demo',
+  })
+  const [status, setStatus] = useState(null)
+  const [createdId, setCreatedId] = useState(null)
 
-  const set = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }))
+  const canProceed = useMemo(() => {
+    if (currentStep === 0) return form.student.trim().length > 3
+    if (currentStep === 1) return form.name.trim().length > 2
+    if (currentStep === 2) return form.department.trim().length > 2
+    return true
+  }, [currentStep, form])
 
-  async function handleSubmit(e) {
-    e.preventDefault()
+  async function handleFinish() {
     if (!/^\d{12}$/.test(form.aadhar)) {
-      setStatus({ error: 'Aadhar number must be exactly 12 digits.' })
+      setStatus({ error: 'Aadhar number must be exactly 12 digits before final confirmation.' })
       return
     }
+
     setStatus('loading')
     try {
       await registerVoter({
-        aadharNumber:     form.aadhar,
-        fullName:         `${form.firstName} ${form.lastName}`.trim(),
+        aadharNumber: form.aadhar,
+        fullName: form.name.trim(),
         biometricTemplate: form.biometric,
-        districtId:       form.district || 'General',
+        districtId: form.department.trim() || 'General',
       })
+      const generatedId = `A-${Math.floor(1000 + Math.random() * 9000)}`
+      setCreatedId(generatedId)
       setStatus('success')
     } catch (err) {
-      setStatus({ error: err.message || 'Registration failed. Please try again.' })
+      setStatus({ error: err.message || 'Registration failed.' })
     }
   }
 
   return (
-    <div className="view on" id="v-create" style={{flex:1,overflow:'auto'}}>
-      <div className="create-shell">
-        <div className="create-left">
-          <div className="cl-o1"></div>
-          <div className="cl-o2"></div>
+    <section className="portal-page portal-page--narrow">
+      <div className="section-heading">
+        <p className="section-kicker">Voter onboarding</p>
+        <h1>Register with your student details in four quick steps.</h1>
+      </div>
 
-          {/* Fingerprint Scanner Animation */}
-          <div className="fp-scanner-wrap">
-            <div className="fp-scanner-box">
-              <svg viewBox="0 0 80 96" fill="none">
-                <path d="M40 6C24 6 11 18.5 11 34c0 7.5 2.8 14.4 7.4 19.8" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round"/>
-                <path d="M40 6C56 6 69 18.5 69 34c0 7.5-2.8 14.4-7.4 19.8" stroke="rgba(255,255,255,0.8)" strokeWidth="2.2" strokeLinecap="round"/>
-                <path d="M19 56c-3.8-5.8-6-12.8-6-20C13 21.2 25.3 10 40 10s27 11.2 27 26c0 7.2-2.2 14.2-6 20" stroke="rgba(255,255,255,0.65)" strokeWidth="1.9" strokeLinecap="round"/>
-                <path d="M23 63c-3-5.2-4.8-11.2-4.8-17.5C18.2 31 28 21 40 21s21.8 10 21.8 24.5c0 6.3-1.8 12.3-4.8 17.5" stroke="rgba(255,255,255,0.55)" strokeWidth="1.7" strokeLinecap="round"/>
-                <path d="M27.5 70c-2.2-4.5-3.5-9.6-3.5-15C24 42.5 31.3 34 40 34s16 8.5 16 21c0 5.4-1.3 10.5-3.5 15" stroke="rgba(255,255,255,0.45)" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M32 76c-1.5-3.8-2.4-8-2.4-12.5C29.6 54.5 34.3 47 40 47s10.4 7.5 10.4 16.5c0 4.5-.9 8.7-2.4 12.5" stroke="rgba(255,255,255,0.35)" strokeWidth="1.3" strokeLinecap="round"/>
-                <path d="M36 82c-.8-3-1.2-6.2-1.2-9.8C34.8 65.8 37 60 40 60s5.2 5.8 5.2 12.2c0 3.6-.4 6.8-1.2 9.8" stroke="rgba(255,255,255,0.25)" strokeWidth="1.1" strokeLinecap="round"/>
-                <path d="M38.5 88c-.2-1.8-.4-3.8-.4-6C38.1 77 39 73 40 73s1.9 4 1.9 9c0 2.2-.2 4.2-.4 6" stroke="rgba(255,255,255,0.18)" strokeWidth="1" strokeLinecap="round"/>
-              </svg>
-              <div className="fp-scan-line"></div>
-              <div className="fp-scan-glow"></div>
-            </div>
-          </div>
-
-          <div className="cl-txt">
-            <div className="cl-h">Capturing Democracy,<br/>Creating Transparency</div>
-            <div className="cl-s">Election Management System &middot; India</div>
-            <div className="cl-dots">
-              <div className="cldot"></div>
-              <div className="cldot"></div>
-              <div className="cldot on"></div>
-            </div>
-          </div>
+      <div className="surface-card step-shell">
+        <div className="step-progress">
+          {STEPS.map((step, index) => (
+            <span key={step.key} className={`step-dot${index <= currentStep ? ' is-active' : ''}`} />
+          ))}
         </div>
 
-        <div className="create-right">
-          <div className="cf">
-            <div className="cf-ey">Admin Portal</div>
-            <div className="cf-h">Create an account</div>
-            <div className="cf-s">
-              Already have an account? <a href="#" onClick={e => { e.preventDefault(); navigate('/') }}>Log in</a>
+        {status === 'success' ? (
+          <div className="step-success">
+            <div className="step-success__mark">OK</div>
+            <h2>You are registered.</h2>
+            <p>Your voter ID is <strong>{createdId}</strong>.</p>
+            <div className="form-actions">
+              <button type="button" className="button button--ghost" onClick={() => navigate('/')}>
+                Back to home
+              </button>
+              <button type="button" className="button button--primary" onClick={() => navigate('/voter')}>
+                Open voter terminal
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="step-card" style={{ transform: `translateX(-${currentStep * 100}%)` }}>
+            <div className="step-slide">
+              <label className="field-label">Student ID</label>
+              <input
+                className="field-input"
+                value={form.student}
+                onChange={(event) => setForm((current) => ({ ...current, student: event.target.value }))}
+                placeholder={STEPS[0].placeholder}
+              />
             </div>
 
-            {status === 'success' && (
-              <div style={{
-                background:'rgba(21,128,61,0.07)',border:'1px solid rgba(21,128,61,0.2)',
-                borderRadius:10,padding:14,fontSize:12,color:'#166534',marginBottom:12
-              }}>
-                ✅ Voter registered successfully! <a href="#" onClick={e=>{e.preventDefault();navigate('/')}}>Go home</a>
-              </div>
-            )}
-            {status?.error && (
-              <div style={{
-                background:'rgba(185,28,28,0.06)',border:'1px solid rgba(185,28,28,0.15)',
-                borderRadius:10,padding:12,fontSize:11,color:'#b91c1c',marginBottom:10
-              }}>
-                ⚠ {status.error}
-              </div>
-            )}
-
-            <div className="fr">
-              <input className="fi" type="text" placeholder="First name" value={form.firstName} onChange={set('firstName')} />
-              <input className="fi" type="text" placeholder="Last name"  value={form.lastName}  onChange={set('lastName')}  />
-            </div>
-            <input className="fi" type="text" placeholder="Aadhar Number (12 digits)" value={form.aadhar}   onChange={set('aadhar')}   style={{display:'block',marginBottom:9}}/>
-            <input className="fi" type="text" placeholder="District / Department"      value={form.district} onChange={set('district')} style={{display:'block',marginBottom:9}}/>
-
-            <div className="pw">
-              <input className="fi" type={showPass ? 'text' : 'password'} placeholder="Biometric Template (demo)" value={form.biometric} onChange={set('biometric')}/>
-              <div className="pw-eye" onClick={() => setShowPass(v => !v)}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="#94A3B8" strokeWidth="1.5" strokeLinecap="round">
-                  <path d="M1 8s2.5-5 7-5 7 5 7 5-2.5 5-7 5-7-5-7-5z"/>
-                  <circle cx="8" cy="8" r="2"/>
-                </svg>
-              </div>
+            <div className="step-slide">
+              <label className="field-label">Full name</label>
+              <input
+                className="field-input"
+                value={form.name}
+                onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+                placeholder={STEPS[1].placeholder}
+              />
             </div>
 
-            <div className="tr">
-              <div className="chk">
-                <svg viewBox="0 0 10 10" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round">
-                  <path d="M2 5l2 2.5 4-4"/>
-                </svg>
-              </div>
-              <div className="tr-txt">
-                I agree to the <a href="#">Terms &amp; Conditions</a>
-              </div>
+            <div className="step-slide">
+              <label className="field-label">Department</label>
+              <input
+                className="field-input"
+                value={form.department}
+                onChange={(event) => setForm((current) => ({ ...current, department: event.target.value }))}
+                placeholder={STEPS[2].placeholder}
+              />
             </div>
 
-            <button className="lbtn" onClick={handleSubmit} disabled={status==='loading'}
-              style={{opacity:status==='loading'?0.7:1}}>
-              <span>{status==='loading' ? 'Registering…' : 'Create account'}</span>
+            <div className="step-slide">
+              <label className="field-label">Aadhar number (12 digits)</label>
+              <input
+                className="field-input"
+                value={form.aadhar}
+                onChange={(event) => setForm((current) => ({ ...current, aadhar: event.target.value }))}
+                placeholder="e.g. 123456789012"
+              />
+              <label className="field-label">Biometric template</label>
+              <input
+                className="field-input"
+                value={form.biometric}
+                onChange={(event) => setForm((current) => ({ ...current, biometric: event.target.value }))}
+              />
+            </div>
+          </div>
+        )}
+
+        {status?.error ? <div className="surface-note surface-note--warning">{status.error}</div> : null}
+
+        {status !== 'success' ? (
+          <div className="form-actions">
+            <button
+              type="button"
+              className="button button--ghost"
+              onClick={() => (currentStep === 0 ? navigate('/') : setCurrentStep((value) => value - 1))}
+            >
+              {currentStep === 0 ? 'Cancel' : 'Back'}
             </button>
 
-            <div className="or-r">
-              <div className="or-l"></div>
-              <div className="or-t">Or register with</div>
-              <div className="or-l"></div>
-            </div>
-
-            <div className="sr">
-              <button className="sbtn">
-                <svg viewBox="0 0 24 24" style={{width:15,height:15}}>
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                Google
+            {currentStep < STEPS.length - 1 ? (
+              <button
+                type="button"
+                className="button button--primary"
+                disabled={!canProceed}
+                onClick={() => setCurrentStep((value) => Math.min(value + 1, STEPS.length - 1))}
+              >
+                Next
               </button>
-              <button className="sbtn">
-                <svg viewBox="0 0 24 24" fill="#94A3B8" style={{width:15,height:15}}>
-                  <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                </svg>
-                Apple
+            ) : (
+              <button type="button" className="button button--primary" disabled={status === 'loading'} onClick={handleFinish}>
+                {status === 'loading' ? 'Creating account' : 'Confirm registration'}
               </button>
-            </div>
+            )}
           </div>
-        </div>
+        ) : null}
       </div>
-    </div>
+    </section>
   )
 }

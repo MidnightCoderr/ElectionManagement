@@ -5,29 +5,25 @@
   "private": true,
   "workspaces": [
     "backend",
-    "voter-ui",
-    "observer-dashboard",
-    "admin-portal"
+    "frontend"
   ],
   "scripts": {
-    "install:all": "npm install && cd backend && npm install && cd ../voter-ui && npm install && cd ../observer-dashboard && npm install && cd ../admin-portal && npm install",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
     "dev": "docker-compose up",
     "dev:backend": "cd backend && npm run dev",
-    "dev:voter-ui": "cd voter-ui && npm run dev",
-    "dev:observer": "cd observer-dashboard && npm run dev",
-    "dev:admin": "cd admin-portal && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
     "build": "npm run build:backend && npm run build:frontends",
     "build:backend": "cd backend && npm run build",
-    "build:frontends": "cd voter-ui && npm run build && cd ../observer-dashboard && npm run build && cd ../admin-portal && npm run build",
+    "build:frontends": "cd frontend && npm run build",
     "test": "npm run test:backend && npm run test:frontend",
     "test:backend": "cd backend && npm test",
-    "test:frontend": "cd voter-ui && npm test && cd ../observer-dashboard && npm test && cd ../admin-portal && npm test",
+    "test:frontend": "npm --prefix frontend run test --if-present",
     "test:integration": "cd backend && npm run test:integration",
     "test:e2e": "cd tests/e2e && npm test",
     "test:load": "cd tests/load && k6 run vote-casting-load-test.js",
     "lint": "npm run lint:backend && npm run lint:frontend",
     "lint:backend": "cd backend && npm run lint",
-    "lint:frontend": "cd voter-ui && npm run lint && cd ../observer-dashboard && npm run lint && cd ../admin-portal && npm run lint",
+    "lint:frontend": "npm --prefix frontend run lint --if-present",
     "fabric:start": "cd blockchain && ./scripts/startNetwork.sh",
     "fabric:stop": "cd blockchain && ./scripts/stopNetwork.sh",
     "fabric:deploy": "cd blockchain && ./scripts/deployChaincode.sh",
@@ -37,7 +33,7 @@
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f",
-    "clean": "rm -rf node_modules backend/node_modules voter-ui/node_modules observer-dashboard/node_modules admin-portal/node_modules dist build"
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules dist build"
   },
   "repository": {
     "type": "git",

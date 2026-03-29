@@ -1,139 +1,146 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const PORTAL_URLS = {
-  voter:    import.meta.env.VITE_VOTER_URL    || 'http://localhost:3001',
-  observer: import.meta.env.VITE_OBSERVER_URL || 'http://localhost:3002',
-  admin:    import.meta.env.VITE_ADMIN_URL    || 'http://localhost:3004',
-}
+const ROLES = [
+  { id: 'voter', label: 'Cast your vote', path: '/voter' },
+  { id: 'candidate', label: 'Manage candidacy', path: '/candidate' },
+  { id: 'observer', label: 'Monitor live status', path: '/observer' },
+  { id: 'admin', label: 'Run election ops', path: '/dashboard' },
+]
+
+const ROLE_CARDS = [
+  {
+    id: 'voter',
+    title: 'Voter Terminal',
+    body: 'Cast your ballot with biometric check-in and instant receipt verification.',
+    cta: 'Go to my ballot',
+    path: '/voter',
+    duration: 'Takes about 2 minutes',
+    status: 'Polls open until 6:00 PM today',
+    large: true,
+  },
+  {
+    id: 'observer',
+    title: 'Observer Desk',
+    body: 'Watch turnout, alerts, and vote flow as polling continues.',
+    cta: 'Watch live results',
+    path: '/observer',
+    duration: 'Live view',
+    status: 'Election in progress',
+  },
+  {
+    id: 'admin',
+    title: 'Admin Workspace',
+    body: 'Manage terminals, candidate records, and closeout decisions.',
+    cta: 'Manage this election',
+    path: '/dashboard',
+    duration: 'Restricted access',
+    status: 'Ops controls',
+  },
+]
 
 export default function Landing() {
   const navigate = useNavigate()
+  const closesInText = useMemo(() => 'Closes in 4h 22m', [])
 
   return (
-    <div className="view on" id="v-land" style={{flex:1,overflow:'hidden'}}>
-      <div className="landing">
-        <div className="hero-orb"></div>
-        <div className="hero-orb2"></div>
-        <div className="hlines">
-          <div className="hline" style={{top:'21%'}}></div>
-          <div className="hline" style={{top:'47%'}}></div>
-          <div className="hline" style={{top:'72%'}}></div>
-        </div>
+    <section className="landing-page">
+      <div className="landing-hero">
+        <div className="landing-hero__copy">
+          <p className="section-kicker">Campus election portal</p>
+          <h1>Run your campus election with confidence.</h1>
+          <p className="landing-hero__lede">
+            From voter check-in to certified results, every step stays fast, transparent, and easy to manage.
+          </p>
 
-        {/* Glowing ring animation — Dribbble inspired */}
-        <div className="glow-ring-wrapper">
-          <div className="glow-ring">
-            <div className="glow-ring-trail"></div>
+          <div className="landing-task-chips">
+            <span>You are here to:</span>
+            <div className="task-chip-row">
+              {ROLES.map((role) => (
+                <button
+                  key={role.id}
+                  type="button"
+                  className={`task-chip${role.id === 'admin' ? ' task-chip--muted' : ''}`}
+                  onClick={() => navigate(role.path)}
+                >
+                  {role.label}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="glow-ring-inner"></div>
-          <div className="glow-ring-pulse"></div>
-        </div>
 
-        <div className="hero-announce">
-          <div className="announce-dot"></div>
-          Blockchain-verified student elections &mdash; Learn how it works &nbsp;&rarr;
-        </div>
-
-        {/* Floating nodes — animated entry */}
-        <div className="fnode-l1 fnode-anim" style={{animationDelay:'0.1s'}}>
-          <div className="fnode-ico fnode-float">
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
-              <polygon points="5,1 9,8 1,8" fill="none"/>
-            </svg>
-          </div>
-          <div className="fnode-name">&bull; Computer Science</div>
-          <div className="fnode-val">1,456 votes</div>
-        </div>
-
-        <div className="fnode-l2 fnode-anim" style={{animationDelay:'0.3s'}}>
-          <div className="fnode-ico fnode-float" style={{animationDelay:'1s'}}>
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
-              <circle cx="5" cy="5" r="2" fill="none"/>
-              <circle cx="5" cy="5" r="4" fill="none"/>
-            </svg>
-          </div>
-          <div className="fnode-name">&bull; Electrical Eng.</div>
-          <div className="fnode-val">1,234 votes</div>
-        </div>
-
-        <div className="fnode-r1 fnode-anim" style={{animationDelay:'0.2s'}}>
-          <div className="fnode-ico fnode-float" style={{marginLeft:'auto',animationDelay:'0.5s'}}>
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
-              <path d="M2 8l3-6 3 6" strokeLinecap="round"/>
-            </svg>
-          </div>
-          <div className="fnode-name">&bull; Mechanical Eng.</div>
-          <div className="fnode-val">1,102 votes</div>
-        </div>
-
-        <div className="fnode-r2 fnode-anim" style={{animationDelay:'0.4s'}}>
-          <div className="fnode-ico fnode-float" style={{marginLeft:'auto',animationDelay:'1.5s'}}>
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" width="10" height="10">
-              <path d="M2 6l2-3 2 2 2-4" strokeLinecap="round" fill="none"/>
-            </svg>
-          </div>
-          <div className="fnode-name">&bull; Business School</div>
-          <div className="fnode-val">890 votes</div>
-        </div>
-
-        {/* Connecting SVG curves */}
-        <svg className="svg-lines" viewBox="0 0 800 654" preserveAspectRatio="none">
-          <path d="M92 210 Q200 280 400 327"  stroke="rgba(11,31,58,0.06)" strokeWidth="1" fill="none"/>
-          <path d="M92 380 Q200 376 400 327"  stroke="rgba(11,31,58,0.04)" strokeWidth="1" fill="none"/>
-          <path d="M708 210 Q600 275 400 327" stroke="rgba(11,31,58,0.06)" strokeWidth="1" fill="none"/>
-          <path d="M708 420 Q620 378 400 327" stroke="rgba(11,31,58,0.04)" strokeWidth="1" fill="none"/>
-        </svg>
-
-        {/* Hero text with glow */}
-        <div className="hero-text">
-          <span className="hero-line1 hero-glow-text">Your vote.</span>
-          <span className="hero-line2 hero-glow-text" style={{animationDelay:'0.2s'}}>Protected.</span>
-          <span className="hero-line3 hero-glow-text" style={{animationDelay:'0.4s'}}>Counted.</span>
-          <div className="hero-sub">
-            Where blockchain technology meets campus democracy &mdash; secure, transparent, verifiable.
+          <div className="landing-hero__actions">
+            <button type="button" className="button button--primary" onClick={() => navigate('/voter')}>
+              Go to my ballot
+            </button>
+            <button type="button" className="button button--ghost" onClick={() => navigate('/verify')}>
+              Verify results
+            </button>
           </div>
         </div>
 
-
-
-        {/* Scroll indicator */}
-        <div className="scroll-ind">
-          <div className="scroll-circle">
-            <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M5 2v5M2.5 5.5L5 8l2.5-2.5"/>
-            </svg>
+        <div className="landing-hero__panel">
+          <div className="hero-panel__header">
+            <span className="section-kicker">Status</span>
+            <span className="hero-panel__badge">Student council election</span>
           </div>
-          01/05 &middot; Scroll down
-        </div>
 
-        {/* Bottom-left portal links */}
-        <div className="portal-links">
-          <a href={PORTAL_URLS.voter} target="_blank" rel="noopener noreferrer" className="portal-link" title="Voter Terminal">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <rect x="2" y="3" width="12" height="9" rx="1.5"/>
-              <path d="M5 15h6M8 12v3"/>
-            </svg>
-          </a>
-          <a href={PORTAL_URLS.observer} target="_blank" rel="noopener noreferrer" className="portal-link" title="Observer Dashboard">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/>
-              <circle cx="8" cy="8" r="2"/>
-            </svg>
-          </a>
-          <a href={PORTAL_URLS.admin} target="_blank" rel="noopener noreferrer" className="portal-link" title="Admin Portal">
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <circle cx="8" cy="8" r="3"/>
-              <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/>
-            </svg>
-          </a>
-        </div>
+          <div className="status-strip">
+            <span className="status-dot" />
+            Election live - {closesInText} - Polls open now
+          </div>
 
-        {/* Election Horizons */}
-        <div className="defi-label">
-          <div className="defi-label-t">Campus Elections</div>
-          <div className="defi-under"></div>
+          <div className="hero-panel__rail hero-panel__rail--system">
+            <div>
+              <span>Terminals active</span>
+              <strong>12 terminals</strong>
+            </div>
+            <div>
+              <span>Votes cast</span>
+              <strong>2,341 ballots</strong>
+            </div>
+            <div>
+              <span>Last ballot</span>
+              <strong>3 minutes ago</strong>
+            </div>
+          </div>
+
+          <div className="operator-strip">
+            <span className="operator-pill">
+              <span className="operator-pill__dot" />
+              Fraud monitoring: Healthy <span className="status-cursor" />
+            </span>
+            <span className="operator-pill">Verification path: Biometric plus blockchain</span>
+          </div>
         </div>
       </div>
-    </div>
+
+      <div className="landing-section">
+        <div className="section-heading">
+          <p className="section-kicker">Role workspaces</p>
+          <h2>Pick the space that matches your role.</h2>
+        </div>
+
+        <div className="role-grid">
+          {ROLE_CARDS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`role-card${item.large ? ' role-card--primary' : ''}${item.id === 'admin' ? ' role-card--admin' : ''}`}
+              onClick={() => navigate(item.path)}
+            >
+              <span className="role-card__label">{item.title}</span>
+              <p>{item.body}</p>
+              <div className="role-card__meta">
+                <span className="role-dot" />
+                {item.status}
+              </div>
+              <div className="role-card__meta role-card__meta--muted">{item.duration}</div>
+              <span className="role-card__cta">{item.cta}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }

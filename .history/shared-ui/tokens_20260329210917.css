@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap');
+
+:root {
+  --em-bg: #f6f4ee;
+  --em-bg-subtle: #efeade;
+  --em-surface: #ffffff;
+  --em-surface-muted: #faf8f2;
+  --em-border: #ddd4c0;
+  --em-border-strong: #c8bca4;
+
+  --em-text: #181712;
+  --em-text-muted: #6d6758;
+  --em-text-soft: #8b826f;
+
+  --em-primary: #215f4e;
+  --em-primary-strong: #18483b;
+  --em-primary-soft: #d9ebe4;
+  --em-accent: #ad7b2f;
+
+  --em-success: #2f7d4c;
+  --em-warning: #ad7b2f;
+  --em-danger: #b13f34;
+
+  --em-radius-sm: 8px;
+  --em-radius-md: 12px;
+  --em-radius-lg: 16px;
+  --em-radius-pill: 999px;
+
+  --em-shadow-sm: 0 2px 6px rgba(27, 24, 18, 0.05);
+  --em-shadow-md: 0 10px 30px rgba(27, 24, 18, 0.08);
+  --em-shadow-lg: 0 16px 36px rgba(25, 21, 12, 0.12);
+
+  --em-font-sans: 'Manrope', system-ui, sans-serif;
+  --em-font-serif: 'Fraunces', Georgia, serif;
+}

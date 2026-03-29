@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,600&display=swap');
+
+:root {
+  --bg: #f6f4ee;
+  --bg2: #efeade;
+  --bg3: #e9e2d3;
+  --surface: #ffffff;
+  --surface2: #faf8f2;
+  --glass: rgba(24, 23, 18, 0.03);
+  --glass2: rgba(24, 23, 18, 0.06);
+  --border: #ddd4c0;
+  --border2: #c8bca4;
+  --text: #181712;
+  --text2: #6d6758;
+  --text3: #8b826f;
+  --p1: #215f4e;
+  --p2: #18483b;
+  --p3: #2f7d4c;
+  --p4: #88af9d;
+  --g1: #f7f4ed;
+  --g2: #ddd4c0;
+  --g3: #b7ab92;
+  --g4: #7f7766;
+  --muted: #6d6758;
+  --saffron: #ad7b2f;
+  --danger: #b13f34;
+  --green: #2f7d4c;
+  --orange: #ad7b2f;
+  --red: #b13f34;
+  --sans: 'Manrope', system-ui, sans-serif;
+  --serif: 'Fraunces', Georgia, serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); }
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+@keyframes fadeSlideUp { from { opacity:0; transform:translateY(10px) } to { opacity:1; transform:translateY(0) } }
+@keyframes spin { to { transform:rotate(360deg) } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+@keyframes pop { 0%{transform:scale(.8);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes fpscan { 0%{top:-2px;opacity:0} 6%{opacity:1} 50%{top:calc(100% + 2px);opacity:1} 56%{opacity:0} 100%{top:-2px;opacity:0} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+@keyframes ell { 0%,70%,100%{opacity:0} 35%{opacity:1} }
