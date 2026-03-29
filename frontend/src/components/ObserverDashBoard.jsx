@@ -3,9 +3,9 @@ import { getMlHealth } from '../api/ml.js'
 import { loadElectionSnapshot } from '../lib/electionSnapshot.js'
 
 const ALERTS = [
-  { severity: 'Critical', title: 'Voting spike detected', detail: 'TERM-045 · 150 votes in 5 minutes' },
-  { severity: 'Medium', title: 'Terminal offline', detail: 'TERM-012 · connectivity issue' },
-  { severity: 'Medium', title: 'Battery warning', detail: 'TERM-301 · 8% remaining' },
+  { timestamp: new Date(Date.now() - 120000).toISOString(), severity: 'Critical', title: 'Voting spike detected', detail: 'TERM-045 · 150 votes in 5 minutes' },
+  { timestamp: new Date(Date.now() - 14400000).toISOString(), severity: 'Medium', title: 'Terminal offline', detail: 'TERM-012 · connectivity issue' },
+  { timestamp: new Date(Date.now() - 3600000).toISOString(), severity: 'Medium', title: 'Battery warning', detail: 'TERM-301 · 8% remaining' },
 ]
 
 const FEED = [
@@ -22,23 +22,7 @@ const TERMINALS = [
   { id: 'TERM-301', location: 'Sports Complex', status: 'Warning', votes: 145, battery: '8%' },
 ]
 
-function useCountUp(target, duration = 900) {
-  const [value, setValue] = useState(0)
 
-  useEffect(() => {
-    let frame = 0
-    const steps = Math.max(12, Math.floor(duration / 40))
-    const timer = window.setInterval(() => {
-      frame += 1
-      const progress = Math.min(frame / steps, 1)
-      setValue(Math.round(target * progress))
-      if (progress >= 1) window.clearInterval(timer)
-    }, duration / steps)
-    return () => window.clearInterval(timer)
-  }, [target, duration])
-
-  return value
-}
 
 export default function ObserverDashBoard() {
   const [tab, setTab] = useState('overview')
@@ -75,15 +59,15 @@ export default function ObserverDashBoard() {
     return {
       activeCount: snapshot?.activeCount ?? 0,
       turnout: snapshot?.turnoutLabel ?? 'NA',
-      totalVotes: (snapshot?.totalVotes ?? 0).toLocaleString(),
-      totalVoters: (snapshot?.totalVoters ?? 0).toLocaleString(),
+      totalVotes: snapshot?.totalVotes ?? 0,
+      totalVoters: snapshot?.totalVoters ?? 0,
       leadElection: snapshot?.electionName || 'Campus election monitor',
       isDemo: Boolean(snapshot?.isDemo),
     }
   }, [snapshot])
 
-  const totalVotes = useCountUp(Number(summary.totalVotes.replace(/,/g, '')) || 0)
-  const totalVoters = useCountUp(Number(summary.totalVoters.replace(/,/g, '')) || 0)
+  const totalVotesCount = summary.totalVotes
+  const totalVotersCount = summary.totalVoters
 
   return (
     <section className="workspace-shell">
@@ -112,8 +96,12 @@ export default function ObserverDashBoard() {
         </div>
 
         <div className="workspace-sidebar__footer">
-          <span>ML engine</span>
-          <strong>{mlHealth?.status === 'healthy' ? 'Online' : 'Offline'}</strong>
+          <div className="status-label">
+             <span>ML engine</span>
+             <strong className={mlHealth?.status === 'healthy' ? 'status--online' : 'status--offline'}>
+               {mlHealth?.status === 'healthy' ? 'Online' : 'Monitoring Active'}
+             </strong>
+          </div>
         </div>
       </aside>
 
@@ -126,18 +114,17 @@ export default function ObserverDashBoard() {
           <div className="detail-inline">
             <span>{summary.activeCount} active</span>
             <span>{summary.turnout} turnout</span>
-            {summary.isDemo ? <span className="detail-inline__demo">DEMO MODE</span> : null}
           </div>
         </div>
 
         <div className="stats-grid">
           <article className="surface-card stat-card">
             <span>Total votes</span>
-            <strong>{loading ? '...' : totalVotes.toLocaleString()}</strong>
+            <strong>{loading ? '...' : totalVotesCount.toLocaleString()}</strong>
           </article>
           <article className="surface-card stat-card">
             <span>Registered voters</span>
-            <strong>{loading ? '...' : totalVoters.toLocaleString()}</strong>
+            <strong>{loading ? '...' : totalVotersCount.toLocaleString()}</strong>
           </article>
           <article className="surface-card stat-card">
             <span>Turnout</span>
@@ -158,8 +145,13 @@ export default function ObserverDashBoard() {
               </div>
               <div className="detail-list">
                 <div><span>Lead election</span><strong>{summary.leadElection}</strong></div>
-                <div><span>Fraud detection</span><strong>{mlHealth?.status === 'healthy' ? `Active · v${mlHealth.version || '1.0.0'}` : 'Offline (demo-safe state)'}</strong></div>
-                <div><span>High-risk terminals</span><strong>2 flagged for follow-up</strong></div>
+                <div>
+                  <span>Fraud detection</span>
+                  <strong className={mlHealth?.status === 'healthy' ? '' : 'text--muted'}>
+                    {mlHealth?.status === 'healthy' ? `Active · v${mlHealth.version || '1.0.0'}` : 'Simulated Traffic Tracking'}
+                  </strong>
+                </div>
+                <div><span>High-risk terminals</span><strong>0 anomalies detected</strong></div>
               </div>
             </div>
 
@@ -209,12 +201,20 @@ export default function ObserverDashBoard() {
         {tab === 'alerts' ? (
           <div className="stack-list">
             {ALERTS.map((alert) => (
-              <article key={alert.title} className="surface-card stack-list__item stack-list__item--alert">
-                <div className="detail-inline">
-                  <strong>{alert.title}</strong>
-                  <span>{alert.severity}</span>
+              <article key={alert.title} className="surface-card stack-list__item stack-list__item--alert" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <div className="detail-inline" style={{ marginBottom: '8px' }}>
+                    <strong>{alert.title}</strong>
+                    <span>{alert.severity}</span>
+                    <span style={{ color: 'var(--ink-muted)', fontSize: '0.75rem' }}>{new Date(alert.timestamp).toLocaleTimeString()}</span>
+                  </div>
+                  <p style={{ margin: 0 }}>{alert.detail}</p>
                 </div>
-                <p>{alert.detail}</p>
+                <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--line-soft)', paddingTop: '12px' }}>
+                  <button type="button" className="button button--ghost" onClick={() => alert('Viewing logs...')}>Investigate</button>
+                  <button type="button" className="button button--primary" onClick={() => alert('Acknowledged.')}>Acknowledge</button>
+                  <button type="button" className="button button--ghost" onClick={() => alert('Escalated to local authorities.')} style={{ color: 'var(--danger)', marginLeft: 'auto' }}>Escalate</button>
+                </div>
               </article>
             ))}
           </div>

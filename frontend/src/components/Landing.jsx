@@ -2,44 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loadElectionSnapshot } from '../lib/electionSnapshot.js'
 
-const ROLES = [
-  { id: 'voter', label: 'Cast your vote', path: '/app/voter' },
-  { id: 'candidate', label: 'Manage candidacy', path: '/app/candidate' },
-  { id: 'observer', label: 'Monitor live status', path: '/app/observer' },
-  { id: 'admin', label: 'Run election ops', path: '/app/dashboard' },
-]
-
-const ROLE_CARDS = [
-  {
-    id: 'voter',
-    title: 'Voter Terminal',
-    body: 'Cast your ballot with biometric check-in and instant receipt verification.',
-    cta: 'Go to my ballot',
-    path: '/app/voter',
-    duration: 'Takes about 2 minutes',
-    status: 'Polls open until 6:00 PM today',
-    large: true,
-  },
-  {
-    id: 'observer',
-    title: 'Observer Desk',
-    body: 'Watch turnout, alerts, and vote flow as polling continues.',
-    cta: 'Watch live results',
-    path: '/app/observer',
-    duration: 'Live view',
-    status: 'Election in progress',
-  },
-  {
-    id: 'admin',
-    title: 'Admin Workspace',
-    body: 'Manage terminals, candidate records, and closeout decisions.',
-    cta: 'Manage this election',
-    path: '/app/dashboard',
-    duration: 'Restricted access',
-    status: 'Ops controls',
-  },
-]
-
 export default function Landing() {
   const navigate = useNavigate()
   const [snapshot, setSnapshot] = useState(null)
@@ -52,39 +14,23 @@ export default function Landing() {
     return () => { mounted = false }
   }, [])
 
+  const isLoading = !snapshot
   const terminalsActive = snapshot?.terminalsActive ?? 0
   const totalVotes = snapshot?.totalVotes ?? 0
   const closesInText = snapshot?.closesInLabel || 'Closes soon'
   const electionName = snapshot?.electionName || 'Student council election'
-  const demoMode = snapshot?.isDemo
 
   return (
     <section className="landing-page">
       <div className="landing-hero">
         <div className="landing-hero__copy">
-          <p className="section-kicker">Campus election portal</p>
-          <h1>Run your campus election with confidence.</h1>
+          <p className="section-kicker">Student Council Election 2026</p>
+          <h1>Run your campus election with absolute integrity.</h1>
           <p className="landing-hero__lede">
-            From voter check-in to certified results, every step stays fast, transparent, and easy to manage.
+            Your vote is anonymous, instant, and permanently verifiable. It takes 2 minutes.
           </p>
 
-          <div className="landing-task-chips">
-            <span>You are here to:</span>
-            <div className="task-chip-row">
-              {ROLES.map((role) => (
-                <button
-                  key={role.id}
-                  type="button"
-                  className={`task-chip${role.id === 'admin' ? ' task-chip--muted' : ''}`}
-                  onClick={() => navigate(role.path)}
-                >
-                  {role.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="landing-hero__actions">
+          <div className="landing-hero__actions" style={{ marginTop: '24px' }}>
             <button type="button" className="button button--primary" onClick={() => navigate('/app/voter')}>
               Go to my ballot
             </button>
@@ -97,26 +43,42 @@ export default function Landing() {
         <div className="landing-hero__panel">
           <div className="hero-panel__header">
             <span className="section-kicker">Status</span>
-            <span className="hero-panel__badge">{electionName}</span>
+            {isLoading ? (
+              <span className="hero-panel__badge" style={{ color: 'transparent', background: 'var(--line-soft)', width: '150px' }}>Loading...</span>
+            ) : (
+              <span className="hero-panel__badge">{electionName}</span>
+            )}
           </div>
 
           <div className="status-strip">
             <span className="status-dot" />
-            Election live - {closesInText} - Polls open now - {totalVotes.toLocaleString()} votes cast
+            {isLoading ? 'Fetching live election status...' : `Election live - ${closesInText} - Polls open now - ${totalVotes.toLocaleString()} votes cast`}
           </div>
 
           <div className="hero-panel__rail hero-panel__rail--system">
             <div>
               <span>Terminals active</span>
-              <strong>{terminalsActive} terminals</strong>
+              {isLoading ? (
+                <strong style={{ width: '80px', height: '24px', background: 'var(--line-strong)', borderRadius: '4px', display: 'inline-block' }} />
+              ) : (
+                <strong>{terminalsActive} terminals</strong>
+              )}
             </div>
             <div>
               <span>Votes cast</span>
-              <strong>{totalVotes.toLocaleString()} ballots</strong>
+              {isLoading ? (
+                <strong style={{ width: '120px', height: '24px', background: 'var(--line-strong)', borderRadius: '4px', display: 'inline-block' }} />
+              ) : (
+                <strong>{totalVotes.toLocaleString()} ballots</strong>
+              )}
             </div>
             <div>
               <span>Last ballot</span>
-              <strong>3 minutes ago</strong>
+              {isLoading ? (
+                <strong style={{ width: '90px', height: '24px', background: 'var(--line-strong)', borderRadius: '4px', display: 'inline-block' }} />
+              ) : (
+                <strong>3 minutes ago</strong>
+              )}
             </div>
           </div>
 
@@ -125,38 +87,25 @@ export default function Landing() {
               <span className="operator-pill__dot" />
               Fraud monitoring: Healthy <span className="status-cursor" />
             </span>
-            <span className="operator-pill">Verification path: Biometric plus blockchain</span>
-            {demoMode ? <span className="operator-pill operator-pill--demo">DEMO MODE</span> : null}
           </div>
         </div>
       </div>
-
-      <div className="landing-section">
-        <div className="section-heading">
-          <p className="section-kicker">Role workspaces</p>
-          <h2>Pick the space that matches your role.</h2>
+      
+      <div className="surface-card" style={{ maxWidth: '800px', margin: '0 auto', width: '100%', padding: '32px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <span style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--ink)' }}>Live Turnout</span>
+            <span style={{ fontWeight: 600, fontSize: '1.05rem', color: 'var(--brand)' }}>{(totalVotes / 4230 * 100).toFixed(1)}%</span>
         </div>
-
-        <div className="role-grid">
-          {ROLE_CARDS.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={`role-card${item.large ? ' role-card--primary' : ''}${item.id === 'admin' ? ' role-card--admin' : ''}`}
-              onClick={() => navigate(item.path)}
-            >
-              <span className="role-card__label">{item.title}</span>
-              <p>{item.body}</p>
-              <div className="role-card__meta">
-                <span className="role-dot" />
-                {item.status}
-              </div>
-              <div className="role-card__meta role-card__meta--muted">{item.duration}</div>
-              <span className="role-card__cta">{item.cta}</span>
-            </button>
-          ))}
+        <div style={{ height: '16px', background: 'var(--line-soft)', borderRadius: '999px', overflow: 'hidden', marginBottom: '16px' }}>
+            <div style={{ width: `${(totalVotes / 4230 * 100)}%`, height: '100%', background: 'var(--brand)', borderRadius: '999px', transition: 'width 1s ease-out' }}></div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--ink-muted)', fontSize: '0.9rem' }}>
+            <span>{totalVotes.toLocaleString()} of 4,230 classmates have voted</span>
+            <span>Polls close in 4h 22m</span>
         </div>
       </div>
+
+
     </section>
   )
 }

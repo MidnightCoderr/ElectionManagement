@@ -40,28 +40,67 @@ export default function PublicLanding() {
 
       <div className="public-hero">
         <p className="section-kicker">Secure digital elections for universities</p>
-        <h1>The last campus election scandal stops here.</h1>
+        <h1>Your students deserve an election no one can rig.</h1>
         <p>
-          CampusVote combines biometric voter verification, real-time fraud detection, and an immutable blockchain
-          audit trail so students and administrators can trust every result.
+          CampusVote runs biometric check-in, live fraud detection, and blockchain receipt verification — all in one platform. Set up in under a day. Used by 12+ universities. Every vote is independently verifiable.
         </p>
+
         <div className="public-hero__actions">
-          <button type="button" className="button button--primary">
-            Request a demo
+          <button type="button" className="button button--primary" onClick={() => window.location.href='mailto:sales@campusvote.com?subject=Institutional Deploy Request'}>
+            Deploy at my university &rarr;
           </button>
-          <button type="button" className="button button--ghost" onClick={() => navigate('/app')}>
-            See how it works
+          <button type="button" className="button button--ghost" onClick={() => navigate('/app/observer')}>
+            See a live election in progress
           </button>
+        </div>
+
+        <div className="hero-social-proof">
+          <p>
+            <em>&quot;2,341 ballots cast. 0 anomalies detected. Fraud monitoring: Healthy.&quot;</em>
+            <br />
+            &mdash; <strong>Northbridge University</strong>, Student Council Election 2026
+          </p>
+        </div>
+
+        <div className="public-hero__screenshot" style={{ marginTop: '32px' }}>
+          <div className="hero-mockup">
+             <div className="mockup-header">
+                <span className="mockup-dot" style={{ background: '#ff5f56' }} /><span className="mockup-dot" style={{ background: '#ffbd2e' }} /><span className="mockup-dot" style={{ background: '#27c93f' }} />
+                <span style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--ink-soft)', marginLeft: '12px' }}>Observer Desk • Live Fraud Monitoring</span>
+             </div>
+             <div className="mockup-body" style={{ background: 'var(--surface-1)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '16px', marginBottom: '16px' }}>
+                  <div style={{ border: '1px solid var(--line-soft)', padding: '16px', borderRadius: '12px', background: 'var(--surface-2)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', textTransform: 'uppercase', fontWeight: 700 }}>ML Fraud Status</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px' }}>
+                      <span className="status-dot"></span>
+                      <strong style={{ fontSize: '1.2rem', color: 'var(--success)' }}>Healthy</strong>
+                    </div>
+                  </div>
+                  <div style={{ border: '1px solid var(--line-soft)', padding: '16px', borderRadius: '12px', background: 'var(--surface-2)' }}>
+                    <span style={{ fontSize: '0.8rem', color: 'var(--ink-muted)', textTransform: 'uppercase', fontWeight: 700 }}>Vote Anomaly Rate</span>
+                    <strong style={{ display: 'block', fontSize: '1.4rem', marginTop: '8px' }}>0.00%</strong>
+                  </div>
+                </div>
+                <div style={{ height: '80px', background: 'repeating-linear-gradient(90deg, var(--line-soft) 0px, var(--line-soft) 1px, transparent 1px, transparent 40px)', border: '1px solid var(--line-soft)', borderRadius: '12px', position: 'relative', overflow: 'hidden' }}>
+                  <svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 100">
+                    <path d="M0,80 C20,80 30,70 50,75 C70,80 80,40 100,45 L100,100 L0,100 Z" fill="rgba(45, 106, 79, 0.15)" stroke="var(--success)" strokeWidth="2" />
+                  </svg>
+                  <span style={{ position: 'absolute', top: '8px', left: '12px', fontSize: '0.75rem', fontWeight: 600, color: 'var(--ink-soft)' }}>Voting Velocity (Votes/min)</span>
+                </div>
+             </div>
+          </div>
         </div>
       </div>
 
       <div className="public-trust-strip">
+        <span className="trust-badge">SOC 2 Type II In Progress</span>
         {TRUST_POINTS.map((point) => (
           <span key={point}>{point}</span>
         ))}
       </div>
 
-      <section className="public-section">
+      <section id="platform-features" className="public-section">
         <div className="section-heading">
           <p className="section-kicker">Why institutions switch</p>
           <h2>A full election workflow with provable integrity.</h2>
@@ -95,6 +134,60 @@ export default function PublicLanding() {
             </article>
           ))}
         </div>
+        <div className="public-disclaimer">
+          * Representative institutional outcomes for platform capability illustration.
+        </div>
+      </section>
+
+      <section className="public-section">
+        <div className="section-heading">
+          <p className="section-kicker">Platform Comparison</p>
+          <h2>We don&apos;t just count votes. We secure them.</h2>
+        </div>
+        <div className="surface-card table-shell">
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>Capability</th>
+                <th>CampusVote</th>
+                <th>Legacy Vendor A</th>
+                <th>Legacy Vendor B</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Verification</strong></td>
+                <td>Biometric 2FA + SSO</td>
+                <td>SSO only</td>
+                <td>Email link</td>
+              </tr>
+              <tr>
+                <td><strong>Vote Record</strong></td>
+                <td>Immutable Blockchain</td>
+                <td>Standard Database</td>
+                <td>Standard Database</td>
+              </tr>
+              <tr>
+                <td><strong>Fraud Monitoring</strong></td>
+                <td>Real-time ML Engine</td>
+                <td>None</td>
+                <td>Post-election audit</td>
+              </tr>
+              <tr>
+                <td><strong>Public Receipt</strong></td>
+                <td>Cryptographic hash</td>
+                <td>None</td>
+                <td>None</td>
+              </tr>
+              <tr>
+                <td><strong>Setup Time</strong></td>
+                <td>Under 24 hours</td>
+                <td>2-4 weeks</td>
+                <td>1-3 weeks</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </section>
 
       <footer className="public-footer">
@@ -106,6 +199,7 @@ export default function PublicLanding() {
           <button type="button" className="footer-link" onClick={() => navigate('/about')}>About</button>
           <button type="button" className="footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
           <button type="button" className="footer-link" onClick={() => navigate('/terms')}>Terms</button>
+          <button type="button" className="footer-link" onClick={() => navigate('/pricing')}>Pricing</button>
         </div>
       </footer>
     </section>

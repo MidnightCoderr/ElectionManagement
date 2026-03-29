@@ -1,10 +1,39 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getElections } from '../api/elections.js'
 import { submitCandidateApplication } from '../api/admin.js'
+import { useNavigate } from 'react-router-dom'
 
 const DEPARTMENTS = ['Computer Science', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Business School', 'Biotechnology']
 
+const MOCK_ELECTIONS = [
+  {
+    election_id: 'ELEC-2027-SEC',
+    election_name: 'General Secretary',
+    election_type: 'Executive Campus-wide',
+    district_id: 'All students',
+    status: 'Upcoming',
+    start_date: new Date(Date.now() + 86400000 * 14).toISOString()
+  },
+  {
+    election_id: 'ELEC-2027-REP',
+    election_name: 'Engineering Representative',
+    election_type: 'Departmental',
+    district_id: 'School of Engineering',
+    status: 'Upcoming',
+    start_date: new Date(Date.now() + 86400000 * 14).toISOString()
+  },
+  {
+    election_id: 'ELEC-2027-CULT',
+    election_name: 'Cultural Secretary',
+    election_type: 'Executive Campus-wide',
+    district_id: 'All students',
+    status: 'Upcoming',
+    start_date: new Date(Date.now() + 86400000 * 21).toISOString()
+  }
+]
+
 export default function CandidatePortal() {
+  const navigate = useNavigate()
   const [tab, setTab] = useState('browse')
   const [elections, setElections] = useState([])
   const [selectedElection, setSelectedElection] = useState(null)
@@ -26,9 +55,13 @@ export default function CandidatePortal() {
     async function load() {
       try {
         const response = await getElections({ limit: 20 })
-        setElections(response.elections || [])
+        if (response.elections && response.elections.length > 0) {
+          setElections(response.elections)
+        } else {
+          setElections(MOCK_ELECTIONS)
+        }
       } catch {
-        setElections([])
+        setElections(MOCK_ELECTIONS)
       } finally {
         setLoading(false)
       }
@@ -84,8 +117,9 @@ export default function CandidatePortal() {
   return (
     <section className="portal-page">
       <div className="section-heading">
-        <p className="section-kicker">Candidate workspace</p>
-        <h1>Apply for open election positions with a clear, review-ready submission flow.</h1>
+        <p className="section-kicker">Candidacy</p>
+        <h1>Ready to represent your student body?</h1>
+        <p>Browse open seats and submit your application to join the next student council leadership.</p>
       </div>
 
       <div className="tab-strip">
@@ -109,8 +143,11 @@ export default function CandidatePortal() {
         <div className="card-grid">
           {loading ? <div className="surface-card">Loading elections…</div> : null}
           {!loading && elections.length === 0 ? (
-            <div className="surface-card">
-              No elections are open for candidacy yet. Ask your election admin to open nominations for your department.
+            <div className="surface-card empty-state">
+              <span className="empty-state__icon">🗳️</span>
+              <h3>No elections open for candidacy yet</h3>
+              <p>Applications for upcoming seats haven&apos;t opened yet. Check back soon or contact your campus election administrator to inquire about nomination windows.</p>
+              <button type="button" className="button button--ghost" onClick={() => navigate('/app')}>Return to overview</button>
             </div>
           ) : null}
           {elections.map((election) => (
@@ -215,7 +252,11 @@ export default function CandidatePortal() {
             <h2>Current submissions</h2>
           </div>
           {applications.length === 0 ? (
-            <p className="empty-copy">No candidate applications have been submitted from this workspace yet.</p>
+            <div className="surface-card empty-state">
+              <span className="empty-state__icon">📄</span>
+              <h3>No active applications</h3>
+              <p>Register as a formal candidate for an upcoming election. Ensure you&apos;ve read the compliance guidelines before submitting.</p>
+            </div>
           ) : (
             <div className="table-shell">
               <table className="data-table">

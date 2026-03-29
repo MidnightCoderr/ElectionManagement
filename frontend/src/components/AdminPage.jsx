@@ -22,10 +22,10 @@ function AdminLogin({ onLogin, error }) {
   return (
     <section className="portal-page portal-page--split">
       <div className="surface-card portal-aside">
-        <p className="section-kicker">Administrative access</p>
-        <h1>Operate elections from a single institutional workspace.</h1>
+        <p className="section-kicker">Admin Workspace</p>
+        <h1>Institutional oversight made simple.</h1>
         <p>
-          Manage elections, supervise readiness, inspect voter data, and coordinate live results with a tighter, more professional admin interface.
+          Configure your campus elections, manage departments, and supervise live operational health from a secure command center.
         </p>
       </div>
 
@@ -155,7 +155,7 @@ export default function AdminPage() {
       <div className="workspace-main">
         <div className="workspace-header">
           <div>
-            <p className="section-kicker">Election administration</p>
+            <p className="section-kicker">Command Center</p>
             <h1>Operational control center</h1>
           </div>
           <div className="detail-inline">

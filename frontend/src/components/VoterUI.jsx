@@ -11,17 +11,17 @@ const LOCALES = [
 
 const COPY = {
   en: {
-    welcome: 'Ready to vote',
-    intro: 'Use the campus terminal flow from one consolidated frontend.',
+    welcome: 'It takes 2 minutes. Your vote is anonymous. Your receipt is permanent.',
+    intro: "Tap below to verify your identity with a quick biometric scan — then cast your ballot. You'll get a unique receipt you can verify anytime, forever.",
     start: 'Start biometric scan',
     scanning: 'Scanning fingerprint',
-    scanHint: 'Place your finger firmly on the sensor.',
+    scanHint: 'Place your finger firmly on the sensor. Your biometric data is never stored; we generate a one-time cryptographic hash for privacy.',
     verified: 'Identity verified',
     continue: 'Start voting',
     choose: 'Choose your candidate',
     change: 'Change choice',
     confirm: 'Confirm your vote',
-    casting: 'Recording vote on blockchain',
+    casting: 'Securing vote on the blockchain',
     receipt: 'Vote recorded',
     done: 'Finish',
     back: 'Back',
@@ -358,11 +358,13 @@ export default function VoterUI() {
       </header>
 
       <div className="terminal-progressbar">
-        {Array.from({ length: 6 }, (_, index) => (
-          <span
-            key={index + 1}
-            className={`terminal-progressdot${index + 1 === stepIndex ? ' current' : ''}${index + 1 < stepIndex ? ' done' : ''}`}
-          />
+        {['Welcome', 'Verify', 'Identity', 'Select', 'Review', 'Receipt'].map((label, index) => (
+          <div key={index + 1} className="terminal-progress-step">
+            <span
+              className={`terminal-progressdot${index + 1 === stepIndex ? ' current' : ''}${index + 1 < stepIndex ? ' done' : ''}`}
+            />
+            <span className={`terminal-progresslabel${index + 1 === stepIndex ? ' current' : ''}`}>{label}</span>
+          </div>
         ))}
       </div>
 
@@ -410,7 +412,7 @@ export default function VoterUI() {
             <h2>{state.voter?.fullName}</h2>
             <p>{state.voter?.districtId}</p>
             {state.voter?.hasVoted ? (
-              <div className="terminal-alert error">This voter has already cast a ballot.</div>
+              <div className="terminal-alert error">You have already cast a ballot in this election.</div>
             ) : (
               <button
                 type="button"
@@ -632,6 +634,26 @@ const styles = `
 
   .terminal-progressdot.current {
     background: #4f46e5;
+  }
+
+  .terminal-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    gap: 8px;
+    max-width: 90px;
+  }
+
+  .terminal-progresslabel {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: rgba(148, 163, 184, 0.8);
+    text-align: center;
+  }
+
+  .terminal-progresslabel.current {
+    color: #4f46e5;
   }
 
   .terminal-content {

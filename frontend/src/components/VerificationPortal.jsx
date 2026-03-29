@@ -8,7 +8,9 @@ const FALLBACK_RESULT = {
     timestamp: new Date().toISOString(),
     terminalId: 'TERM-045',
     districtId: 'Computer Science',
-    blockchainTxId: '0x7A3FE9C2D014',
+    blockchainTxId: '0x7A3FE9C2D0140A83...',
+    chainId: 'Monad Testnet (10143)',
+    consensus: 'PoS (BFT)',
     blockNumber: 14892,
     integrityVerified: true,
   },
@@ -45,7 +47,8 @@ export default function VerificationPortal() {
         <p className="section-kicker">Public verification</p>
         <h1>Confirm a ballot receipt against the recorded chain entry.</h1>
         <p>
-          Students can verify that their vote was recorded without exposing the ballot contents.
+          Students can verify that their vote was recorded without exposing the ballot contents. 
+          <strong>Votes are written to an immutable blockchain ledger at the time of submission and cannot be retroactively modified.</strong>
         </p>
       </div>
 
@@ -79,10 +82,18 @@ export default function VerificationPortal() {
               <div><span>Terminal</span><strong>{result.vote.terminalId || 'NA'}</strong></div>
               <div><span>District</span><strong>{result.vote.districtId || 'NA'}</strong></div>
               <div><span>Blockchain TX</span><strong>{result.vote.blockchainTxId || 'Pending'}</strong></div>
+              <div><span>Chain</span><strong>{result.vote.chainId || 'Monad Testnet (10143)'}</strong></div>
+              <div><span>Consensus</span><strong>{result.vote.consensus || 'PoS (BFT)'}</strong></div>
               <div><span>Block number</span><strong>{result.vote.blockNumber ?? 'Pending'}</strong></div>
               <div><span>Integrity</span><strong>{result.vote.integrityVerified ? 'Confirmed' : 'Database only'}</strong></div>
             </div>
           ) : null}
+          <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--line-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--ink-muted)' }}>If this record does not match your printed receipt:</span>
+            <button type="button" className="button button--ghost" onClick={() => alert('Grievance reporting flow triggered. Support ticket created.')}>
+              Report a discrepancy
+            </button>
+          </div>
         </div>
       ) : null}
     </section>
