@@ -331,6 +331,118 @@ a {
   padding: 28px 0 48px;
 }
 
+.public-page {
+  width: var(--content-width);
+  margin: 0 auto;
+  padding: 28px 0 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.public-topbar {
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--line-soft);
+  padding-bottom: 12px;
+}
+
+.public-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.public-hero {
+  background: var(--surface-1);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--em-shadow-md);
+  padding: 34px;
+}
+
+.public-hero h1 {
+  font-family: var(--em-font-serif);
+  font-size: clamp(2rem, 3.5vw, 3.1rem);
+  line-height: 1.06;
+  margin: 10px 0 0;
+  letter-spacing: -0.03em;
+}
+
+.public-hero p {
+  color: var(--ink-muted);
+  max-width: 70ch;
+}
+
+.public-hero__actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.public-trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.public-trust-strip span {
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  background: var(--surface-2);
+}
+
+.public-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.public-footer {
+  margin-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.public-footer strong {
+  display: block;
+}
+
+.public-footer span {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+}
+
+.public-footer__links {
+  display: flex;
+  gap: 10px;
+}
+
+.footer-link {
+  border: none;
+  background: transparent;
+  color: var(--ink-muted);
+  font-size: 0.86rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.legal-page {
+  width: min(900px, calc(100vw - 24px));
+  margin: 26px auto;
+}
+
 .landing-page,
 .portal-page {
   display: flex;
@@ -682,6 +794,13 @@ a {
   background: var(--surface-2);
 }
 
+.operator-pill--demo {
+  color: #9a5f03;
+  background: rgba(212, 130, 10, 0.12);
+  border-color: rgba(212, 130, 10, 0.35);
+  font-weight: 700;
+}
+
 .operator-pill__dot {
   display: inline-block;
   width: 7px;
@@ -689,6 +808,11 @@ a {
   border-radius: 999px;
   background: var(--success);
   margin-right: 6px;
+}
+
+.detail-inline__demo {
+  color: #9a5f03;
+  background: rgba(212, 130, 10, 0.12) !important;
 }
 
 .election-board {

@@ -74,7 +74,7 @@ export default function CreateAccount() {
               <button type="button" className="button button--ghost" onClick={() => navigate('/')}>
                 Back to home
               </button>
-              <button type="button" className="button button--primary" onClick={() => navigate('/voter')}>
+              <button type="button" className="button button--primary" onClick={() => navigate('/app/voter')}>
                 Open voter terminal
               </button>
             </div>

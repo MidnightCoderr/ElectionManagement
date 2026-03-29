@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getElections } from '../api/elections.js'
 import { getMlHealth } from '../api/ml.js'
+import { loadElectionSnapshot } from '../lib/electionSnapshot.js'
 
 const ALERTS = [
   { severity: 'Critical', title: 'Voting spike detected', detail: 'TERM-045 · 150 votes in 5 minutes' },
@@ -42,20 +42,20 @@ function useCountUp(target, duration = 900) {
 
 export default function ObserverDashBoard() {
   const [tab, setTab] = useState('overview')
-  const [elections, setElections] = useState([])
+  const [snapshot, setSnapshot] = useState(null)
   const [mlHealth, setMlHealth] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       try {
-        const [electionResponse, mlResponse] = await Promise.allSettled([
-          getElections({ limit: 10 }),
+        const [snapshotResponse, mlResponse] = await Promise.allSettled([
+          loadElectionSnapshot(),
           getMlHealth(),
         ])
 
-        if (electionResponse.status === 'fulfilled') {
-          setElections(electionResponse.value.elections || [])
+        if (snapshotResponse.status === 'fulfilled') {
+          setSnapshot(snapshotResponse.value)
         }
 
         if (mlResponse.status === 'fulfilled') {
@@ -72,18 +72,15 @@ export default function ObserverDashBoard() {
   }, [])
 
   const summary = useMemo(() => {
-    const active = elections.filter((election) => election.status === 'active')
-    const totalVotes = elections.reduce((sum, election) => sum + (election.total_votes_cast || 0), 0)
-    const totalVoters = elections.reduce((sum, election) => sum + (election.total_voters || 0), 0)
-
     return {
-      activeCount: active.length,
-      turnout: totalVoters ? `${((totalVotes / totalVoters) * 100).toFixed(1)}%` : 'NA',
-      totalVotes: totalVotes.toLocaleString(),
-      totalVoters: totalVoters.toLocaleString(),
-      leadElection: active[0]?.election_name || 'Campus election monitor',
+      activeCount: snapshot?.activeCount ?? 0,
+      turnout: snapshot?.turnoutLabel ?? 'NA',
+      totalVotes: (snapshot?.totalVotes ?? 0).toLocaleString(),
+      totalVoters: (snapshot?.totalVoters ?? 0).toLocaleString(),
+      leadElection: snapshot?.electionName || 'Campus election monitor',
+      isDemo: Boolean(snapshot?.isDemo),
     }
-  }, [elections])
+  }, [snapshot])
 
   const totalVotes = useCountUp(Number(summary.totalVotes.replace(/,/g, '')) || 0)
   const totalVoters = useCountUp(Number(summary.totalVoters.replace(/,/g, '')) || 0)
@@ -129,6 +126,7 @@ export default function ObserverDashBoard() {
           <div className="detail-inline">
             <span>{summary.activeCount} active</span>
             <span>{summary.turnout} turnout</span>
+            {summary.isDemo ? <span className="detail-inline__demo">DEMO MODE</span> : null}
           </div>
         </div>
 
@@ -160,7 +158,7 @@ export default function ObserverDashBoard() {
               </div>
               <div className="detail-list">
                 <div><span>Lead election</span><strong>{summary.leadElection}</strong></div>
-                <div><span>Fraud detection</span><strong>{mlHealth?.status === 'healthy' ? `Healthy · v${mlHealth.version || '1.0.0'}` : 'Service offline'}</strong></div>
+                <div><span>Fraud detection</span><strong>{mlHealth?.status === 'healthy' ? `Active · v${mlHealth.version || '1.0.0'}` : 'Offline (demo-safe state)'}</strong></div>
                 <div><span>High-risk terminals</span><strong>2 flagged for follow-up</strong></div>
               </div>
             </div>

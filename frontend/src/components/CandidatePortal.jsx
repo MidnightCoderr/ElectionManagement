@@ -108,7 +108,11 @@ export default function CandidatePortal() {
       {tab === 'browse' ? (
         <div className="card-grid">
           {loading ? <div className="surface-card">Loading elections…</div> : null}
-          {!loading && elections.length === 0 ? <div className="surface-card">No active or upcoming elections are available.</div> : null}
+          {!loading && elections.length === 0 ? (
+            <div className="surface-card">
+              No elections are open for candidacy yet. Ask your election admin to open nominations for your department.
+            </div>
+          ) : null}
           {elections.map((election) => (
             <article key={election.election_id} className="product-card product-card--static">
               <span className="product-card__label">{election.election_name}</span>

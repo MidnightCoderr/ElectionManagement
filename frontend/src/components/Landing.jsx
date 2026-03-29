@@ -1,11 +1,12 @@
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { loadElectionSnapshot } from '../lib/electionSnapshot.js'
 
 const ROLES = [
-  { id: 'voter', label: 'Cast your vote', path: '/voter' },
-  { id: 'candidate', label: 'Manage candidacy', path: '/candidate' },
-  { id: 'observer', label: 'Monitor live status', path: '/observer' },
-  { id: 'admin', label: 'Run election ops', path: '/dashboard' },
+  { id: 'voter', label: 'Cast your vote', path: '/app/voter' },
+  { id: 'candidate', label: 'Manage candidacy', path: '/app/candidate' },
+  { id: 'observer', label: 'Monitor live status', path: '/app/observer' },
+  { id: 'admin', label: 'Run election ops', path: '/app/dashboard' },
 ]
 
 const ROLE_CARDS = [
@@ -14,7 +15,7 @@ const ROLE_CARDS = [
     title: 'Voter Terminal',
     body: 'Cast your ballot with biometric check-in and instant receipt verification.',
     cta: 'Go to my ballot',
-    path: '/voter',
+    path: '/app/voter',
     duration: 'Takes about 2 minutes',
     status: 'Polls open until 6:00 PM today',
     large: true,
@@ -24,7 +25,7 @@ const ROLE_CARDS = [
     title: 'Observer Desk',
     body: 'Watch turnout, alerts, and vote flow as polling continues.',
     cta: 'Watch live results',
-    path: '/observer',
+    path: '/app/observer',
     duration: 'Live view',
     status: 'Election in progress',
   },
@@ -33,7 +34,7 @@ const ROLE_CARDS = [
     title: 'Admin Workspace',
     body: 'Manage terminals, candidate records, and closeout decisions.',
     cta: 'Manage this election',
-    path: '/dashboard',
+    path: '/app/dashboard',
     duration: 'Restricted access',
     status: 'Ops controls',
   },
@@ -41,7 +42,21 @@ const ROLE_CARDS = [
 
 export default function Landing() {
   const navigate = useNavigate()
-  const closesInText = useMemo(() => 'Closes in 4h 22m', [])
+  const [snapshot, setSnapshot] = useState(null)
+
+  useEffect(() => {
+    let mounted = true
+    loadElectionSnapshot().then((data) => {
+      if (mounted) setSnapshot(data)
+    })
+    return () => { mounted = false }
+  }, [])
+
+  const terminalsActive = snapshot?.terminalsActive ?? 0
+  const totalVotes = snapshot?.totalVotes ?? 0
+  const closesInText = snapshot?.closesInLabel || 'Closes soon'
+  const electionName = snapshot?.electionName || 'Student council election'
+  const demoMode = snapshot?.isDemo
 
   return (
     <section className="landing-page">
@@ -70,10 +85,10 @@ export default function Landing() {
           </div>
 
           <div className="landing-hero__actions">
-            <button type="button" className="button button--primary" onClick={() => navigate('/voter')}>
+            <button type="button" className="button button--primary" onClick={() => navigate('/app/voter')}>
               Go to my ballot
             </button>
-            <button type="button" className="button button--ghost" onClick={() => navigate('/verify')}>
+            <button type="button" className="button button--ghost" onClick={() => navigate('/app/verify')}>
               Verify results
             </button>
           </div>
@@ -82,22 +97,22 @@ export default function Landing() {
         <div className="landing-hero__panel">
           <div className="hero-panel__header">
             <span className="section-kicker">Status</span>
-            <span className="hero-panel__badge">Student council election</span>
+            <span className="hero-panel__badge">{electionName}</span>
           </div>
 
           <div className="status-strip">
             <span className="status-dot" />
-            Election live - {closesInText} - Polls open now
+            Election live - {closesInText} - Polls open now - {totalVotes.toLocaleString()} votes cast
           </div>
 
           <div className="hero-panel__rail hero-panel__rail--system">
             <div>
               <span>Terminals active</span>
-              <strong>12 terminals</strong>
+              <strong>{terminalsActive} terminals</strong>
             </div>
             <div>
               <span>Votes cast</span>
-              <strong>2,341 ballots</strong>
+              <strong>{totalVotes.toLocaleString()} ballots</strong>
             </div>
             <div>
               <span>Last ballot</span>
@@ -111,6 +126,7 @@ export default function Landing() {
               Fraud monitoring: Healthy <span className="status-cursor" />
             </span>
             <span className="operator-pill">Verification path: Biometric plus blockchain</span>
+            {demoMode ? <span className="operator-pill operator-pill--demo">DEMO MODE</span> : null}
           </div>
         </div>
       </div>
