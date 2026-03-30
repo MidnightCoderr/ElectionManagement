@@ -3,6 +3,7 @@ const Election = require('./election.model.js');
 const Candidate = require('./candidate.model.js');
 const VotingRecord = require('./votingRecord.model.js');
 const AuditLog = require('./auditLog.model.js');
+const Student = require('./student.model.js');
 
 // Define relationships
 Election.hasMany(Candidate, {
@@ -38,6 +39,7 @@ Object.assign(module.exports, {
     Candidate,
     VotingRecord,
     AuditLog,
+    Student,
 });
 
 module.exports = {
@@ -46,4 +48,5 @@ module.exports = {
     Candidate,
     VotingRecord,
     AuditLog,
+    Student,
 };

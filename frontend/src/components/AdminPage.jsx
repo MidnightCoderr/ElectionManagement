@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { adminLogin, getStoredAdmin, logout } from '../api/auth.js'
 import { getAuditLogs, getVoters } from '../api/admin.js'
-import { getCandidates, getElections, updateElectionStatus } from '../api/elections.js'
+import { createElection, getCandidates, getElections, updateElectionStatus } from '../api/elections.js'
 import { getMlHealth } from '../api/ml.js'
 
 function AdminLogin({ onLogin, error }) {
@@ -103,10 +103,42 @@ export default function AdminPage() {
     setAdmin(user)
   }
 
+  const [isCreating, setIsCreating] = useState(false)
+  const [newElection, setNewElection] = useState({
+    election_name: '',
+    election_type: 'General',
+    district_id: 'All',
+    start_date: '',
+    end_date: '',
+  })
+
+  async function handleCreateElection(e) {
+    if (e) e.preventDefault()
+    try {
+      await createElection(newElection)
+      setIsCreating(false)
+      const response = await getElections({ limit: 12 })
+      setElections(response.elections || [])
+      setNewElection({
+        election_name: '',
+        election_type: 'General',
+        district_id: 'All',
+        start_date: '',
+        end_date: '',
+      })
+    } catch (err) {
+      alert(`Election creation failed: ${err.message}`)
+    }
+  }
+
   async function handleStatusChange(electionId, status) {
-    await updateElectionStatus(electionId, status)
-    const response = await getElections({ limit: 12 })
-    setElections(response.elections || [])
+    try {
+      await updateElectionStatus(electionId, status)
+      const response = await getElections({ limit: 12 })
+      setElections(response.elections || [])
+    } catch (err) {
+      alert(`Failed to update status: ${err.message}`)
+    }
   }
 
   if (!admin) {
@@ -205,9 +237,52 @@ export default function AdminPage() {
         ) : null}
 
         {tab === 'elections' ? (
-          <div className="surface-card table-shell">
-            <table className="data-table">
-              <thead>
+          <div className="surface-card">
+            <div className="section-heading section-heading--compact" style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div>
+                <p className="section-kicker">Council oversight</p>
+                <h2>Election registry</h2>
+              </div>
+              <button type="button" className="button button--primary" onClick={() => setIsCreating(!isCreating)}>
+                {isCreating ? 'Cancel' : 'Register New election'}
+              </button>
+            </div>
+
+            {isCreating && (
+              <form className="surface-card form-card" onSubmit={handleCreateElection} style={{ marginBottom: '32px', background: 'var(--bg-elevated)', border: '1px solid var(--line-soft)' }}>
+                <div className="field-grid">
+                  <label>
+                    <span className="field-label">Election title</span>
+                    <input className="field-input" value={newElection.election_name} onChange={(e) => setNewElection({...newElection, election_name: e.target.value})} required placeholder="e.g. 2027 General Secretary" />
+                  </label>
+                  <label>
+                    <span className="field-label">Type</span>
+                    <select className="field-input" value={newElection.election_type} onChange={(e) => setNewElection({...newElection, election_type: e.target.value})}>
+                      <option value="General">General Campus-wide</option>
+                      <option value="Departmental">Departmental Representative</option>
+                      <option value="Special">Special/By-election</option>
+                    </select>
+                  </label>
+                </div>
+                <div className="field-grid">
+                  <label>
+                    <span className="field-label">Start date</span>
+                    <input type="datetime-local" className="field-input" value={newElection.start_date} onChange={(e) => setNewElection({...newElection, start_date: e.target.value})} required />
+                  </label>
+                  <label>
+                    <span className="field-label">End date</span>
+                    <input type="datetime-local" className="field-input" value={newElection.end_date} onChange={(e) => setNewElection({...newElection, end_date: e.target.value})} required />
+                  </label>
+                </div>
+                <div className="form-actions">
+                  <button type="submit" className="button button--primary">Publish election</button>
+                </div>
+              </form>
+            )}
+
+            <div className="table-shell">
+              <table className="data-table">
+                <thead>
                 <tr>
                   <th>Election</th>
                   <th>Status</th>
@@ -234,13 +309,22 @@ export default function AdminPage() {
                           Complete
                         </button>
                       ) : null}
+                      {election.status === 'completed' ? (
+                        <button type="button" className="button button--primary button--inline" onClick={() => handleStatusChange(election.election_id, 'certified')}>
+                          Certify & Publish
+                        </button>
+                      ) : null}
+                      {election.status === 'certified' ? (
+                        <span className="detail-inline" style={{ color: 'var(--sage)' }}>✅ Certified</span>
+                      ) : null}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
         {tab === 'candidates' ? (
           <div className="surface-card table-shell">

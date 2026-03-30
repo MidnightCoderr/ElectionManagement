@@ -3,9 +3,7 @@
  * Handles vote tallying, results calculation, and reporting
  */
 
-const Election = require('../models/Election');
-const Candidate = require('../models/Candidate');
-const VotingRecord = require('../models/VotingRecord');
+const { Election, Candidate, VotingRecord } = require('../models/index.js');
 const fabricService = require('./fabricService');
 const logger = require('../utils/logger');
 
@@ -29,8 +27,7 @@ class ResultsService {
             }
 
             // Create tally job
-            const jobId = `tally-${election Id
-        }-${ Date.now() } `;
+            const jobId = `tally-${election.election_id || electionId}-${Date.now()}`;
 
       // Log start
       await logger.auditLog({

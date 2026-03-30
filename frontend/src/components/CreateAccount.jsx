@@ -37,17 +37,20 @@ export default function CreateAccount() {
 
     setStatus('loading')
     try {
-      await registerVoter({
-        aadharNumber: form.aadhar,
+      const response = await registerVoter({
+        aadharNumber: form.aadhar.trim(),
         fullName: form.name.trim(),
-        biometricTemplate: form.biometric,
+        biometricTemplate: form.biometric.trim() || 'fingerprint-data-001',
         districtId: form.department.trim() || 'General',
+        rollNumber: form.student.trim(), // Added rollNumber mapping
       })
-      const generatedId = `A-${Math.floor(1000 + Math.random() * 9000)}`
-      setCreatedId(generatedId)
+      
+      const voter = response.voter || response
+      setCreatedId(voter.voterId || voter.id || 'N/A')
       setStatus('success')
     } catch (err) {
-      setStatus({ error: err.message || 'Registration failed.' })
+      console.error('Registration failed:', err)
+      setStatus({ error: err.message || 'Registration failed. The Aadhar or biometric data might already be registered.' })
     }
   }
 

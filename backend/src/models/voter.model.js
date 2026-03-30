@@ -7,6 +7,11 @@ const Voter = sequelize.define('voters', {
         defaultValue: DataTypes.UUIDV4,
         primaryKey: true,
     },
+    roll_number: {
+        type: DataTypes.STRING(20),
+        allowNull: true, // Existing voters might not have it yet
+        unique: true,
+    },
     aadhar_number: {
         type: DataTypes.STRING(12),
         allowNull: false,

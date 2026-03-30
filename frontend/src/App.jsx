@@ -7,17 +7,20 @@ import VoterUI from './components/VoterUI.jsx'
 import ObserverDashBoard from './components/ObserverDashBoard.jsx'
 import AdminPage from './components/AdminPage.jsx'
 import VerificationPortal from './components/VerificationPortal.jsx'
+import StudentManagement from './components/StudentManagement.jsx'
 import CandidatePortal from './components/CandidatePortal.jsx'
 import CreateAccount from './components/CreateAccount.jsx'
 import NotFound from './components/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { Menu, X } from 'lucide-react'
+import { getStoredAdmin, getStoredVoter, logout } from './api/auth.js'
 import './index.css'
 const ROLE_TABS = [
   { id: 'voter', label: 'Voter', path: '/app/voter' },
   { id: 'candidate', label: 'Candidate', path: '/app/candidate' },
   { id: 'observer', label: 'Observer', path: '/app/observer' },
   { id: 'admin', label: 'Returning Officer', path: '/app/dashboard' },
+  { id: 'students', label: 'Students', path: '/app/students' },
   { id: 'verify', label: 'Verify', path: '/app/verify' },
 ]
 
@@ -25,6 +28,7 @@ function deriveActiveRole(pathname) {
   if (pathname.includes('/candidate')) return 'candidate'
   if (pathname.includes('/observer')) return 'observer'
   if (pathname.includes('/dashboard')) return 'admin'
+  if (pathname.includes('/students')) return 'students'
   if (pathname.includes('/voter')) return 'voter'
   if (pathname.includes('/verify')) return 'verify'
   return 'overview'
@@ -47,6 +51,11 @@ function WorkspaceShell() {
   const navigate = useNavigate()
   const [theme, setTheme] = useState(() => localStorage.getItem('campusvote-theme') || 'light')
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    setUser(getStoredAdmin() || getStoredVoter())
+  }, [location.pathname])
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme
@@ -60,6 +69,7 @@ function WorkspaceShell() {
       case 'candidate': return 'Candidate Dashboard'
       case 'observer': return 'Live Monitoring Active'
       case 'admin': return 'Returning Officer Controls'
+      case 'students': return 'Academic Records Center'
       case 'verify': return 'Blockchain Verification'
       default: return 'Review Workspace'
     }
@@ -110,7 +120,18 @@ function WorkspaceShell() {
                 {theme === 'light' ? 'Dark mode' : 'Light mode'}
               </button>
               <div style={{ width: '1px', height: '20px', background: 'var(--line-strong)', margin: '0 8px' }} />
-              <span className="user-chip">Ayush</span>
+              <div 
+                className="user-chip" 
+                onClick={() => {
+                  logout()
+                  setUser(null)
+                  navigate('/')
+                }}
+                style={{ cursor: 'pointer' }}
+                title="Click to sign out"
+              >
+                {user ? (user.username || user.fullName) : 'Sign out'}
+              </div>
             </div>
           </div>
 
@@ -131,10 +152,21 @@ function WorkspaceShell() {
           <Route path="/observer" element={<ObserverDashBoard />} />
           <Route path="/dashboard" element={<AdminPage />} />
           <Route path="/verify" element={<VerificationPortal />} />
+          <Route path="/students" element={<StudentManagement />} />
           <Route path="/create" element={<CreateAccount />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
+
+      <footer className="workspace-footer">
+        <span>&copy; {new Date().getFullYear()} CampusVote</span>
+        <div className="workspace-footer__links">
+          <button type="button" className="footer-link" onClick={() => navigate('/about')}>About</button>
+          <button type="button" className="footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
+          <button type="button" className="footer-link" onClick={() => navigate('/terms')}>Terms</button>
+          <button type="button" className="footer-link" onClick={() => navigate('/pricing')}>Pricing</button>
+        </div>
+      </footer>
     </>
   )
 }

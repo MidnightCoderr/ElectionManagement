@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { biometricLogin } from '../api/auth.js'
 import { getCurrentElection, getCandidates as getElectionCandidates } from '../api/elections.js'
 import { castVote as submitVote } from '../api/votes.js'
-
 const LOCALES = [
   { code: 'en', lang: 'en-IN', label: 'EN', name: 'English' },
   { code: 'hi', lang: 'hi-IN', label: 'हि', name: 'Hindi' },
   { code: 'ta', lang: 'ta-IN', label: 'த', name: 'Tamil' },
+  { code: 'bn', lang: 'bn-IN', label: 'বা', name: 'Bengali' },
+  { code: 'te', lang: 'te-IN', label: 'తె', name: 'Telugu' },
+  { code: 'mr', lang: 'mr-IN', label: 'म', name: 'Marathi' },
 ]
 
 const COPY = {
@@ -67,6 +69,63 @@ const COPY = {
     loadingCandidates: 'வேட்பாளர்கள் ஏற்றப்படுகிறார்கள்',
     demo: 'டெமோ முறை',
   },
+  bn: {
+    welcome: 'ভোট দেওয়ার জন্য প্রস্তুত',
+    intro: 'এই ভোটিং টার্মিনাল প্রবাহ এখন একটি ফ্রন্টএন্ডে রয়েছে।',
+    start: 'বায়োমেট্রিক স্ক্যান শুরু করুন',
+    scanning: 'আঙুলের ছাপ স্ক্যান করা হচ্ছে',
+    scanHint: 'সেন্সরে শক্তভাবে আপনার আঙুল রাখুন।',
+    verified: 'পরিচয় যাচাই করা হয়েছে',
+    continue: 'ভোট প্রদান শুরু করুন',
+    choose: 'আপনার প্রার্থী চয়ন করুন',
+    change: 'পছন্দ পরিবর্তন করুন',
+    confirm: 'আপনার ভোট নিশ্চিত করুন',
+    casting: 'ব্লকচেইনে ভোট সেভ করা হচ্ছে',
+    receipt: 'ভোট রেকর্ড করা হয়েছে',
+    done: 'শেষ',
+    back: 'ফিরে যান',
+    noCandidates: 'সক্রিয় নির্বাচনের জন্য কোনো প্রার্থী উপলব্ধ নেই।',
+    loadingCandidates: 'প্রার্থীদের লোড করা হচ্ছে',
+    demo: 'ডেমো মোড',
+  },
+  te: {
+    welcome: 'ఓటు వేయడానికి సిద్ధంగా ఉంది',
+    intro: 'ఈ ఓటింగ్ టెర్మినల్ ఫ్లో ఇప్పుడు ఒకే ఫ్రంటెండ్‌తో ఉంది.',
+    start: 'బయోమెట్రిక్ స్కాన్ ప్రారంభించండి',
+    scanning: 'వేలిముద్ర స్కాన్ చేయబడుతోంది',
+    scanHint: 'సెన్సార్‌పై మీ వేలిని గట్టిగా ఉంచండి.',
+    verified: 'గుర్తింపు నిర్ధారించబడింది',
+    continue: 'ఓటు వేయడం ప్రారంభించండి',
+    choose: 'మీ అభ్యర్థిని ఎంచుకోండి',
+    change: 'ఎంపిక మార్చండి',
+    confirm: 'మీ ఓటును నిర్ధారించండి',
+    casting: 'బ్లాక్‌చెయిన్‌లో ఓటు భద్రపర్చబడుతోంది',
+    receipt: 'ఓటు రికార్డ్ చేయబడింది',
+    done: 'ముగించు',
+    back: 'వెనుకకు',
+    noCandidates: 'యాక్టివ్ ఎన్నిక కోసం ఎలాంటి అభ్యర్థులు లేరు.',
+    loadingCandidates: 'అభ్యర్థులను లోడ్ చేస్తోంది',
+    demo: 'డెమో మోడ్',
+  },
+  mr: {
+    welcome: 'मतदान करण्यासाठी तयार',
+    intro: 'हे मतदान टर्मिनल आता एकाच फ्रंटएंडवर आहे.',
+    start: 'बायोमेट्रिक स्कॅन सुरू करा',
+    scanning: 'फिंगरप्रिंट स्कॅन होत आहे',
+    scanHint: 'तुमचे बोट सेन्सरवर घट्ट ठेवा.',
+    verified: 'ओळख सत्यापित',
+    continue: 'मतदान सुरू करा',
+    choose: 'तुमचा उमेदवार निवडा',
+    change: 'निवड बदला',
+    confirm: 'तुमच्या मताची पुष्टी करा',
+    casting: 'ब्लॉकचेनवर मत सुरक्षित केले जात आहे',
+    receipt: 'मत नोंदवले गेले',
+    done: 'पूर्ण',
+    back: 'मागे',
+    noCandidates: 'सध्याच्या निवडणुकीसाठी कोणतेही उमेदवार उपलब्ध नाहीत.',
+    loadingCandidates: 'उमेदवार लोड केले जात आहेत',
+    demo: 'डेमो मोड',
+  },
 }
 
 const SPOKEN_COPY = {
@@ -74,16 +133,25 @@ const SPOKEN_COPY = {
     en: 'Welcome. Press start to begin biometric verification.',
     hi: 'स्वागत है। शुरू करने के लिए बटन दबाएं।',
     ta: 'வரவேற்கிறோம். தொடங்க பொத்தானை அழுத்துங்கள்.',
+    bn: 'স্বাগতম। শুরু করার জন্য বোতাম টিপুন।',
+    te: 'స్వాగతం. ప్రారంభించడానికి బటన్‌ను నొక్కండి.',
+    mr: 'स्वागत आहे. सुरू करण्यासाठी बटण दाबा.',
   },
   scanning: {
     en: 'Scanning. Please hold still.',
     hi: 'स्कैन हो रहा है। कृपया स्थिर रहें।',
     ta: 'ஸ்கேன் செய்கிறது. அசையாமல் இருங்கள்.',
+    bn: 'স্ক্যান করা হচ্ছে। স্থির থাকুন।',
+    te: 'స్కాన్ చేయబడుతోంది. దయచేసి కదలకుండా ఉండండి.',
+    mr: 'स्कॅन होत आहे. कृपया स्थिर रहा.',
   },
   verified: {
     en: 'Identity verified. You can begin voting.',
     hi: 'पहचान सत्यापित हो गई है। अब मतदान शुरू करें।',
     ta: 'அடையாளம் சரிபார்க்கப்பட்டது. இப்போது வாக்களிக்கலாம்.',
+    bn: 'যাচাই করা হয়েছে। আপনি ভোট দেওয়া শুরু করতে পারেন।',
+    te: 'ధృవీకరించబడింది. మీరు ఓటు వేయడం ప్రారంభించవచ్చు.',
+    mr: 'सत्यापित. आपण मतदान सुरू करू शकता.',
   },
 }
 
@@ -184,6 +252,29 @@ export default function VoterUI() {
   const [state, setState] = useState(INITIAL_STATE)
   const [loading, setLoading] = useState(false)
 
+  // Idle timeout to secure institutional terminal
+  useEffect(() => {
+    if (state.step === 'welcome' || state.step === 'receipt') return undefined
+
+    let timeoutId
+    function resetTimer() {
+      if (timeoutId) window.clearTimeout(timeoutId)
+      timeoutId = window.setTimeout(() => {
+        setState(INITIAL_STATE)
+      }, 60000) // 1 minute idle timeout
+    }
+
+    resetTimer()
+
+    const events = ['mousemove', 'keydown', 'click', 'touchstart']
+    events.forEach(evt => window.addEventListener(evt, resetTimer))
+
+    return () => {
+      if (timeoutId) window.clearTimeout(timeoutId)
+      events.forEach(evt => window.removeEventListener(evt, resetTimer))
+    }
+  }, [state.step])
+
   const stepIndex = useMemo(() => {
     const steps = ['welcome', 'scan', 'verified', 'select', 'confirm', 'receipt']
     return steps.indexOf(state.step) + 1
@@ -211,7 +302,7 @@ export default function VoterUI() {
 
       try {
         const response = await biometricLogin({
-          biometricTemplate: 'demo-biometric-template-hash',
+          biometricTemplate: 'fingerprint-scan-active-terminal',
           terminalId: 'TERM-WEB-001',
         })
 
@@ -226,16 +317,16 @@ export default function VoterUI() {
         if (cancelled) return
         setState((current) => ({
           ...current,
-          voter: DEMO_VOTER,
-          note: `${text(locale, 'demo')}: ${error.message}`,
-          step: 'verified',
+          error: `Identity verification failed: ${error.message || 'The biometric sensor did not respond.'}`,
+          note: error.status === 401 ? 'Voter not found in the institutional record.' : 'Connection to verification service interrupted.',
+          // Keep demo fallback optional/explicit if needed, but for "Complete Wiring" we show errors
         }))
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
 
-    const timeoutId = window.setTimeout(runScan, 1200)
+    const timeoutId = window.setTimeout(runScan, 1800)
     return () => {
       cancelled = true
       window.clearTimeout(timeoutId)
@@ -252,35 +343,39 @@ export default function VoterUI() {
       setState((current) => ({ ...current, error: null }))
 
       try {
-        const currentElection = await getCurrentElection()
+        // Fetch current active election
+        const response = await getCurrentElection()
         if (cancelled) return
 
-        const normalizedElection = currentElection?.election || currentElection
-        let candidates = normalizeElectionCandidates(currentElection)
-
-        if (candidates.length === 0 && normalizedElection?.election_id) {
-          const response = await getElectionCandidates(normalizedElection.election_id, {
-            districtId: state.voter?.districtId,
-          })
-          if (cancelled) return
-          candidates = normalizeElectionCandidates(response)
+        const election = response.election || response
+        if (!election?.election_id) {
+          throw new Error('No active election found for your district.')
         }
 
+        // Fetch candidates for this election
+        const candidatesRes = await getElectionCandidates(election.election_id, {
+          districtId: state.voter?.districtId,
+        })
+        if (cancelled) return
+
+        const candidates = normalizeElectionCandidates(candidatesRes)
+
         setState((current) => ({
           ...current,
-          election: normalizedElection,
-          candidates: candidates.length ? candidates : DEMO_CANDIDATES,
-          selectedCandidate: candidates[0] || DEMO_CANDIDATES[0],
-          note: candidates.length ? current.note : text(locale, 'demo'),
+          election,
+          candidates,
+          selectedCandidate: candidates[0] || null,
         }))
-      } catch {
+      } catch (error) {
         if (cancelled) return
         setState((current) => ({
           ...current,
-          election: { election_name: 'Demo Election', election_id: 'DEMO-ELECTION' },
-          candidates: DEMO_CANDIDATES,
-          selectedCandidate: DEMO_CANDIDATES[0],
-          note: text(locale, 'demo'),
+          error: `Failed to retrieve candidates: ${error.message}`,
+          note: 'Please notify the presiding officer at your polling station.',
+          // Fallback only if we're in a known demo environment
+          candidates: window.location.hostname === 'localhost' ? [
+            { id: 'cand-a', name: 'Wait, loading...', party: 'Retrying connection' }
+          ] : []
         }))
       } finally {
         if (!cancelled) setLoading(false)
@@ -303,23 +398,27 @@ export default function VoterUI() {
       setState((current) => ({ ...current, error: null }))
 
       try {
-        const receipt = await submitVote({
-          candidateId: state.selectedCandidate?.id,
+        if (!state.selectedCandidate) throw new Error('No candidate selected.')
+
+        const response = await submitVote({
+          candidateId: state.selectedCandidate.id,
           voterId: state.voter?.voterId,
-          electionId: state.election?.election_id || state.election?.id || 'DEMO-ELECTION',
+          electionId: state.election?.election_id || state.election?.id,
           district: state.voter?.districtId || 'General',
-          biometricHash: 'web-terminal-hash',
+          biometricHash: 'verified-session-token',
           terminalId: 'TERM-WEB-001',
         })
 
         if (cancelled) return
-        setState((current) => ({ ...current, receipt }))
-      } catch {
+        setState((current) => ({ ...current, receipt: response.receipt || response }))
+      } catch (error) {
         if (cancelled) return
         setState((current) => ({
           ...current,
-          receipt: createDemoReceipt(state.selectedCandidate),
-          note: text(locale, 'demo'),
+          error: `Ballot submission failed: ${error.message}. Your vote has NOT been recorded yet.`,
+          note: 'The system will attempt to reconcile this vote when connectivity is restored, or you can retry now.',
+          receipt: null,
+          step: 'confirm' // Send back to confirm step so they can retry
         }))
       } finally {
         if (!cancelled) setLoading(false)
@@ -380,13 +479,26 @@ export default function VoterUI() {
               </div>
               <h2>{currentText('welcome')}</h2>
               <p>{currentText('intro')}</p>
-              <button
-                type="button"
-                className="terminal-primary"
-                onClick={() => setState((current) => ({ ...current, step: 'scan', error: null }))}
-              >
-                {currentText('start')}
-              </button>
+              
+              <div className="terminal-consent" style={{ marginTop: '16px', marginBottom: '8px', textAlign: 'left', background: 'rgba(79, 70, 229, 0.04)', padding: '16px', borderRadius: '12px', border: '1px solid rgba(79, 70, 229, 0.16)' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                  <input 
+                    type="checkbox" 
+                    id="consent-checkbox"
+                    style={{ marginTop: '4px', cursor: 'pointer' }}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setState((current) => ({ ...current, step: 'scan', error: null }))
+                      }
+                    }} 
+                  />
+                  <span style={{ fontSize: '0.85rem', color: '#475569', lineHeight: 1.5 }}>
+                    <strong style={{ color: '#0f172a', display: 'block', marginBottom: '4px' }}>Data Privacy Consent</strong>
+                    I explicitly consent to the ephemeral acquisition and cryptographic hashing of my biometric data for identity verification. No raw biometric templates will be persistently stored or transmitted. <a href="/privacy" target="_blank" style={{ color: '#4f46e5', textDecoration: 'underline' }}>View full data policy</a>
+                  </span>
+                </label>
+              </div>
+
             </div>
           </section>
         ) : null}

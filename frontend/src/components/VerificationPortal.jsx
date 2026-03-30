@@ -1,20 +1,7 @@
 import { useState } from 'react'
 import { verifyReceipt } from '../api/votes.js'
 
-const FALLBACK_RESULT = {
-  verified: true,
-  vote: {
-    voteId: 'DEMO-RECEIPT',
-    timestamp: new Date().toISOString(),
-    terminalId: 'TERM-045',
-    districtId: 'Computer Science',
-    blockchainTxId: '0x7A3FE9C2D0140A83...',
-    chainId: 'Monad Testnet (10143)',
-    consensus: 'PoS (BFT)',
-    blockNumber: 14892,
-    integrityVerified: true,
-  },
-}
+
 
 export default function VerificationPortal() {
   const [receiptId, setReceiptId] = useState('')
@@ -31,11 +18,12 @@ export default function VerificationPortal() {
     setResult(null)
 
     try {
-      const data = await verifyReceipt(receiptId.trim())
-      setResult(data)
+      const response = await verifyReceipt(receiptId.trim())
+      setResult(response.result || response)
     } catch (err) {
-      setResult(FALLBACK_RESULT)
-      setError(`Demo mode: ${err.message || 'Verification service unavailable'}`)
+      console.error('Verification failed:', err)
+      setResult(null)
+      setError(`Record not found: The receipt ID "${receiptId}" could not be located on the blockchain. Please verify the ID or contact your election officer if you believe this is an error.`)
     } finally {
       setLoading(false)
     }

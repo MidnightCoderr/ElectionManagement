@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { Voter } = require('../models/index.js');
+const { Voter, Student } = require('../models/index.js');
 const { generateToken, verifyToken } = require('../middleware/auth.middleware.js');
 const { authLimiter } = require('../middleware/rateLimit.middleware.js');
 const logger = require('../utils/logger.js');
@@ -20,10 +20,12 @@ router.post('/register-voter', async (req, res) => {
             fullName,
             biometricTemplate,
             districtId,
+            rollNumber, // Added rollNumber
         } = req.body;
 
         logger.info('VOTER_REGISTRATION_ATTEMPT', {
             aadharNumber: aadharNumber ? aadharNumber.slice(-4) : 'unknown',
+            rollNumber: rollNumber || 'not provided',
             ip: req.ip,
             timestamp: new Date().toISOString()
         });
@@ -34,6 +36,27 @@ router.post('/register-voter', async (req, res) => {
                 error: 'Missing required fields',
                 required: ['aadharNumber', 'fullName', 'biometricTemplate', 'districtId'],
             });
+        }
+
+        // --- INSTITUTIONAL VERIFICATION ---
+        // If rollNumber is provided, verify against Student records
+        if (rollNumber) {
+            const studentRecord = await Student.findOne({ 
+                where: { roll_number: rollNumber } 
+            });
+            
+            if (!studentRecord) {
+                return res.status(403).json({
+                    error: 'Institutional record not found',
+                    message: `No active student record found for roll number: ${rollNumber}. Please contact the Academic Records Center.`,
+                });
+            }
+            
+            // Optional: Cross-verify name
+            if (!studentRecord.name.toLowerCase().includes(fullName.toLowerCase().split(' ')[0].toLowerCase())) {
+                logger.warn('REGISTRATION_NAME_MISMATCH', { provided: fullName, official: studentRecord.name });
+                // We'll allow it but log it, or we could strict match
+            }
         }
 
         // Validate Aadhar number format (12 digits)
@@ -66,6 +89,7 @@ router.post('/register-voter', async (req, res) => {
         // Create voter record
         const voter = await Voter.create({
             aadhar_number: aadharNumber,
+            roll_number: rollNumber || null,
             full_name: fullName,
             biometric_hash: biometricHash,
             district_id: districtId,
@@ -89,7 +113,7 @@ router.post('/register-voter', async (req, res) => {
         if (error.name === 'SequelizeUniqueConstraintError') {
             return res.status(409).json({
                 error: 'Duplicate entry',
-                message: 'Biometric data already registered',
+                message: 'Biometric or Roll number already registered',
             });
         }
 

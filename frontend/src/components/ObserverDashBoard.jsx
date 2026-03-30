@@ -1,41 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getMlHealth } from '../api/ml.js'
+import { getAuditLogs } from '../api/admin.js'
 import { loadElectionSnapshot } from '../lib/electionSnapshot.js'
-
-const ALERTS = [
-  { timestamp: new Date(Date.now() - 120000).toISOString(), severity: 'Critical', title: 'Voting spike detected', detail: 'TERM-045 · 150 votes in 5 minutes' },
-  { timestamp: new Date(Date.now() - 14400000).toISOString(), severity: 'Medium', title: 'Terminal offline', detail: 'TERM-012 · connectivity issue' },
-  { timestamp: new Date(Date.now() - 3600000).toISOString(), severity: 'Medium', title: 'Battery warning', detail: 'TERM-301 · 8% remaining' },
-]
-
-const FEED = [
-  { time: '14:23:05', type: 'Vote', terminal: 'TERM-045', event: 'Ballot recorded for candidate 3' },
-  { time: '14:22:58', type: 'Auth', terminal: 'TERM-089', event: 'Biometric match confirmed' },
-  { time: '14:22:44', type: 'Auth', terminal: 'TERM-156', event: 'Identity verification passed' },
-  { time: '14:22:30', type: 'Vote', terminal: 'TERM-045', event: 'Ballot recorded for candidate 2' },
-]
-
-const TERMINALS = [
-  { id: 'TERM-001', location: 'CS Building - Lab A', status: 'Online', votes: 342, battery: '92%' },
-  { id: 'TERM-012', location: 'EE Building - Room 201', status: 'Offline', votes: 0, battery: '45%' },
-  { id: 'TERM-045', location: 'Student Center', status: 'Online', votes: 512, battery: '85%' },
-  { id: 'TERM-301', location: 'Sports Complex', status: 'Warning', votes: 145, battery: '8%' },
-]
-
-
 
 export default function ObserverDashBoard() {
   const [tab, setTab] = useState('overview')
   const [snapshot, setSnapshot] = useState(null)
   const [mlHealth, setMlHealth] = useState(null)
+  const [auditLogs, setAuditLogs] = useState([])
+  const [alerts, setAlerts] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
       try {
-        const [snapshotResponse, mlResponse] = await Promise.allSettled([
+        const [snapshotResponse, mlResponse, auditResponse] = await Promise.allSettled([
           loadElectionSnapshot(),
           getMlHealth(),
+          getAuditLogs({ limit: 50 })
         ])
 
         if (snapshotResponse.status === 'fulfilled') {
@@ -47,12 +29,20 @@ export default function ObserverDashBoard() {
         } else {
           setMlHealth({ status: 'offline' })
         }
+
+        if (auditResponse.status === 'fulfilled') {
+          const logs = auditResponse.value.logs || []
+          setAuditLogs(logs)
+          setAlerts(logs.filter(log => ['FRAUD_DETECTED', 'ANOMALY', 'CRITICAL_ERROR'].includes(log.event_type || log.action)))
+        }
       } finally {
         setLoading(false)
       }
     }
 
     load()
+    const interval = setInterval(load, 30000) // Poll every 30s
+    return () => clearInterval(interval)
   }, [])
 
   const summary = useMemo(() => {
@@ -114,6 +104,9 @@ export default function ObserverDashBoard() {
           <div className="detail-inline">
             <span>{summary.activeCount} active</span>
             <span>{summary.turnout} turnout</span>
+            {summary.isDemo && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+              <span className="detail-inline__demo">DEMO MODE</span>
+            )}
           </div>
         </div>
 
@@ -132,7 +125,7 @@ export default function ObserverDashBoard() {
           </article>
           <article className="surface-card stat-card">
             <span>Alert count</span>
-            <strong>{ALERTS.length}</strong>
+            <strong>{alerts.length}</strong>
           </article>
         </div>
 
@@ -151,23 +144,24 @@ export default function ObserverDashBoard() {
                     {mlHealth?.status === 'healthy' ? `Active · v${mlHealth.version || '1.0.0'}` : 'Simulated Traffic Tracking'}
                   </strong>
                 </div>
-                <div><span>High-risk terminals</span><strong>0 anomalies detected</strong></div>
+                <div><span>High-risk signals</span><strong>{alerts.length} anomalies detected</strong></div>
               </div>
             </div>
 
             <div className="surface-card">
               <div className="section-heading section-heading--compact">
-                <p className="section-kicker">Recent alerts</p>
+                <p className="section-kicker">Recent system events</p>
                 <h2>Items requiring attention</h2>
               </div>
               <div className="stack-list">
-                {ALERTS.map((alert) => (
-                  <article key={alert.title} className="stack-list__item">
-                    <strong>{alert.title}</strong>
-                    <span>{alert.severity}</span>
-                    <p>{alert.detail}</p>
+                {alerts.slice(0, 3).map((alert) => (
+                  <article key={alert._id || alert.id} className="stack-list__item">
+                    <strong>{alert.event_type || alert.action}</strong>
+                    <span>{alert.metadata?.severity || 'Medium'}</span>
+                    <p>{alert.metadata?.reason || alert.errorMessage || 'System warning captured.'}</p>
                   </article>
                 ))}
+                {alerts.length === 0 && <p className="text--muted">No critical alerts detected in the last 50 events.</p>}
               </div>
             </div>
           </div>
@@ -185,12 +179,12 @@ export default function ObserverDashBoard() {
                 </tr>
               </thead>
               <tbody>
-                {FEED.map((item) => (
-                  <tr key={`${item.time}-${item.terminal}`}>
-                    <td>{item.time}</td>
-                    <td>{item.type}</td>
-                    <td>{item.terminal}</td>
-                    <td>{item.event}</td>
+                {auditLogs.map((item) => (
+                  <tr key={item._id || item.id}>
+                    <td>{new Date(item.timestamp).toLocaleTimeString()}</td>
+                    <td>{item.event_type || item.action}</td>
+                    <td>{item.metadata?.terminalId || 'SYS'}</td>
+                    <td>{item.metadata?.reason || item.errorMessage || 'Audit log captured.'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -200,20 +194,27 @@ export default function ObserverDashBoard() {
 
         {tab === 'alerts' ? (
           <div className="stack-list">
-            {ALERTS.map((alert) => (
-              <article key={alert.title} className="surface-card stack-list__item stack-list__item--alert" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {alerts.length === 0 && (
+              <div className="surface-card empty-state">
+                <span className="empty-state__icon">🛡️</span>
+                <h3>System integrity confirmed</h3>
+                <p>No critical anomalies or fraud signals have been detected in the current audit window.</p>
+              </div>
+            )}
+            {alerts.map((alert) => (
+              <article key={alert._id || alert.id} className="surface-card stack-list__item stack-list__item--alert" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div>
                   <div className="detail-inline" style={{ marginBottom: '8px' }}>
-                    <strong>{alert.title}</strong>
-                    <span>{alert.severity}</span>
+                    <strong>{alert.event_type || alert.action}</strong>
+                    <span>{alert.metadata?.severity || 'High'}</span>
                     <span style={{ color: 'var(--ink-muted)', fontSize: '0.75rem' }}>{new Date(alert.timestamp).toLocaleTimeString()}</span>
                   </div>
-                  <p style={{ margin: 0 }}>{alert.detail}</p>
+                  <p style={{ margin: 0 }}>{alert.metadata?.reason || alert.errorMessage || 'Anomaly detected in voting patterns.'}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid var(--line-soft)', paddingTop: '12px' }}>
-                  <button type="button" className="button button--ghost" onClick={() => alert('Viewing logs...')}>Investigate</button>
-                  <button type="button" className="button button--primary" onClick={() => alert('Acknowledged.')}>Acknowledge</button>
-                  <button type="button" className="button button--ghost" onClick={() => alert('Escalated to local authorities.')} style={{ color: 'var(--danger)', marginLeft: 'auto' }}>Escalate</button>
+                  <button type="button" className="button button--ghost">Investigate</button>
+                  <button type="button" className="button button--primary">Acknowledge</button>
+                  <button type="button" className="button button--ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}>Escalate</button>
                 </div>
               </article>
             ))}
@@ -226,20 +227,18 @@ export default function ObserverDashBoard() {
               <thead>
                 <tr>
                   <th>Terminal</th>
-                  <th>Location</th>
                   <th>Status</th>
-                  <th>Votes</th>
-                  <th>Battery</th>
+                  <th>Last active</th>
+                  <th>District</th>
                 </tr>
               </thead>
               <tbody>
-                {TERMINALS.map((terminal) => (
-                  <tr key={terminal.id}>
-                    <td>{terminal.id}</td>
-                    <td>{terminal.location}</td>
-                    <td>{terminal.status}</td>
-                    <td>{terminal.votes}</td>
-                    <td>{terminal.battery}</td>
+                {[...new Set(auditLogs.map(l => l.metadata?.terminalId).filter(Boolean))].map((tid) => (
+                  <tr key={tid}>
+                    <td>{tid}</td>
+                    <td>Online</td>
+                    <td>Active now</td>
+                    <td>Institutional</td>
                   </tr>
                 ))}
               </tbody>

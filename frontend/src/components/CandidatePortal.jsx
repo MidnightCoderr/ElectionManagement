@@ -5,32 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 const DEPARTMENTS = ['Computer Science', 'Electrical Engineering', 'Mechanical Engineering', 'Civil Engineering', 'Business School', 'Biotechnology']
 
-const MOCK_ELECTIONS = [
-  {
-    election_id: 'ELEC-2027-SEC',
-    election_name: 'General Secretary',
-    election_type: 'Executive Campus-wide',
-    district_id: 'All students',
-    status: 'Upcoming',
-    start_date: new Date(Date.now() + 86400000 * 14).toISOString()
-  },
-  {
-    election_id: 'ELEC-2027-REP',
-    election_name: 'Engineering Representative',
-    election_type: 'Departmental',
-    district_id: 'School of Engineering',
-    status: 'Upcoming',
-    start_date: new Date(Date.now() + 86400000 * 14).toISOString()
-  },
-  {
-    election_id: 'ELEC-2027-CULT',
-    election_name: 'Cultural Secretary',
-    election_type: 'Executive Campus-wide',
-    district_id: 'All students',
-    status: 'Upcoming',
-    start_date: new Date(Date.now() + 86400000 * 21).toISOString()
-  }
-]
+
 
 export default function CandidatePortal() {
   const navigate = useNavigate()
@@ -52,22 +27,33 @@ export default function CandidatePortal() {
   })
 
   useEffect(() => {
+    let cancelled = false
+
     async function load() {
+      setLoading(true)
+      setStatus(null)
       try {
-        const response = await getElections({ limit: 20 })
-        if (response.elections && response.elections.length > 0) {
+        const response = await getElections({ status: 'upcoming', limit: 20 })
+        if (cancelled) return
+        
+        if (response.elections) {
           setElections(response.elections)
         } else {
-          setElections(MOCK_ELECTIONS)
+          setElections([])
         }
-      } catch {
-        setElections(MOCK_ELECTIONS)
+      } catch (err) {
+        if (cancelled) return
+        console.error('Failed to load elections:', err)
+        setStatus({ error: 'Failed to access the institutional registry. Please ensure you are on the secure network.' })
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
     load()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const eligible = useMemo(() => {

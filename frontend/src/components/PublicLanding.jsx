@@ -33,7 +33,7 @@ export default function PublicLanding() {
             Verify results
           </button>
           <button type="button" className="button button--primary" onClick={() => navigate('/app')}>
-            Open workspace
+            Return to workspace
           </button>
         </div>
       </header>

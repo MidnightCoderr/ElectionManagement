@@ -7,28 +7,45 @@ const dotenv = require('dotenv');
 dotenv.config({ path: require('path').resolve(__dirname, '../../../.env') });
 
 // PostgreSQL Connection with Sequelize (ORM)
-const sequelize = new Sequelize(
-    process.env.POSTGRES_DB || 'election_db',
-    process.env.POSTGRES_USER || 'election_admin',
-    process.env.POSTGRES_PASSWORD || 'changeme_secure_password',
-    {
-        host: process.env.POSTGRES_HOST || 'localhost',
-        port: process.env.POSTGRES_PORT || 5432,
-        dialect: 'postgres',
-        dialectModule: pg,
-        logging: process.env.NODE_ENV === 'development' ? console.log : false,
-        pool: {
-            max: 20,
-            min: 5,
-            acquire: 30000,
-            idle: 10000,
-        },
+let sequelizeOptions = {
+    host: process.env.POSTGRES_HOST || 'localhost',
+    port: process.env.POSTGRES_PORT || 5432,
+    dialect: 'postgres',
+    dialectModule: pg,
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    pool: {
+        max: 20,
+        min: 5,
+        acquire: 30000,
+        idle: 10000,
+    },
+    define: {
+        timestamps: true,
+        underscored: true,
+        freezeTableName: true,
+    },
+};
+
+// Use SQLite as fallback for development if Postgres is not available
+if (process.env.NODE_ENV === 'development' && (!process.env.POSTGRES_HOST || process.env.USE_SQLITE === 'true')) {
+    console.log('⚠️  Using SQLite for development...');
+    sequelizeOptions = {
+        dialect: 'sqlite',
+        storage: './election_db.sqlite',
+        logging: console.log,
         define: {
             timestamps: true,
             underscored: true,
             freezeTableName: true,
         },
-    }
+    };
+}
+
+const sequelize = new Sequelize(
+    process.env.POSTGRES_DB || 'election_db',
+    process.env.POSTGRES_USER || 'election_admin',
+    process.env.POSTGRES_PASSWORD || 'changeme_secure_password',
+    sequelizeOptions
 );
 
 // MongoDB Connection with Mongoose
@@ -55,18 +72,28 @@ const redisClient = createClient({
     socket: {
         host: process.env.REDIS_HOST || 'localhost',
         port: process.env.REDIS_PORT || 6379,
+        connectTimeout: 2000,
     },
     password: process.env.REDIS_PASSWORD,
 });
 
-redisClient.on('error', (err) => console.error('Redis Client Error:', err));
+redisClient.on('error', (err) => {
+    if (process.env.NODE_ENV !== 'development') {
+        console.error('Redis Client Error:', err);
+    }
+});
 redisClient.on('connect', () => console.log('✅ Redis connected successfully'));
 
 const connectRedis = async () => {
     try {
         await redisClient.connect();
     } catch (error) {
-        console.error('❌ Redis connection error:', error.message);
+        if (process.env.NODE_ENV !== 'development') {
+            console.error('❌ Redis connection error:', error.message);
+            throw error;
+        } else {
+            console.warn('⚠️  Redis connection failed (optional in development)');
+        }
     }
 };
 
@@ -86,8 +113,26 @@ const initializeDatabases = async () => {
     console.log('🔌 Initializing database connections...');
 
     await testPostgresConnection();
-    await connectMongoDB();
-    await connectRedis();
+    
+    try {
+        await connectMongoDB();
+    } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️  MongoDB connection failed, but continuing in development mode...');
+        } else {
+            throw error;
+        }
+    }
+
+    try {
+        await connectRedis();
+    } catch (error) {
+        if (process.env.NODE_ENV === 'development') {
+            console.warn('⚠️  Redis connection failed, but continuing in development mode...');
+        } else {
+            throw error;
+        }
+    }
 
     console.log('✅ All database connections established');
 };

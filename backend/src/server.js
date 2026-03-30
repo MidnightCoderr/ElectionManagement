@@ -21,6 +21,7 @@ const candidateRoutes = require('./routes/candidate.routes.js');
 const resultsRoutes = require('./routes/results.routes.js');
 const auditRoutes = require('./routes/audit.routes.js');
 const voterRoutes = require('./routes/voter.routes.js');
+const studentRoutes = require('./routes/student.routes.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -30,6 +31,15 @@ promClient.collectDefaultMetrics({ prefix: 'election_backend_' });
 
 // Security middleware
 app.use(helmet());
+
+// Enforce HTTPS in production
+app.enable('trust proxy');
+app.use((req, res, next) => {
+    if (process.env.NODE_ENV === 'production' && !req.secure && req.get('x-forwarded-proto') !== 'https') {
+        return res.redirect(`https://${req.get('host')}${req.originalUrl}`);
+    }
+    next();
+});
 
 // CORS configuration
 const corsOrigins = process.env.CORS_ORIGIN
@@ -85,6 +95,7 @@ app.use('/api/v1/candidates', candidateRoutes);
 app.use('/api/v1/results', resultsRoutes);
 app.use('/api/v1/audit', auditRoutes);
 app.use('/api/v1/voters', voterRoutes);
+app.use('/api/v1/students', studentRoutes);
 
 // Mock blockchain route for Verification Portal demo
 const blockchainMockRoutes = require('./routes/blockchain.mock.routes.js');
@@ -153,8 +164,11 @@ const startServer = async () => {
         // Connect to all databases
         await initializeDatabases();
 
-        // Initialize Kafka Producer
-        await initKafkaProducer();
+        try {
+            await initKafkaProducer();
+        } catch (error) {
+            console.warn('⚠️  Kafka Producer initialization failed. Event streaming disabled.');
+        }
 
         // Start HTTP server
         const server = app.listen(PORT, () => {
