@@ -27,13 +27,17 @@ export default function ObserverDashBoard() {
         if (mlResponse.status === 'fulfilled') {
           setMlHealth(mlResponse.value)
         } else {
+          // If 403 or 401, don't scream in the console
           setMlHealth({ status: 'offline' })
         }
 
         if (auditResponse.status === 'fulfilled') {
-          const logs = auditResponse.value.logs || []
+          const logs = auditResponse.value?.logs || []
           setAuditLogs(logs)
-          setAlerts(logs.filter(log => ['FRAUD_DETECTED', 'ANOMALY', 'CRITICAL_ERROR'].includes(log.event_type || log.action)))
+          setAlerts(logs.filter(log => ['FRAUD_DETECTED', 'ANOMALY', 'CRITICAL_ERROR'].includes(log.eventType || log.event_type || log.action)))
+        } else if (auditResponse.reason?.status === 401) {
+           console.log('Observer audit monitoring: Access restricted to institutional roles.');
+           setAuditLogs([]);
         }
       } finally {
         setLoading(false)

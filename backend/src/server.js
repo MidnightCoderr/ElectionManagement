@@ -131,7 +131,11 @@ app.use('/api/ml', (req, res) => {
         port:     targetUrl.port || (isHttps ? 443 : 80),
         path:     targetUrl.pathname + (targetUrl.search || ''),
         method:   req.method,
-        headers:  { ...req.headers, host: targetUrl.hostname },
+        headers:  { 
+            ...req.headers, 
+            host: targetUrl.hostname,
+            'x-ml-api-key': process.env.ML_SERVICE_API_KEY || 'ml-internal-secret'
+        },
     };
 
     const proxyReq = mod.request(options, (proxyRes) => {
@@ -164,6 +168,7 @@ const startServer = async () => {
         // Connect to all databases
         await initializeDatabases();
 
+        console.log('🚀 Finalizing service initialization...');
         try {
             await initKafkaProducer();
         } catch (error) {

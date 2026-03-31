@@ -3,10 +3,10 @@ const logger = require('../utils/logger.js');
 
 const kafka = new Kafka({
     clientId: 'election-backend',
-    brokers: [process.env.KAFKA_BROKER || 'kafka:9092'],
+    brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
     retry: {
-        initialRetryTime: 100,
-        retries: 8
+        initialRetryTime: process.env.NODE_ENV === 'development' ? 50 : 100,
+        retries: process.env.NODE_ENV === 'development' ? 2 : 8
     }
 });
 

@@ -112,29 +112,24 @@ const testPostgresConnection = async () => {
 const initializeDatabases = async () => {
     console.log('🔌 Initializing database connections...');
 
+    // Postgres is usually required for core functionality
     await testPostgresConnection();
     
-    try {
+    if (process.env.NODE_ENV === 'development') {
+        const models = require('../models/index.js');
+        // Synchronize all defined models in SQLite
+        await sequelize.sync();
+        console.log('✅ SQLite database models synced');
+        
+        console.log('🚀 Starting MongoDB and Redis connections in background (dev mode)...');
+        connectMongoDB().catch(() => console.warn('⚠️ MongoDB failed (dev context preserved)'));
+        connectRedis().catch(() => console.warn('⚠️ Redis failed (dev context preserved)'));
+    } else {
         await connectMongoDB();
-    } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️  MongoDB connection failed, but continuing in development mode...');
-        } else {
-            throw error;
-        }
-    }
-
-    try {
         await connectRedis();
-    } catch (error) {
-        if (process.env.NODE_ENV === 'development') {
-            console.warn('⚠️  Redis connection failed, but continuing in development mode...');
-        } else {
-            throw error;
-        }
     }
 
-    console.log('✅ All database connections established');
+    console.log('✅ Database initialization sequence completed');
 };
 
 // Close all connections gracefully

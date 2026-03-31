@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getStoredAdmin, getStoredVoter } from '../api/auth.js'
 
 const TRUST_POINTS = [
   'Biometric voter verification',
@@ -16,6 +18,11 @@ const SOCIAL_PROOF = [
 
 export default function PublicLanding() {
   const navigate = useNavigate()
+  const [user, setUser] = useState(null)
+
+  useEffect(() => {
+    setUser(getStoredAdmin() || getStoredVoter())
+  }, [])
 
   return (
     <section className="public-page">
@@ -32,9 +39,15 @@ export default function PublicLanding() {
           <button type="button" className="utility-link utility-link--button" onClick={() => navigate('/app/verify')}>
             Verify results
           </button>
-          <button type="button" className="button button--primary" onClick={() => navigate('/app')}>
-            Return to workspace
-          </button>
+          {!user ? (
+            <button type="button" className="button button--ghost" onClick={() => navigate('/login')}>
+              Sign in
+            </button>
+          ) : (
+            <button type="button" className="button button--primary" onClick={() => navigate('/app')}>
+              Return to workspace
+            </button>
+          )}
         </div>
       </header>
 
@@ -49,9 +62,14 @@ export default function PublicLanding() {
           <button type="button" className="button button--primary" onClick={() => window.location.href='mailto:sales@campusvote.com?subject=Institutional Deploy Request'}>
             Deploy at my university &rarr;
           </button>
-          <button type="button" className="button button--ghost" onClick={() => navigate('/app/observer')}>
-            See a live election in progress
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button type="button" className="button button--ghost" onClick={() => navigate('/app/observer')}>
+              See a live election in progress
+            </button>
+            <button type="button" className="button button--ghost" style={{ border: '2px solid var(--brand-soft)' }} onClick={() => navigate('/demo')}>
+              Explore Demo Experience
+            </button>
+          </div>
         </div>
 
         <div className="hero-social-proof">
@@ -191,15 +209,17 @@ export default function PublicLanding() {
       </section>
 
       <footer className="public-footer">
-        <div>
-          <strong>CampusVote</strong>
-          <span>Secure election platform for universities.</span>
-        </div>
-        <div className="public-footer__links">
-          <button type="button" className="footer-link" onClick={() => navigate('/about')}>About</button>
-          <button type="button" className="footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
-          <button type="button" className="footer-link" onClick={() => navigate('/terms')}>Terms</button>
-          <button type="button" className="footer-link" onClick={() => navigate('/pricing')}>Pricing</button>
+        <div className="public-footer__inner">
+          <div>
+            <strong>CampusVote</strong>
+            <span>Secure election platform for universities.</span>
+          </div>
+          <div className="public-footer__links">
+            <button type="button" className="footer-link" onClick={() => navigate('/about')}>About</button>
+            <button type="button" className="footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
+            <button type="button" className="footer-link" onClick={() => navigate('/terms')}>Terms</button>
+            <button type="button" className="footer-link" onClick={() => navigate('/pricing')}>Pricing</button>
+          </div>
         </div>
       </footer>
     </section>

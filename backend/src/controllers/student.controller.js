@@ -38,7 +38,20 @@ exports.getStudentById = async (req, res) => {
  */
 exports.createStudent = async (req, res) => {
     try {
-        const student = await Student.create(req.body);
+        const { name, roll_number, department, course, program } = req.body;
+        
+        // Validation Layer
+        if (!name || name.length > 50) {
+            return res.status(400).json({ status: 'error', message: 'Name is required and must be under 50 characters' });
+        }
+        if (!roll_number || !/^[A-Z0-9\-/]+$/.test(roll_number)) {
+            return res.status(400).json({ status: 'error', message: 'Invalid Roll Number format (Alphanumeric, -, / allowed)' });
+        }
+        if (roll_number.length > 20) {
+             return res.status(400).json({ status: 'error', message: 'Roll Number too long (Max 20 chars)' });
+        }
+
+        const student = await Student.create({ name, roll_number, department, course, program });
         
         // Broadcast new student creation in real-time
         broadcastMessage('STUDENT_CREATED', student);
@@ -59,8 +72,17 @@ exports.createStudent = async (req, res) => {
 exports.updateStudent = async (req, res) => {
     try {
         const student = await Student.findByPk(req.params.id);
-        if (!student) {
-            return res.status(404).json({ status: 'error', message: 'Student not found' });
+        const { name, roll_number } = req.body;
+        if (name && name.length > 50) {
+            return res.status(400).json({ status: 'error', message: 'Name must be under 50 characters' });
+        }
+        if (roll_number) {
+            if (!/^[A-Z0-9\-/]+$/.test(roll_number)) {
+                return res.status(400).json({ status: 'error', message: 'Invalid Roll Number format' });
+            }
+            if (roll_number.length > 20) {
+                return res.status(400).json({ status: 'error', message: 'Roll Number too long' });
+            }
         }
         
         await student.update(req.body);

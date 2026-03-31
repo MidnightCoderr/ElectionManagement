@@ -8,8 +8,11 @@ import ObserverDashBoard from './components/ObserverDashBoard.jsx'
 import AdminPage from './components/AdminPage.jsx'
 import VerificationPortal from './components/VerificationPortal.jsx'
 import StudentManagement from './components/StudentManagement.jsx'
+import { FormProvider } from './context/FormContext.jsx'
 import CandidatePortal from './components/CandidatePortal.jsx'
 import CreateAccount from './components/CreateAccount.jsx'
+import LoginPage from './components/LoginPage.jsx'
+import DemoPage from './components/DemoPage.jsx'
 import NotFound from './components/NotFound.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { Menu, X } from 'lucide-react'
@@ -35,12 +38,11 @@ function deriveActiveRole(pathname) {
 }
 
 function ProtectedRoute({ children }) {
-  // Mock auth state for demo purposes - will wire to JWT/Session check
-  const isAuthenticated = true 
+  const isAuthenticated = !!(getStoredAdmin() || getStoredVoter()) 
   const location = useLocation()
   
   if (!isAuthenticated) {
-    return <Navigate to="/" state={{ from: location }} replace />
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   return children
@@ -159,12 +161,14 @@ function WorkspaceShell() {
       </main>
 
       <footer className="workspace-footer">
-        <span>&copy; {new Date().getFullYear()} CampusVote</span>
-        <div className="workspace-footer__links">
-          <button type="button" className="footer-link" onClick={() => navigate('/about')}>About</button>
-          <button type="button" className="footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
-          <button type="button" className="footer-link" onClick={() => navigate('/terms')}>Terms</button>
-          <button type="button" className="footer-link" onClick={() => navigate('/pricing')}>Pricing</button>
+        <div className="workspace-footer__inner">
+          <span>&copy; {new Date().getFullYear()} CampusVote</span>
+          <div className="workspace-footer__links">
+            <button type="button" className="footer-link" onClick={() => navigate('/about')}>About</button>
+            <button type="button" className="footer-link" onClick={() => navigate('/privacy')}>Privacy</button>
+            <button type="button" className="footer-link" onClick={() => navigate('/terms')}>Terms</button>
+            <button type="button" className="footer-link" onClick={() => navigate('/pricing')}>Pricing</button>
+          </div>
         </div>
       </footer>
     </>
@@ -175,23 +179,27 @@ export default function App() {
   return (
     <div className="app-shell">
       <ErrorBoundary>
-        <Routes>
-          <Route path="/" element={<PublicLanding />} />
-          <Route path="/about" element={<LegalPage title="About CampusVote" body="CampusVote is an enterprise-grade election management system designed exclusively for higher education institutions. Our platform integrates biometric identity verification, immutable blockchain auditing, and real-time fraud monitoring to deliver secure, transparent, and scalable digital elections. Engineered to meet the rigorous demands of institutional governance, CampusVote ensures voter privacy while maintaining deterministic auditability." />} />
-          <Route path="/privacy" element={<LegalPage title="Privacy Policy" body="CampusVote operates under a strict data minimization protocol. Voter identity processing, including biometric matching, occurs exclusively within the isolated institutional terminal environment. Biometric templates are generated ephemerally and are never transmitted to our central servers or written to the blockchain. All election event data is cryptographically hashed, rendering individual ballots mathematically detached from plaintext voter identities. System access logs and configuration changes are retained for compliance review under applicable regional privacy regulations (including GDPR and CCPA alignments)." />} />
-          <Route path="/terms" element={<LegalPage title="Terms of Service" body="By accessing the CampusVote platform, participating institutions agree to adhere to all local, state, and federal laws regarding data collection, election integrity, and digital accessibility. The institution maintains ownership of all proprietary election data, utilizing CampusVote purely as a data processor. Election administrators bear sole responsibility for configuring lawful election parameters, configuring accurate voter rolls, and resolving voter grievances. CampusVote provides software 'as-is' for the duration of the institutional contract term." />} />
-          <Route path="/pricing" element={<LegalPage title="Institutional Pricing" body="CampusVote is licensed on an annual enterprise contract model. Pricing is stratified based on the institution's enrolled student population, the number of required physical voting terminals (CampusVote Kiosks), and the selected SLA tier (Standard, Premium, or Mission-Critical). Baseline implementations start at $25,000/year, encompassing the core software platform, unlimited elections, and standard fraud monitoring. Optional add-ons include biometric hardware leasing and dedicated on-site support engineers. Contact enterprise@campusvote.io for a customized deployment estimate." />} />
-          <Route path="/app/*" element={<ProtectedRoute><WorkspaceShell /></ProtectedRoute>} />
+        <FormProvider>
+          <Routes>
+            <Route path="/" element={<PublicLanding />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/demo" element={<DemoPage />} />
+            <Route path="/about" element={<LegalPage title="About CampusVote" body="CampusVote is an enterprise-grade election management system designed exclusively for higher education institutions. Our platform integrates biometric identity verification, immutable blockchain auditing, and real-time fraud monitoring to deliver secure, transparent, and scalable digital elections. Engineered to meet the rigorous demands of institutional governance, CampusVote ensures voter privacy while maintaining deterministic auditability." />} />
+            <Route path="/privacy" element={<LegalPage title="Privacy Policy" body="CampusVote operates under a strict data minimization protocol. Voter identity processing, including biometric matching, occurs exclusively within the isolated institutional terminal environment. Biometric templates are generated ephemerally and are never transmitted to our central servers or written to the blockchain. All election event data is cryptographically hashed, rendering individual ballots mathematically detached from plaintext voter identities. System access logs and configuration changes are retained for compliance review under applicable regional privacy regulations (including GDPR and CCPA alignments)." />} />
+            <Route path="/terms" element={<LegalPage title="Terms of Service" body="By accessing the CampusVote platform, participating institutions agree to adhere to all local, state, and federal laws regarding data collection, election integrity, and digital accessibility. The institution maintains ownership of all proprietary election data, utilizing CampusVote purely as a data processor. Election administrators bear sole responsibility for configuring lawful election parameters, configuring accurate voter rolls, and resolving voter grievances. CampusVote provides software 'as-is' for the duration of the institutional contract term." />} />
+            <Route path="/pricing" element={<LegalPage title="Institutional Pricing" body="CampusVote is licensed on an annual enterprise contract model. Pricing is stratified based on the institution's enrolled student population, the number of required physical voting terminals (CampusVote Kiosks), and the selected SLA tier (Standard, Premium, or Mission-Critical). Baseline implementations start at $25,000/year, encompassing the core software platform, unlimited elections, and standard fraud monitoring. Optional add-ons include biometric hardware leasing and dedicated on-site support engineers. Contact enterprise@campusvote.io for a customized deployment estimate." />} />
+            <Route path="/app/*" element={<ProtectedRoute><WorkspaceShell /></ProtectedRoute>} />
 
-          <Route path="/voter" element={<Navigate to="/app/voter" replace />} />
-          <Route path="/candidate" element={<Navigate to="/app/candidate" replace />} />
-          <Route path="/observer" element={<Navigate to="/app/observer" replace />} />
-          <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-          <Route path="/verify" element={<Navigate to="/app/verify" replace />} />
-          <Route path="/create" element={<Navigate to="/app/create" replace />} />
+            <Route path="/voter" element={<Navigate to="/app/voter" replace />} />
+            <Route path="/candidate" element={<Navigate to="/app/candidate" replace />} />
+            <Route path="/observer" element={<Navigate to="/app/observer" replace />} />
+            <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+            <Route path="/verify" element={<Navigate to="/app/verify" replace />} />
+            <Route path="/create" element={<Navigate to="/app/create" replace />} />
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </FormProvider>
       </ErrorBoundary>
     </div>
   )

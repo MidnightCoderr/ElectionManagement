@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
+import { useFormState } from '../context/FormContext.jsx';
 import { Users, UserPlus, RefreshCw, Trash2, Edit2, Search } from 'lucide-react';
 import { 
   getStudents, 
@@ -10,21 +11,17 @@ import {
 
 // Derive WebSocket URL from API Base
 const API_BASE = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3000';
-const WS_BASE = API_BASE.replace('http', 'ws');
+const WS_BASE = API_BASE.replace(/^http/, 'ws').split('/api')[0];
 
 export default function StudentManagement() {
+  const { formData, updateFormData, resetFormData, showModal, setShowModal } = useFormState();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [showModal, setShowModal] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    roll_number: '',
-    department: '',
-    course: '',
-    program: ''
-  });
+  const [submitting, setSubmitting] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [error, setError] = useState(null);
 
   const ws = useRef(null);
 
@@ -41,16 +38,23 @@ export default function StudentManagement() {
   };
 
   const seedData = async () => {
+    if (seeding) return;
+    setSeeding(true);
     try {
       await forceSeedStudents();
-      fetchStudents();
+      await fetchStudents();
     } catch (error) {
       console.error('Failed to seed data:', error);
+      setError('System failure: Institutional record generation interrupted.');
+    } finally {
+      setSeeding(false);
     }
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
+    setError(null);
     try {
       if (currentStudent) {
         await updateStudent(currentStudent.student_id, formData);
@@ -58,12 +62,13 @@ export default function StudentManagement() {
         await createStudent(formData);
       }
       setShowModal(false);
-      setFormData({ name: '', roll_number: '', department: '', course: '', program: '' });
+      resetFormData();
       setCurrentStudent(null);
-      // Changes will be reflected via WebSocket broadcast
-    } catch (error) {
-      console.error('Failed to save student:', error);
-      alert(error.message || 'Operation failed');
+    } catch (err) {
+      console.error('Failed to save student:', err);
+      setError(err.message || 'Failed to save student. Backend might be unreachable.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -78,7 +83,7 @@ export default function StudentManagement() {
 
   const openEdit = (student) => {
     setCurrentStudent(student);
-    setFormData({
+    updateFormData({
       name: student.name,
       roll_number: student.roll_number,
       department: student.department,
@@ -140,9 +145,17 @@ export default function StudentManagement() {
           <p className="description">Manage student profiles and enrollment data with live synchronization.</p>
         </div>
         <div className="detail-inline">
-          <button className="button button--ghost" onClick={seedData}>
-            <RefreshCw size={16} style={{ marginRight: '8px' }} />
-            Seed 100 Entries
+          <button 
+            className="button button--ghost" 
+            onClick={seedData}
+            disabled={seeding}
+          >
+            <RefreshCw 
+              size={16} 
+              style={{ marginRight: '8px' }} 
+              className={seeding ? 'animate-spin' : ''} 
+            />
+            {seeding ? 'Processing Context...' : 'Seed 100 Entries'}
           </button>
           <button className="button button--primary" onClick={() => { setCurrentStudent(null); setFormData({ name: '', roll_number: '', department: '', course: '', program: '' }); setShowModal(true); }}>
             <UserPlus size={16} style={{ marginRight: '8px' }} />
@@ -215,21 +228,48 @@ export default function StudentManagement() {
         }}>
           <div className="surface-card" style={{ width: '500px', maxWidth: '90%', padding: '2rem' }}>
             <h2>{currentStudent ? 'Edit Student' : 'Add New Student'}</h2>
+            
+            {error && (
+              <div className="alert alert--error" style={{ 
+                background: '#fee2e2', color: '#dc2626', padding: '0.75rem', 
+                borderRadius: '6px', fontSize: '0.875rem', marginTop: '1rem',
+                border: '1px solid #fecaca'
+              }}>
+                {error}
+              </div>
+            )}
+
             <form onSubmit={handleSave} style={{ marginTop: '1.5rem' }}>
               <div className="field-grid">
                 <label>
-                  <span className="field-label">Full Name</span>
-                  <input className="field-input" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                  <span className="field-label">Full Name (Legal)</span>
+                  <input 
+                    className="field-input" 
+                    required 
+                    maxLength={50}
+                    placeholder="Enter full name"
+                    value={formData.name} 
+                    onChange={e => updateFormData({ name: e.target.value })} 
+                  />
                 </label>
                 <label>
-                  <span className="field-label">Roll Number</span>
-                  <input className="field-input" required value={formData.roll_number} onChange={e => setFormData({...formData, roll_number: e.target.value})} />
+                  <span className="field-label">Roll Number (Unique ID)</span>
+                  <input 
+                    className="field-input" 
+                    required 
+                    maxLength={20}
+                    pattern="[A-Z0-9\-/]+"
+                    title="Alphanumeric, hyphen, and slash only (e.g. CS-2024-001)"
+                    placeholder="e.g. CS-24-001"
+                    value={formData.roll_number} 
+                    onChange={e => updateFormData({ roll_number: e.target.value.toUpperCase() })} 
+                  />
                 </label>
               </div>
               <div className="field-grid">
                 <label>
                   <span className="field-label">Department</span>
-                  <select className="field-input" value={formData.department} onChange={e => setFormData({...formData, department: e.target.value})}>
+                  <select className="field-input" value={formData.department} onChange={e => updateFormData({ department: e.target.value })}>
                     <option value="">Select Dept</option>
                     <option value="CS">Computer Science</option>
                     <option value="EE">Electrical Eng</option>
@@ -240,16 +280,28 @@ export default function StudentManagement() {
                 </label>
                 <label>
                   <span className="field-label">Course</span>
-                  <input className="field-input" value={formData.course} onChange={e => setFormData({...formData, course: e.target.value})} />
+                  <input className="field-input" value={formData.course} onChange={e => updateFormData({ course: e.target.value })} />
                 </label>
               </div>
               <label>
                 <span className="field-label">Program</span>
-                <input className="field-input" value={formData.program} onChange={e => setFormData({...formData, program: e.target.value})} />
+                <input className="field-input" value={formData.program} onChange={e => updateFormData({ program: e.target.value })} />
               </label>
               <div className="form-actions" style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-                <button type="button" className="button button--ghost" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="button button--primary">Save Record</button>
+                <button type="button" className="button button--ghost" onClick={() => setShowModal(false)} disabled={submitting}>Cancel</button>
+                <button type="submit" className="button button--primary" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <div className="spinner" style={{ 
+                        width: '14px', height: '14px', border: '2px solid white', 
+                        borderTopColor: 'transparent', borderRadius: '50%', 
+                        animation: 'spin 1s linear infinite', marginRight: '8px',
+                        display: 'inline-block'
+                      }} />
+                      Saving...
+                    </>
+                  ) : 'Save Record'}
+                </button>
               </div>
             </form>
           </div>
@@ -267,6 +319,12 @@ export default function StudentManagement() {
         .description {
           color: var(--text-soft);
           margin-top: 0.5rem;
+        }
+        .animate-spin {
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
         }
       `}} />
     </div>
