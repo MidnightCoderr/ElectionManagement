@@ -263,4 +263,4 @@ Give it a ⭐ and feel free to fork, experiment, and contribute!
 
 ---
 
-**Built with a focus on security, transparency, and trust.**
+**Built with a focus on security, transparency, and trust..**
